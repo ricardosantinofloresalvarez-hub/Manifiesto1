@@ -12,9 +12,15 @@ Manifiesto is a Progressive Web App for managing travel luggage with verifiable 
 - Full-stack application with Express backend and React frontend
 - User authentication (simple email/name login)
 - Trip management (CRUD operations)
-- Manifest item management with categories and values
+- Manifest item management with categories, values, and luggage metadata
+  - Editable quantity and value fields (fixed form input bug)
+  - Luggage description: brand, size (Pequeña/Mediana/Grande/Extra Grande)
+  - Security features: sealed status (Sellada) and lock status (Con Candado)
 - PDF certificate generation with QR codes and SHA-256 hashing
+  - Includes all luggage metadata in certificate
 - Web-based verification system
+  - Full manifest item display with luggage details
+  - Shows destination, total value, and individual item metadata
 - Multi-language support (Spanish/English)
 - Dark/Light mode theming
 - Mobile-first responsive design
@@ -80,6 +86,11 @@ Manifiesto is a Progressive Web App for managing travel luggage with verifiable 
 
 ### ManifestItem
 - id, tripId, name, category, quantity, estimatedValue, serialNumber, imageUrl, createdAt
+- **Luggage Metadata** (optional):
+  - luggageBrand: string (e.g., "Samsonite", "Tumi")
+  - luggageSize: string enum (small/medium/large/xlarge)
+  - isSealed: boolean (security seal status)
+  - isLocked: boolean (lock/padlock status)
 
 ### ManifestCertificate
 - id, tripId, hash, manifestData, itemCount, totalValue, verified, createdAt
@@ -110,13 +121,19 @@ Welcome → Login (email/name) → Dashboard
 Dashboard → Create Trip Dialog → Enter details → Save → View Trip
 
 ### 3. Manifest Management
-Trip Detail → Add Items → Enter item details (name, category, value, serial) → Save
+Trip Detail → Add Items → Enter item details (name, category, quantity, value, serial) → Optional: Add luggage metadata (brand, size, sealed, locked) → Save
+
+Items can be edited to update any field including quantity and luggage information.
 
 ### 4. Certificate Generation
 Trip Detail → Manifest Tab → Generate Certificate → Download PDF
 
 ### 5. Verification
-Anyone → Verify Page → Enter hash OR Scan QR → View verification result
+Anyone → Verify Page → Enter hash OR Scan QR → View verification result with:
+- Trip details (title, destination, user)
+- Complete item list with all metadata
+- Luggage details (brand, size, security features)
+- Total value and item count
 
 ## Known Limitations (Demo/Prototype)
 
@@ -172,6 +189,7 @@ Application runs on port 5000
 3. **Shared Types**: TypeScript types shared between frontend/backend via /shared
 4. **React Query**: Automatic caching, refetching, and state management for server data
 5. **Base64 Images**: Simplifies demo, but should migrate to blob storage for production
+6. **Form Input Strategy**: Quantity and value fields use string state internally, converted to numbers for API to fix editability issues in controlled inputs
 
 ### Testing Strategy
 
