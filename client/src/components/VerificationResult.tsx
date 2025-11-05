@@ -1,16 +1,32 @@
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { CheckCircle2, XCircle, Calendar, User, Package } from 'lucide-react';
+import { CheckCircle2, XCircle, Calendar, User, Package, DollarSign, Lock, ShieldCheck, MapPin } from 'lucide-react';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { QRCodeSVG } from 'qrcode.react';
+import CategoryBadge from './CategoryBadge';
+
+interface ManifestItem {
+  name: string;
+  category: string;
+  quantity: number;
+  estimatedValue?: number;
+  serialNumber?: string;
+  luggageBrand?: string;
+  luggageSize?: string;
+  isSealed?: boolean;
+  isLocked?: boolean;
+}
 
 interface VerificationResultProps {
   valid: boolean;
   manifestId?: string;
   userName?: string;
   tripTitle?: string;
+  destination?: string;
   itemCount?: number;
+  totalValue?: number;
+  items?: ManifestItem[];
   timestamp?: string;
   hash?: string;
 }
@@ -20,10 +36,22 @@ export default function VerificationResult({
   manifestId,
   userName,
   tripTitle,
+  destination,
   itemCount,
+  totalValue,
+  items,
   timestamp,
   hash,
 }: VerificationResultProps) {
+  const getSizeLabel = (size: string) => {
+    const sizeMap: Record<string, string> = {
+      small: 'Pequeña',
+      medium: 'Mediana',
+      large: 'Grande',
+      xlarge: 'Extra Grande',
+    };
+    return sizeMap[size] || size;
+  };
   return (
     <div className="max-w-2xl mx-auto p-4">
       <div className="flex flex-col items-center mb-8">
@@ -57,6 +85,7 @@ export default function VerificationResult({
                   <div>
                     <p className="text-sm text-muted-foreground">Viaje</p>
                     <p className="font-medium">{tripTitle}</p>
+                    {destination && <p className="text-sm text-muted-foreground">{destination}</p>}
                   </div>
                 </div>
               )}
@@ -78,6 +107,15 @@ export default function VerificationResult({
                   </div>
                 </div>
               )}
+              {totalValue !== undefined && totalValue !== null && (
+                <div className="flex items-start gap-3">
+                  <DollarSign className="h-5 w-5 text-muted-foreground mt-0.5" />
+                  <div>
+                    <p className="text-sm text-muted-foreground">Valor Total</p>
+                    <p className="font-medium">${totalValue.toLocaleString()}</p>
+                  </div>
+                </div>
+              )}
               {timestamp && (
                 <div className="flex items-start gap-3">
                   <Calendar className="h-5 w-5 text-muted-foreground mt-0.5" />
@@ -91,6 +129,56 @@ export default function VerificationResult({
               )}
             </div>
           </Card>
+
+          {items && items.length > 0 && (
+            <Card className="p-6 mb-6">
+              <h3 className="font-semibold text-lg mb-4">Artículos del Manifiesto</h3>
+              <div className="space-y-3">
+                {items.map((item, index) => (
+                  <div key={index} className="border-b pb-3 last:border-b-0 last:pb-0">
+                    <div className="flex items-start justify-between gap-2 mb-2">
+                      <div>
+                        <h4 className="font-medium">{item.name}</h4>
+                        <div className="flex flex-wrap items-center gap-2 mt-1">
+                          <CategoryBadge category={item.category} />
+                          <span className="text-sm text-muted-foreground">Cantidad: {item.quantity}</span>
+                        </div>
+                      </div>
+                    </div>
+                    {(item.estimatedValue || item.serialNumber || item.luggageBrand) && (
+                      <div className="text-sm text-muted-foreground space-y-1 mt-2">
+                        {item.estimatedValue && <div>Valor: ${item.estimatedValue.toLocaleString()}</div>}
+                        {item.serialNumber && <div>S/N: {item.serialNumber}</div>}
+                        {item.luggageBrand && (
+                          <div className="flex items-center gap-1">
+                            <span>Maleta:</span>
+                            <span className="font-medium">{item.luggageBrand}</span>
+                            {item.luggageSize && <span>({getSizeLabel(item.luggageSize)})</span>}
+                          </div>
+                        )}
+                      </div>
+                    )}
+                    {(item.isSealed || item.isLocked) && (
+                      <div className="flex gap-2 mt-2">
+                        {item.isSealed && (
+                          <Badge variant="secondary" className="text-xs gap-1">
+                            <ShieldCheck className="h-3 w-3" />
+                            Sellada
+                          </Badge>
+                        )}
+                        {item.isLocked && (
+                          <Badge variant="secondary" className="text-xs gap-1">
+                            <Lock className="h-3 w-3" />
+                            Con Candado
+                          </Badge>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </Card>
+          )}
 
           {hash && (
             <Card className="p-6">

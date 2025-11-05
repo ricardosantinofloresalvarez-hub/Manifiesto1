@@ -353,13 +353,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
     const trip = await storage.getTrip(certificate.tripId);
     const user = trip ? await storage.getUser(trip.userId) : undefined;
+    
+    // Parse manifestData to include full item details with luggage metadata
+    let manifestItems = [];
+    try {
+      const parsedData = JSON.parse(certificate.manifestData);
+      manifestItems = parsedData.items || [];
+    } catch (e) {
+      // If parsing fails, continue with empty array
+    }
 
     res.json({
       valid: true,
       manifestId: certificate.id,
       userName: user?.name,
       tripTitle: trip?.title,
+      destination: trip?.destination,
       itemCount: certificate.itemCount,
+      totalValue: certificate.totalValue,
+      items: manifestItems,
       timestamp: certificate.createdAt,
       hash: certificate.hash,
     });
