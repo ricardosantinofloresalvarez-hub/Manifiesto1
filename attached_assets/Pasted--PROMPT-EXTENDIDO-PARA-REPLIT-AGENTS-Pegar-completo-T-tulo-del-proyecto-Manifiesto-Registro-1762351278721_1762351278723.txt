@@ -1,0 +1,181 @@
+✅ PROMPT EXTENDIDO PARA REPLIT / AGENTS (Pegar completo)
+
+Título del proyecto:
+Manifiesto — Registro seguro de pertenencias y planificación multimodal de viajes (MVP avanzado)
+
+Descripción (pégalo exactamente):
+
+Quiero que generes un proyecto completo (lista para ejecutar en Replit / Expo) llamado “Manifiesto”, una app móvil PWA + Expo/React-Native que ayude a usuarios a organizar su equipaje y planificar viajes, con capacidades de certificación/verificación del manifiesto.
+Genera código, documentación y scripts para desplegar. Usa buenas prácticas (estructura clara, README, variables de entorno, tests básicos).
+
+Requisitos funcionales mínimos (MVP avanzado):
+
+1. Autenticación y usuarios
+
+Registro/login con Firebase Auth (email/password) y OAuth (Google, Apple opcional).
+
+Perfil de usuario con nombre y contacto de emergencia.
+
+
+
+2. Gestión de viajes
+
+Crear/editar/eliminar trips (título, destino, fechas, notas).
+
+Itinerario dentro de cada trip: vuelos, hoteles, transporte (tren, bus, ferry), restaurantes y actividades (cada ítem con fecha/hora, dirección y enlace).
+
+
+
+3. Manifiesto de equipaje
+
+Añadir artículos: nombre, categoría, cantidad, valor estimado (opcional), número de serie (opcional), foto.
+
+Escáner de códigos de barras/QR para añadir artículos rápido (usar biblioteca compatible con Expo).
+
+Posibilidad de marcar artículos como “valiosos” para priorizar fotos y seriales.
+
+
+
+4. Certificado / PDF verificable
+
+Generar PDF certificado del manifiesto con: datos del usuario, ID único del manifiesto, timestamp, lista de artículos (modo público resumido y modo privado detallado), hash SHA-256 del manifiesto y un QR que apunta a /verify/:hash.
+
+Endpoint web /verify/:hash que valida la integridad (consulta a Firestore o backend) y devuelve estado valid: true/false con metadatos (fecha, usuario, trip).
+
+Opción (configurable) para firma PKI (provista como feature opcional — placeholder para integrar CA o servicio de timestamping).
+
+
+
+5. Sincronización offline/online
+
+Sincronización automática de los datos entre almacenamiento local y Firebase/Firestore cuando hay conexión.
+
+Almacenamiento local usando Realm o AsyncStorage + SQLite (elige la opción más estable con Expo) y merge/conflict resolution básico.
+
+Mostrar estado de sincronización visible al usuario.
+
+
+
+6. Itinerarios y recomendaciones
+
+API de clima integrada (placeholder) para sugerir artículos según destino y fechas.
+
+Guardar hoteles/restaurants con enlaces fuera y posibilidad de abrir en mapas.
+
+Marcar item como “verificado por autoridad” mediante QR/ID que pueda ser escaneado por terceros.
+
+
+
+7. Compartir y permisos
+
+Compartir manifiesto con contactos de confianza vía enlace seguro (link expirado configurable) y por email.
+
+Niveles de acceso: ver (público resumen), ver+descargar (privado con contraseña).
+
+
+
+8. Monetización
+
+Integración básica con Stripe (modo test) para suscripción premium:
+
+Funciones premium: certificados con firma PKI (opción futura), historial ilimitado, backups automáticos.
+
+
+Endpoint para manejar webhooks de Stripe.
+
+
+
+9. Admin / Panel de verificación
+
+Panel web simple (React) para verificar manifests por hash, ver metadata y descargar PDF.
+
+
+
+10. Calidad y entrega
+
+README con pasos para configurar Firebase (API keys env vars), Stripe (keys), y ejecutar en Replit/Expo.
+
+Dockerfile para el backend (si aplica).
+
+Tests unitarios básicos para endpoints clave (/api/certify, /api/verify/:hash).
+
+Linter (ESLint) y scripts npm (dev, start, test).
+
+
+
+
+
+---
+
+📁 Stack técnico sugerido (pide que lo use)
+
+Frontend móvil: React Native + Expo (PWA y apps nativas)
+
+Backend: Node.js + Express (host en Replit / Vercel / Heroku)
+
+Base de datos / Auth / Storage: Firebase (Auth, Firestore, Storage)
+(adaptador opcional a Supabase si el generador sugiere)
+
+Sincronización offline: Realm o expo-sqlite + lógica de sincronización
+
+PDF: pdfkit (backend) o librería que funcione con Expo (server-side preferred)
+
+QR: qrcode (backend) y lectura con expo-barcode-scanner
+
+Pago: Stripe (test mode)
+
+Hashing: crypto (SHA-256)
+
+
+
+---
+
+🔧 Variables de entorno requeridas (genera .env.example)
+
+FIREBASE_API_KEY, FIREBASE_AUTH_DOMAIN, FIREBASE_PROJECT_ID, FIREBASE_STORAGE_BUCKET, FIREBASE_MESSAGING_SENDER_ID, FIREBASE_APP_ID
+
+JWT_SECRET
+
+STRIPE_SECRET_KEY, STRIPE_WEBHOOK_SECRET
+
+PKI_PRIVATE_KEY (opcional; placeholder)
+
+
+
+---
+
+📜 Output esperado
+
+Repo listo con carpetas: /mobile (Expo), /backend (Express), /admin (panel web)
+
+README con pasos de configuración (incluye cómo crear proyecto Firebase y dónde pegar keys)
+
+Endpoints documentados (Swagger o README)
+
+Scripts para ejecutar local y en Replit/Expo
+
+Mocks para servicios externos (clima, geocoding) si no hay API key
+
+
+
+---
+
+🔁 Instrucciones extra para el generador de código
+
+Genera UI en español e inglés (i18n) con opción para cambiar idioma en settings.
+
+Implementa modo oscuro por defecto y soporte para modo claro.
+
+Crea ejemplos de datos (seed) para pruebas.
+
+Incluye ejemplo de flujo: registro -> crear viaje -> añadir 3 items -> generar PDF -> verificación.
+
+Si alguna integración no puede implementarse por limitación del entorno, deja TODO con instrucciones claras y placeholders.
+
+
+
+---
+
+🧾 Mensaje final para Replit Agent
+
+> Por favor, genera todo el código indicado y comprímelo en un proyecto que se pueda ejecutar directamente en Replit/Expo. Entrega instrucciones paso a paso en README para configurar Firebase y Stripe. Crea también un script seed que cargue datos de ejemplo y un script test para comprobar endpoints fundamentales.
