@@ -45,6 +45,11 @@ export const manifestItems = pgTable("manifest_items", {
   estimatedValue: real("estimated_value"),
   serialNumber: text("serial_number"),
   imageUrl: text("image_url"),
+  // Luggage metadata fields
+  luggageBrand: text("luggage_brand"),
+  luggageSize: text("luggage_size"),
+  isSealed: boolean("is_sealed").default(false),
+  isLocked: boolean("is_locked").default(false),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 

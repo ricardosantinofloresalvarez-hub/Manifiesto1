@@ -59,9 +59,13 @@ export default function TripDetail() {
   const [formData, setFormData] = useState({
     name: '',
     category: 'electronics',
-    quantity: 1,
-    estimatedValue: undefined as number | undefined,
+    quantity: '1', // Changed to string to fix input editing
+    estimatedValue: '' as string,
     serialNumber: '',
+    luggageBrand: '',
+    luggageSize: '',
+    isSealed: false,
+    isLocked: false,
   });
 
   // Redirect to login if no user
@@ -113,9 +117,13 @@ export default function TripDetail() {
       setFormData({
         name: '',
         category: 'electronics',
-        quantity: 1,
-        estimatedValue: undefined,
+        quantity: '1',
+        estimatedValue: '',
         serialNumber: '',
+        luggageBrand: '',
+        luggageSize: '',
+        isSealed: false,
+        isLocked: false,
       });
     },
     onError: (error: Error) => {
@@ -243,7 +251,17 @@ export default function TripDetail() {
       });
       return;
     }
-    addItemMutation.mutate(formData);
+    addItemMutation.mutate({
+      name: formData.name,
+      category: formData.category,
+      quantity: parseInt(formData.quantity) || 1,
+      estimatedValue: formData.estimatedValue ? parseFloat(formData.estimatedValue) : undefined,
+      serialNumber: formData.serialNumber || undefined,
+      luggageBrand: formData.luggageBrand || undefined,
+      luggageSize: formData.luggageSize || undefined,
+      isSealed: formData.isSealed,
+      isLocked: formData.isLocked,
+    });
   };
 
   const handleEditItem = (item: ManifestItem) => {
@@ -251,9 +269,13 @@ export default function TripDetail() {
     setFormData({
       name: item.name,
       category: item.category,
-      quantity: item.quantity,
-      estimatedValue: item.estimatedValue ?? undefined,
+      quantity: item.quantity.toString(),
+      estimatedValue: item.estimatedValue?.toString() ?? '',
       serialNumber: item.serialNumber ?? '',
+      luggageBrand: item.luggageBrand ?? '',
+      luggageSize: item.luggageSize ?? '',
+      isSealed: item.isSealed ?? false,
+      isLocked: item.isLocked ?? false,
     });
     setShowEditItemDialog(true);
   };
@@ -267,7 +289,20 @@ export default function TripDetail() {
       });
       return;
     }
-    updateItemMutation.mutate({ id: editingItem.id, data: formData });
+    updateItemMutation.mutate({ 
+      id: editingItem.id, 
+      data: {
+        name: formData.name,
+        category: formData.category,
+        quantity: parseInt(formData.quantity) || 1,
+        estimatedValue: formData.estimatedValue ? parseFloat(formData.estimatedValue) : undefined,
+        serialNumber: formData.serialNumber || undefined,
+        luggageBrand: formData.luggageBrand || undefined,
+        luggageSize: formData.luggageSize || undefined,
+        isSealed: formData.isSealed,
+        isLocked: formData.isLocked,
+      }
+    });
   };
 
   const handleDeleteItem = (itemId: string) => {
@@ -533,7 +568,7 @@ export default function TripDetail() {
                   type="number" 
                   data-testid="input-quantity"
                   value={formData.quantity}
-                  onChange={(e) => setFormData({ ...formData, quantity: parseInt(e.target.value) || 1 })}
+                  onChange={(e) => setFormData({ ...formData, quantity: e.target.value })}
                 />
               </div>
               <div className="space-y-2">
@@ -543,8 +578,8 @@ export default function TripDetail() {
                   type="number" 
                   placeholder="0" 
                   data-testid="input-value"
-                  value={formData.estimatedValue || ''}
-                  onChange={(e) => setFormData({ ...formData, estimatedValue: e.target.value ? parseFloat(e.target.value) : undefined })}
+                  value={formData.estimatedValue}
+                  onChange={(e) => setFormData({ ...formData, estimatedValue: e.target.value })}
                 />
               </div>
             </div>
@@ -557,6 +592,67 @@ export default function TripDetail() {
                 value={formData.serialNumber}
                 onChange={(e) => setFormData({ ...formData, serialNumber: e.target.value })}
               />
+            </div>
+            
+            <div className="border-t pt-4 space-y-4">
+              <h4 className="font-medium">Información de Maleta</h4>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="brand">Marca</Label>
+                  <Input 
+                    id="brand" 
+                    placeholder="Ej: Samsonite" 
+                    data-testid="input-brand"
+                    value={formData.luggageBrand}
+                    onChange={(e) => setFormData({ ...formData, luggageBrand: e.target.value })}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="size">Tamaño</Label>
+                  <Select 
+                    value={formData.luggageSize}
+                    onValueChange={(value) => setFormData({ ...formData, luggageSize: value })}
+                  >
+                    <SelectTrigger data-testid="select-size">
+                      <SelectValue placeholder="Seleccionar" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="small">Pequeña (Cabina)</SelectItem>
+                      <SelectItem value="medium">Mediana</SelectItem>
+                      <SelectItem value="large">Grande</SelectItem>
+                      <SelectItem value="xlarge">Extra Grande</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+              <div className="flex gap-4">
+                <div className="flex items-center space-x-2">
+                  <input
+                    type="checkbox"
+                    id="sealed"
+                    className="h-4 w-4 rounded border-input"
+                    data-testid="checkbox-sealed"
+                    checked={formData.isSealed}
+                    onChange={(e) => setFormData({ ...formData, isSealed: e.target.checked })}
+                  />
+                  <Label htmlFor="sealed" className="font-normal cursor-pointer">
+                    Sellada
+                  </Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <input
+                    type="checkbox"
+                    id="locked"
+                    className="h-4 w-4 rounded border-input"
+                    data-testid="checkbox-locked"
+                    checked={formData.isLocked}
+                    onChange={(e) => setFormData({ ...formData, isLocked: e.target.checked })}
+                  />
+                  <Label htmlFor="locked" className="font-normal cursor-pointer">
+                    Con Candado
+                  </Label>
+                </div>
+              </div>
             </div>
           </div>
           <DialogFooter>
@@ -624,7 +720,7 @@ export default function TripDetail() {
                   type="number" 
                   data-testid="input-edit-quantity"
                   value={formData.quantity}
-                  onChange={(e) => setFormData({ ...formData, quantity: parseInt(e.target.value) || 1 })}
+                  onChange={(e) => setFormData({ ...formData, quantity: e.target.value })}
                 />
               </div>
               <div className="space-y-2">
@@ -634,8 +730,8 @@ export default function TripDetail() {
                   type="number" 
                   placeholder="0" 
                   data-testid="input-edit-value"
-                  value={formData.estimatedValue || ''}
-                  onChange={(e) => setFormData({ ...formData, estimatedValue: e.target.value ? parseFloat(e.target.value) : undefined })}
+                  value={formData.estimatedValue}
+                  onChange={(e) => setFormData({ ...formData, estimatedValue: e.target.value })}
                 />
               </div>
             </div>
@@ -648,6 +744,67 @@ export default function TripDetail() {
                 value={formData.serialNumber}
                 onChange={(e) => setFormData({ ...formData, serialNumber: e.target.value })}
               />
+            </div>
+            
+            <div className="border-t pt-4 space-y-4">
+              <h4 className="font-medium">Información de Maleta</h4>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="editBrand">Marca</Label>
+                  <Input 
+                    id="editBrand" 
+                    placeholder="Ej: Samsonite" 
+                    data-testid="input-edit-brand"
+                    value={formData.luggageBrand}
+                    onChange={(e) => setFormData({ ...formData, luggageBrand: e.target.value })}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="editSize">Tamaño</Label>
+                  <Select 
+                    value={formData.luggageSize}
+                    onValueChange={(value) => setFormData({ ...formData, luggageSize: value })}
+                  >
+                    <SelectTrigger data-testid="select-edit-size">
+                      <SelectValue placeholder="Seleccionar" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="small">Pequeña (Cabina)</SelectItem>
+                      <SelectItem value="medium">Mediana</SelectItem>
+                      <SelectItem value="large">Grande</SelectItem>
+                      <SelectItem value="xlarge">Extra Grande</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+              <div className="flex gap-4">
+                <div className="flex items-center space-x-2">
+                  <input
+                    type="checkbox"
+                    id="editSealed"
+                    className="h-4 w-4 rounded border-input"
+                    data-testid="checkbox-edit-sealed"
+                    checked={formData.isSealed}
+                    onChange={(e) => setFormData({ ...formData, isSealed: e.target.checked })}
+                  />
+                  <Label htmlFor="editSealed" className="font-normal cursor-pointer">
+                    Sellada
+                  </Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <input
+                    type="checkbox"
+                    id="editLocked"
+                    className="h-4 w-4 rounded border-input"
+                    data-testid="checkbox-edit-locked"
+                    checked={formData.isLocked}
+                    onChange={(e) => setFormData({ ...formData, isLocked: e.target.checked })}
+                  />
+                  <Label htmlFor="editLocked" className="font-normal cursor-pointer">
+                    Con Candado
+                  </Label>
+                </div>
+              </div>
             </div>
           </div>
           <DialogFooter>

@@ -81,8 +81,10 @@ export class MemStorage implements IStorage {
   async createTrip(insertTrip: InsertTrip): Promise<Trip> {
     const id = randomUUID();
     const trip: Trip = { 
-      ...insertTrip, 
+      ...insertTrip,
       id,
+      imageUrl: insertTrip.imageUrl ?? null,
+      notes: insertTrip.notes ?? null,
       createdAt: new Date()
     };
     this.trips.set(id, trip);
@@ -116,8 +118,16 @@ export class MemStorage implements IStorage {
   async createManifestItem(insertItem: InsertManifestItem): Promise<ManifestItem> {
     const id = randomUUID();
     const item: ManifestItem = { 
-      ...insertItem, 
+      ...insertItem,
       id,
+      quantity: insertItem.quantity ?? 1,
+      estimatedValue: insertItem.estimatedValue ?? null,
+      serialNumber: insertItem.serialNumber ?? null,
+      imageUrl: insertItem.imageUrl ?? null,
+      luggageBrand: insertItem.luggageBrand ?? null,
+      luggageSize: insertItem.luggageSize ?? null,
+      isSealed: insertItem.isSealed ?? false,
+      isLocked: insertItem.isLocked ?? false,
       createdAt: new Date()
     };
     this.manifestItems.set(id, item);
@@ -141,8 +151,10 @@ export class MemStorage implements IStorage {
   async createCertificate(insertCert: InsertManifestCertificate): Promise<ManifestCertificate> {
     const id = randomUUID();
     const cert: ManifestCertificate = { 
-      ...insertCert, 
+      ...insertCert,
       id,
+      totalValue: insertCert.totalValue ?? null,
+      verified: insertCert.verified ?? true,
       createdAt: new Date()
     };
     this.certificates.set(id, cert);
