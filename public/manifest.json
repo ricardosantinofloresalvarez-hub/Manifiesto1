@@ -1,0 +1,22 @@
+{
+  "name": "Manifiesto",
+  "short_name": "Manifiesto",
+  "description": "Organiza tu equipaje y planifica viajes con certificación verificable",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#141826",
+  "theme_color": "#141826",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "/favicon.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/favicon.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
