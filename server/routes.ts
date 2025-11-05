@@ -235,6 +235,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
           quantity: item.quantity,
           estimatedValue: item.estimatedValue,
           serialNumber: item.serialNumber,
+          luggageBrand: item.luggageBrand,
+          luggageSize: item.luggageSize,
+          isSealed: item.isSealed,
+          isLocked: item.isLocked,
         })),
         timestamp: new Date().toISOString(),
       });
@@ -290,7 +294,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
         doc.fontSize(10).font('Helvetica');
         
         items.forEach((item, index) => {
-          doc.text(`${index + 1}. ${item.name} (${item.category}) - Cantidad: ${item.quantity}${item.estimatedValue ? ` - Valor: $${item.estimatedValue}` : ''}${item.serialNumber ? ` - S/N: ${item.serialNumber}` : ''}`);
+          let itemText = `${index + 1}. ${item.name} (${item.category}) - Cantidad: ${item.quantity}`;
+          if (item.estimatedValue) itemText += ` - Valor: $${item.estimatedValue}`;
+          if (item.serialNumber) itemText += ` - S/N: ${item.serialNumber}`;
+          if (item.luggageBrand) {
+            const sizeMap: Record<string, string> = {
+              small: 'Pequeña',
+              medium: 'Mediana',
+              large: 'Grande',
+              xlarge: 'Extra Grande'
+            };
+            const sizeLabel = item.luggageSize ? sizeMap[item.luggageSize] || item.luggageSize : '';
+            itemText += ` - Maleta: ${item.luggageBrand}${sizeLabel ? ` (${sizeLabel})` : ''}`;
+          }
+          const security: string[] = [];
+          if (item.isSealed) security.push('Sellada');
+          if (item.isLocked) security.push('Con Candado');
+          if (security.length > 0) itemText += ` - ${security.join(', ')}`;
+          doc.text(itemText);
         });
 
         doc.moveDown();
