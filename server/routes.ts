@@ -1,4 +1,4 @@
-import type { Express } from "express";
+import type { Express, Request, Response, NextFunction } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { 
@@ -15,6 +15,48 @@ const upload = multer({
   storage: multer.memoryStorage(),
   limits: { fileSize: 5 * 1024 * 1024 }, // 5MB limit
 });
+
+async function validateTripOwnership(req: Request, res: Response, next: NextFunction) {
+  const tripId = req.params.id || req.params.tripId;
+  const userId = req.body.userId || req.query.userId as string;
+  
+  if (!userId) {
+    return res.status(401).json({ error: "User ID required" });
+  }
+  
+  if (tripId) {
+    const trip = await storage.getTrip(tripId);
+    if (!trip) {
+      return res.status(404).json({ error: "Trip not found" });
+    }
+    if (trip.userId !== userId) {
+      return res.status(403).json({ error: "Access denied" });
+    }
+  }
+  
+  next();
+}
+
+async function validateItemOwnership(req: Request, res: Response, next: NextFunction) {
+  const itemId = req.params.id;
+  const userId = req.body.userId || req.query.userId as string;
+  
+  if (!userId) {
+    return res.status(401).json({ error: "User ID required" });
+  }
+  
+  const item = await storage.getManifestItem(itemId);
+  if (!item) {
+    return res.status(404).json({ error: "Item not found" });
+  }
+  
+  const trip = await storage.getTrip(item.tripId);
+  if (!trip || trip.userId !== userId) {
+    return res.status(403).json({ error: "Access denied" });
+  }
+  
+  next();
+}
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // User routes
@@ -43,7 +85,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Trip routes
-  app.get("/api/trips", async (req, res) => {
+  app.get("/api/trips", validateTripOwnership, async (req, res) => {
     const userId = req.query.userId as string;
     if (!userId) {
       return res.status(400).json({ error: "userId is required" });
@@ -67,7 +109,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.json(tripsWithCounts);
   });
 
-  app.get("/api/trips/:id", async (req, res) => {
+  app.get("/api/trips/:id", validateTripOwnership, async (req, res) => {
     const trip = await storage.getTrip(req.params.id);
     if (!trip) {
       return res.status(404).json({ error: "Trip not found" });
@@ -93,9 +135,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.patch("/api/trips/:id", async (req, res) => {
+  app.patch("/api/trips/:id", validateTripOwnership, async (req, res) => {
     try {
-      const trip = await storage.updateTrip(req.params.id, req.body);
+      const updateData = insertTripSchema.partial().parse(req.body);
+      const trip = await storage.updateTrip(req.params.id, updateData);
       if (!trip) {
         return res.status(404).json({ error: "Trip not found" });
       }
@@ -105,7 +148,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.delete("/api/trips/:id", async (req, res) => {
+  app.delete("/api/trips/:id", validateTripOwnership, async (req, res) => {
     const deleted = await storage.deleteTrip(req.params.id);
     if (!deleted) {
       return res.status(404).json({ error: "Trip not found" });
@@ -114,12 +157,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Manifest Item routes
-  app.get("/api/trips/:tripId/items", async (req, res) => {
+  app.get("/api/trips/:tripId/items", validateTripOwnership, async (req, res) => {
     const items = await storage.getManifestItemsByTripId(req.params.tripId);
     res.json(items);
   });
 
-  app.post("/api/trips/:tripId/items", async (req, res) => {
+  app.post("/api/trips/:tripId/items", validateTripOwnership, async (req, res) => {
     try {
       const itemData = insertManifestItemSchema.parse({
         ...req.body,
@@ -132,9 +175,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.patch("/api/items/:id", async (req, res) => {
+  app.patch("/api/items/:id", validateItemOwnership, async (req, res) => {
     try {
-      const item = await storage.updateManifestItem(req.params.id, req.body);
+      const updateData = insertManifestItemSchema.partial().parse(req.body);
+      const item = await storage.updateManifestItem(req.params.id, updateData);
       if (!item) {
         return res.status(404).json({ error: "Item not found" });
       }
@@ -144,7 +188,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.delete("/api/items/:id", async (req, res) => {
+  app.delete("/api/items/:id", validateItemOwnership, async (req, res) => {
     const deleted = await storage.deleteManifestItem(req.params.id);
     if (!deleted) {
       return res.status(404).json({ error: "Item not found" });
@@ -164,7 +208,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Certificate generation route
-  app.post("/api/trips/:tripId/certificate", async (req, res) => {
+  app.post("/api/trips/:tripId/certificate", validateTripOwnership, async (req, res) => {
     try {
       const trip = await storage.getTrip(req.params.tripId);
       if (!trip) {

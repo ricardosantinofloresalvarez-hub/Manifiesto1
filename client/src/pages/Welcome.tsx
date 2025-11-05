@@ -65,7 +65,7 @@ export default function Welcome() {
         <div className="flex flex-col sm:flex-row gap-4 justify-center">
           <Button
             size="lg"
-            onClick={() => setLocation('/auth')}
+            onClick={() => setLocation('/login')}
             className="text-base"
             data-testid="button-get-started"
           >

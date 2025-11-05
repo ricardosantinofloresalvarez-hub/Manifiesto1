@@ -1,11 +1,15 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useLocation } from 'wouter';
+import { useQuery, useMutation } from '@tanstack/react-query';
+import { useAuth } from '@/lib/auth';
+import { queryClient } from '@/lib/queryClient';
 import TopAppBar from '@/components/TopAppBar';
 import BottomNavigation from '@/components/BottomNavigation';
 import TripCard from '@/components/TripCard';
 import EmptyState from '@/components/EmptyState';
 import { Button } from '@/components/ui/button';
+import { useToast } from '@/hooks/use-toast';
 import {
   Dialog,
   DialogContent,
@@ -17,55 +21,102 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import type { Trip } from '@shared/schema';
 import beachImg from '@assets/generated_images/Beach_destination_photo_a88a2d29.png';
 import mountainImg from '@assets/generated_images/Mountain_destination_photo_988c16a1.png';
 import cityImg from '@assets/generated_images/City_destination_photo_450e6abe.png';
 
-//TODO: Remove mock data - this is placeholder for the prototype
-const mockTrips = [
-  {
-    id: '1',
-    title: 'Vacaciones en Cancún',
-    destination: 'Cancún, México',
-    startDate: '2025-06-15',
-    endDate: '2025-06-22',
-    itemCount: 24,
-    verified: true,
-    imageUrl: beachImg,
-  },
-  {
-    id: '2',
-    title: 'Aventura en los Alpes',
-    destination: 'Chamonix, Francia',
-    startDate: '2025-12-01',
-    endDate: '2025-12-10',
-    itemCount: 18,
-    verified: false,
-    imageUrl: mountainImg,
-  },
-  {
-    id: '3',
-    title: 'Tour Europeo',
-    destination: 'París, Francia',
-    startDate: '2025-09-10',
-    endDate: '2025-09-20',
-    itemCount: 32,
-    verified: true,
-    imageUrl: cityImg,
-  },
-];
+const defaultImages = [beachImg, mountainImg, cityImg];
 
 export default function Dashboard() {
   const { t } = useTranslation();
   const [, setLocation] = useLocation();
+  const { user, isLoading } = useAuth();
+  const { toast } = useToast();
   const [showCreateDialog, setShowCreateDialog] = useState(false);
-  const [trips] = useState(mockTrips); //TODO: Replace with actual data from backend
+  const [formData, setFormData] = useState({
+    title: '',
+    destination: '',
+    startDate: '',
+    endDate: '',
+    notes: '',
+  });
+
+  const { data: trips = [], isLoading: isTripsLoading } = useQuery<Trip[]>({
+    queryKey: ['/api/trips', { userId: user?.id }],
+    queryFn: async () => {
+      if (!user?.id) return [];
+      const res = await fetch(`/api/trips?userId=${user.id}`);
+      if (!res.ok) throw new Error('Failed to fetch trips');
+      return res.json();
+    },
+    enabled: !!user?.id,
+  });
+
+  const createTripMutation = useMutation({
+    mutationFn: async (data: typeof formData) => {
+      const res = await fetch('/api/trips', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          ...data,
+          userId: user!.id,
+          imageUrl: defaultImages[Math.floor(Math.random() * defaultImages.length)],
+        }),
+      });
+      if (!res.ok) throw new Error('Failed to create trip');
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/trips'] });
+      setShowCreateDialog(false);
+      setFormData({ title: '', destination: '', startDate: '', endDate: '', notes: '' });
+      toast({
+        title: 'Viaje creado',
+        description: 'Tu viaje se ha creado exitosamente',
+      });
+    },
+    onError: () => {
+      toast({
+        title: 'Error',
+        description: 'No se pudo crear el viaje',
+        variant: 'destructive',
+      });
+    },
+  });
 
   const handleCreateTrip = () => {
-    console.log('Create trip');
-    setShowCreateDialog(false);
-    //TODO: Implement trip creation
+    if (!formData.title || !formData.destination || !formData.startDate || !formData.endDate) {
+      toast({
+        title: 'Error',
+        description: 'Por favor completa todos los campos requeridos',
+        variant: 'destructive',
+      });
+      return;
+    }
+    createTripMutation.mutate(formData);
   };
+
+  useEffect(() => {
+    if (!isLoading && !user) {
+      setLocation('/login');
+    }
+  }, [isLoading, user, setLocation]);
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+          <p className="text-muted-foreground">Cargando...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return null;
+  }
 
   return (
     <div className="min-h-screen bg-background pb-20">
@@ -93,10 +144,17 @@ export default function Dashboard() {
           />
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {trips.map((trip) => (
+            {trips.map((trip: any) => (
               <TripCard
                 key={trip.id}
-                {...trip}
+                id={trip.id}
+                title={trip.title}
+                destination={trip.destination}
+                startDate={trip.startDate}
+                endDate={trip.endDate}
+                itemCount={trip.itemCount || 0}
+                verified={trip.verified || false}
+                imageUrl={trip.imageUrl || undefined}
                 onClick={() => setLocation(`/trip/${trip.id}`)}
               />
             ))}
@@ -115,33 +173,67 @@ export default function Dashboard() {
           <div className="space-y-4 py-4">
             <div className="space-y-2">
               <Label htmlFor="title">{t('tripTitle')}</Label>
-              <Input id="title" placeholder="Ej: Vacaciones en Cancún" data-testid="input-trip-title" />
+              <Input
+                id="title"
+                value={formData.title}
+                onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                placeholder="Ej: Vacaciones en Cancún"
+                data-testid="input-trip-title"
+              />
             </div>
             <div className="space-y-2">
               <Label htmlFor="destination">{t('destination')}</Label>
-              <Input id="destination" placeholder="Ej: Cancún, México" data-testid="input-destination" />
+              <Input
+                id="destination"
+                value={formData.destination}
+                onChange={(e) => setFormData({ ...formData, destination: e.target.value })}
+                placeholder="Ej: Cancún, México"
+                data-testid="input-destination"
+              />
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="startDate">{t('startDate')}</Label>
-                <Input id="startDate" type="date" data-testid="input-start-date" />
+                <Input
+                  id="startDate"
+                  type="date"
+                  value={formData.startDate}
+                  onChange={(e) => setFormData({ ...formData, startDate: e.target.value })}
+                  data-testid="input-start-date"
+                />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="endDate">{t('endDate')}</Label>
-                <Input id="endDate" type="date" data-testid="input-end-date" />
+                <Input
+                  id="endDate"
+                  type="date"
+                  value={formData.endDate}
+                  onChange={(e) => setFormData({ ...formData, endDate: e.target.value })}
+                  data-testid="input-end-date"
+                />
               </div>
             </div>
             <div className="space-y-2">
               <Label htmlFor="notes">{t('notes')}</Label>
-              <Textarea id="notes" placeholder="Notas adicionales..." data-testid="input-notes" />
+              <Textarea
+                id="notes"
+                value={formData.notes}
+                onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+                placeholder="Notas adicionales..."
+                data-testid="input-notes"
+              />
             </div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setShowCreateDialog(false)} data-testid="button-cancel">
               {t('cancel')}
             </Button>
-            <Button onClick={handleCreateTrip} data-testid="button-save-trip">
-              {t('save')}
+            <Button
+              onClick={handleCreateTrip}
+              disabled={createTripMutation.isPending}
+              data-testid="button-save-trip"
+            >
+              {createTripMutation.isPending ? 'Guardando...' : t('save')}
             </Button>
           </DialogFooter>
         </DialogContent>

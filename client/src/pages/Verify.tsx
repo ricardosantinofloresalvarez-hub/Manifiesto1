@@ -1,5 +1,6 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useLocation } from 'wouter';
 import TopAppBar from '@/components/TopAppBar';
 import BottomNavigation from '@/components/BottomNavigation';
 import VerificationResult from '@/components/VerificationResult';
@@ -7,25 +8,57 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card } from '@/components/ui/card';
+import { useToast } from '@/hooks/use-toast';
 
 export default function Verify() {
   const { t } = useTranslation();
+  const [location] = useLocation();
+  const { toast } = useToast();
   const [hash, setHash] = useState('');
   const [verificationResult, setVerificationResult] = useState<any>(null);
+  const [isVerifying, setIsVerifying] = useState(false);
+
+  useEffect(() => {
+    const params = new URLSearchParams(location.split('?')[1]);
+    const hashParam = params.get('hash');
+    if (hashParam) {
+      setHash(hashParam);
+      handleVerifyHash(hashParam);
+    }
+  }, [location]);
+
+  const handleVerifyHash = async (hashToVerify: string) => {
+    if (!hashToVerify) return;
+
+    setIsVerifying(true);
+    try {
+      const res = await fetch(`/api/verify/${hashToVerify}`);
+      if (!res.ok) throw new Error('Verification failed');
+      
+      const result = await res.json();
+      setVerificationResult(result);
+      
+      if (!result.valid) {
+        toast({
+          title: 'Verificación fallida',
+          description: 'El hash proporcionado no corresponde a ningún manifiesto válido',
+          variant: 'destructive',
+        });
+      }
+    } catch (error) {
+      toast({
+        title: 'Error',
+        description: 'No se pudo verificar el manifiesto. Intenta de nuevo.',
+        variant: 'destructive',
+      });
+      setVerificationResult({ valid: false });
+    } finally {
+      setIsVerifying(false);
+    }
+  };
 
   const handleVerify = () => {
-    console.log('Verifying hash:', hash);
-    //TODO: Implement actual verification with backend
-    // Mock verification result for prototype
-    setVerificationResult({
-      valid: true,
-      manifestId: 'manifest-123',
-      userName: 'Juan Pérez',
-      tripTitle: 'Vacaciones en Cancún',
-      itemCount: 24,
-      timestamp: new Date().toISOString(),
-      hash: hash || 'a3f5d8e2b1c4f6a9d7e3b5c8f2a1d9e6',
-    });
+    handleVerifyHash(hash);
   };
 
   return (
@@ -54,10 +87,10 @@ export default function Verify() {
               <Button
                 onClick={handleVerify}
                 className="w-full"
-                disabled={!hash}
+                disabled={!hash || isVerifying}
                 data-testid="button-verify"
               >
-                Verificar
+                {isVerifying ? 'Verificando...' : 'Verificar'}
               </Button>
             </div>
           </Card>
