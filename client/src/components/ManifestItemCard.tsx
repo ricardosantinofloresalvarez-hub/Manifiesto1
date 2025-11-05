@@ -1,7 +1,8 @@
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import CategoryBadge from './CategoryBadge';
-import { MoreVertical, Pencil, Trash2 } from 'lucide-react';
+import { MoreVertical, Pencil, Trash2, Lock, ShieldCheck } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -17,6 +18,10 @@ interface ManifestItemCardProps {
   estimatedValue?: number;
   serialNumber?: string;
   imageUrl?: string;
+  luggageBrand?: string | null;
+  luggageSize?: string | null;
+  isSealed?: boolean | null;
+  isLocked?: boolean | null;
   onEdit?: () => void;
   onDelete?: () => void;
 }
@@ -28,9 +33,22 @@ export default function ManifestItemCard({
   estimatedValue,
   serialNumber,
   imageUrl,
+  luggageBrand,
+  luggageSize,
+  isSealed,
+  isLocked,
   onEdit,
   onDelete,
 }: ManifestItemCardProps) {
+  const getSizeLabel = (size: string) => {
+    const sizeMap: Record<string, string> = {
+      small: 'Pequeña',
+      medium: 'Mediana',
+      large: 'Grande',
+      xlarge: 'Extra Grande',
+    };
+    return sizeMap[size] || size;
+  };
   return (
     <Card className="p-3 hover-elevate">
       <div className="flex gap-3">
@@ -77,10 +95,33 @@ export default function ManifestItemCard({
             <CategoryBadge category={category} />
             <span className="text-muted-foreground">Cantidad: {quantity}</span>
           </div>
-          {(estimatedValue || serialNumber) && (
+          {(estimatedValue || serialNumber || luggageBrand || luggageSize) && (
             <div className="mt-2 text-sm text-muted-foreground space-y-1">
-              {estimatedValue && <div>Valor: ${estimatedValue}</div>}
+              {estimatedValue && <div>Valor: ${estimatedValue.toLocaleString()}</div>}
               {serialNumber && <div>S/N: {serialNumber}</div>}
+              {luggageBrand && (
+                <div className="flex items-center gap-1">
+                  <span>Maleta:</span>
+                  <span className="font-medium">{luggageBrand}</span>
+                  {luggageSize && <span>({getSizeLabel(luggageSize)})</span>}
+                </div>
+              )}
+            </div>
+          )}
+          {(isSealed || isLocked) && (
+            <div className="flex gap-2 mt-2">
+              {isSealed && (
+                <Badge variant="secondary" className="text-xs gap-1">
+                  <ShieldCheck className="h-3 w-3" />
+                  Sellada
+                </Badge>
+              )}
+              {isLocked && (
+                <Badge variant="secondary" className="text-xs gap-1">
+                  <Lock className="h-3 w-3" />
+                  Con Candado
+                </Badge>
+              )}
             </div>
           )}
         </div>

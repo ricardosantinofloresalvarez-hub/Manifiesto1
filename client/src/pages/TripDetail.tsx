@@ -99,7 +99,7 @@ export default function TripDetail() {
 
   // Add item mutation
   const addItemMutation = useMutation({
-    mutationFn: async (data: typeof formData) => {
+    mutationFn: async (data: any) => {
       const response = await apiRequest('POST', `/api/trips/${tripId}/items`, {
         ...data,
         userId: user!.id,
@@ -137,7 +137,7 @@ export default function TripDetail() {
 
   // Update item mutation
   const updateItemMutation = useMutation({
-    mutationFn: async ({ id, data }: { id: string; data: typeof formData }) => {
+    mutationFn: async ({ id, data }: { id: string; data: any }) => {
       const response = await apiRequest('PATCH', `/api/items/${id}`, {
         ...data,
         userId: user!.id,
@@ -454,6 +454,10 @@ export default function TripDetail() {
                       estimatedValue={item.estimatedValue ?? undefined}
                       serialNumber={item.serialNumber ?? undefined}
                       imageUrl={item.imageUrl ?? undefined}
+                      luggageBrand={item.luggageBrand}
+                      luggageSize={item.luggageSize}
+                      isSealed={item.isSealed}
+                      isLocked={item.isLocked}
                       onEdit={() => handleEditItem(item)}
                       onDelete={() => handleDeleteItem(item.id)}
                     />
