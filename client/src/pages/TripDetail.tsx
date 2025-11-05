@@ -22,6 +22,16 @@ import {
   DialogTitle,
   DialogFooter,
 } from '@/components/ui/dialog';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -41,6 +51,11 @@ export default function TripDetail() {
   const { user, isLoading } = useAuth();
   const { toast } = useToast();
   const [showAddItemDialog, setShowAddItemDialog] = useState(false);
+  const [showEditItemDialog, setShowEditItemDialog] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [editingItem, setEditingItem] = useState<ManifestItem | null>(null);
+  const [deletingItemId, setDeletingItemId] = useState<string | null>(null);
+  const [generatedHash, setGeneratedHash] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     name: '',
     category: 'electronics',
@@ -112,6 +127,61 @@ export default function TripDetail() {
     },
   });
 
+  // Update item mutation
+  const updateItemMutation = useMutation({
+    mutationFn: async ({ id, data }: { id: string; data: typeof formData }) => {
+      const response = await apiRequest('PATCH', `/api/items/${id}`, {
+        ...data,
+        userId: user!.id,
+      });
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/trips', tripId, 'items'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/trips', tripId] });
+      toast({
+        title: t('success'),
+        description: 'Artículo actualizado',
+      });
+      setShowEditItemDialog(false);
+      setEditingItem(null);
+    },
+    onError: (error: Error) => {
+      toast({
+        title: t('error'),
+        description: error.message,
+        variant: 'destructive',
+      });
+    },
+  });
+
+  // Delete item mutation
+  const deleteItemMutation = useMutation({
+    mutationFn: async (itemId: string) => {
+      const response = await apiRequest('DELETE', `/api/items/${itemId}`, {
+        userId: user!.id,
+      });
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/trips', tripId, 'items'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/trips', tripId] });
+      toast({
+        title: t('success'),
+        description: 'Artículo eliminado',
+      });
+      setShowDeleteConfirm(false);
+      setDeletingItemId(null);
+    },
+    onError: (error: Error) => {
+      toast({
+        title: t('error'),
+        description: error.message,
+        variant: 'destructive',
+      });
+    },
+  });
+
   // Generate certificate mutation
   const generateCertificateMutation = useMutation({
     mutationFn: async () => {
@@ -120,8 +190,11 @@ export default function TripDetail() {
       });
       return response.json();
     },
-    onSuccess: (data: { pdfUrl: string }) => {
+    onSuccess: (data: { pdfUrl: string; certificate: { hash: string } }) => {
       queryClient.invalidateQueries({ queryKey: ['/api/trips', tripId] });
+      
+      // Save hash for display
+      setGeneratedHash(data.certificate.hash);
       
       // Download PDF
       const link = document.createElement('a');
@@ -171,6 +244,41 @@ export default function TripDetail() {
       return;
     }
     addItemMutation.mutate(formData);
+  };
+
+  const handleEditItem = (item: ManifestItem) => {
+    setEditingItem(item);
+    setFormData({
+      name: item.name,
+      category: item.category,
+      quantity: item.quantity,
+      estimatedValue: item.estimatedValue ?? undefined,
+      serialNumber: item.serialNumber ?? '',
+    });
+    setShowEditItemDialog(true);
+  };
+
+  const handleUpdateItem = () => {
+    if (!editingItem || !formData.name.trim()) {
+      toast({
+        title: t('error'),
+        description: 'Item name is required',
+        variant: 'destructive',
+      });
+      return;
+    }
+    updateItemMutation.mutate({ id: editingItem.id, data: formData });
+  };
+
+  const handleDeleteItem = (itemId: string) => {
+    setDeletingItemId(itemId);
+    setShowDeleteConfirm(true);
+  };
+
+  const confirmDelete = () => {
+    if (deletingItemId) {
+      deleteItemMutation.mutate(deletingItemId);
+    }
   };
 
   // Show loading state while auth is loading
@@ -311,11 +419,38 @@ export default function TripDetail() {
                       estimatedValue={item.estimatedValue ?? undefined}
                       serialNumber={item.serialNumber ?? undefined}
                       imageUrl={item.imageUrl ?? undefined}
-                      onEdit={() => console.log('Edit item:', item.id)}
-                      onDelete={() => console.log('Delete item:', item.id)}
+                      onEdit={() => handleEditItem(item)}
+                      onDelete={() => handleDeleteItem(item.id)}
                     />
                   ))}
                 </div>
+
+                {generatedHash && (
+                  <Card className="p-4 bg-primary/5 border-primary/20">
+                    <h4 className="font-semibold mb-2 flex items-center gap-2">
+                      <Download className="h-4 w-4" />
+                      Certificado Generado
+                    </h4>
+                    <p className="text-sm text-muted-foreground mb-2">
+                      Hash SHA-256 para verificación:
+                    </p>
+                    <code className="block p-2 bg-background rounded text-xs break-all font-mono">
+                      {generatedHash}
+                    </code>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="mt-3 w-full"
+                      onClick={() => {
+                        navigator.clipboard.writeText(generatedHash);
+                        toast({ title: 'Copiado', description: 'Hash copiado al portapapeles' });
+                      }}
+                      data-testid="button-copy-hash"
+                    >
+                      Copiar Hash
+                    </Button>
+                  </Card>
+                )}
 
                 <Button
                   onClick={handleGenerateCertificate}
@@ -443,6 +578,127 @@ export default function TripDetail() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <Dialog open={showEditItemDialog} onOpenChange={setShowEditItemDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Editar Artículo</DialogTitle>
+            <DialogDescription>
+              Modifica los detalles de este artículo
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="editItemName">{t('itemName')}</Label>
+              <Input 
+                id="editItemName" 
+                placeholder="Ej: Cámara Sony" 
+                data-testid="input-edit-item-name"
+                value={formData.name}
+                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="editCategory">{t('category')}</Label>
+              <Select 
+                value={formData.category}
+                onValueChange={(value) => setFormData({ ...formData, category: value })}
+              >
+                <SelectTrigger data-testid="select-edit-category">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="electronics">{t('electronics')}</SelectItem>
+                  <SelectItem value="clothing">{t('clothing')}</SelectItem>
+                  <SelectItem value="documents">{t('documents')}</SelectItem>
+                  <SelectItem value="accessories">{t('accessories')}</SelectItem>
+                  <SelectItem value="other">{t('other')}</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="editQuantity">{t('quantity')}</Label>
+                <Input 
+                  id="editQuantity" 
+                  type="number" 
+                  data-testid="input-edit-quantity"
+                  value={formData.quantity}
+                  onChange={(e) => setFormData({ ...formData, quantity: parseInt(e.target.value) || 1 })}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="editValue">{t('estimatedValue')}</Label>
+                <Input 
+                  id="editValue" 
+                  type="number" 
+                  placeholder="0" 
+                  data-testid="input-edit-value"
+                  value={formData.estimatedValue || ''}
+                  onChange={(e) => setFormData({ ...formData, estimatedValue: e.target.value ? parseFloat(e.target.value) : undefined })}
+                />
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="editSerial">{t('serialNumber')}</Label>
+              <Input 
+                id="editSerial" 
+                placeholder="Opcional" 
+                data-testid="input-edit-serial"
+                value={formData.serialNumber}
+                onChange={(e) => setFormData({ ...formData, serialNumber: e.target.value })}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button 
+              variant="outline" 
+              onClick={() => {
+                setShowEditItemDialog(false);
+                setEditingItem(null);
+              }}
+              data-testid="button-cancel-edit"
+              disabled={updateItemMutation.isPending}
+            >
+              {t('cancel')}
+            </Button>
+            <Button 
+              onClick={handleUpdateItem} 
+              data-testid="button-update-item"
+              disabled={updateItemMutation.isPending}
+            >
+              {updateItemMutation.isPending ? 'Actualizando...' : 'Actualizar'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <AlertDialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>¿Eliminar artículo?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Esta acción no se puede deshacer. El artículo será eliminado permanentemente del manifiesto.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel 
+              data-testid="button-cancel-delete"
+              disabled={deleteItemMutation.isPending}
+            >
+              Cancelar
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={confirmDelete}
+              data-testid="button-confirm-delete"
+              disabled={deleteItemMutation.isPending}
+              className="bg-destructive hover:bg-destructive/90"
+            >
+              {deleteItemMutation.isPending ? 'Eliminando...' : 'Eliminar'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       <BottomNavigation />
     </div>
