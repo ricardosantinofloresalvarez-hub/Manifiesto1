@@ -4,7 +4,12 @@ import { storage } from "./storage";
 import { 
   insertTripSchema, 
   insertManifestItemSchema,
-  insertUserSchema 
+  insertUserSchema,
+  insertFlightSchema,
+  insertHotelSchema,
+  insertTransportSchema,
+  insertRestaurantSchema,
+  insertActivitySchema
 } from "@shared/schema";
 import { createHash } from "crypto";
 import PDFDocument from "pdfkit";
@@ -341,6 +346,321 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error: any) {
       res.status(500).json({ error: error.message });
     }
+  });
+
+  // Flight routes
+  app.get("/api/trips/:tripId/flights", validateTripOwnership, async (req, res) => {
+    const flights = await storage.getFlightsByTripId(req.params.tripId);
+    res.json(flights);
+  });
+
+  app.post("/api/trips/:tripId/flights", validateTripOwnership, async (req, res) => {
+    try {
+      const flightData = insertFlightSchema.parse({
+        ...req.body,
+        tripId: req.params.tripId,
+        userId: req.body.userId,
+      });
+      const flight = await storage.createFlight(flightData);
+      res.json(flight);
+    } catch (error: any) {
+      res.status(400).json({ error: error.message });
+    }
+  });
+
+  app.patch("/api/flights/:id", async (req, res) => {
+    try {
+      const userId = req.body.userId || req.query.userId as string;
+      if (!userId) {
+        return res.status(401).json({ error: "User ID required" });
+      }
+
+      const flight = await storage.getFlight(req.params.id);
+      if (!flight) {
+        return res.status(404).json({ error: "Flight not found" });
+      }
+
+      if (flight.userId !== userId) {
+        return res.status(403).json({ error: "Access denied" });
+      }
+
+      const updateData = insertFlightSchema.partial().parse(req.body);
+      const updated = await storage.updateFlight(req.params.id, updateData);
+      res.json(updated);
+    } catch (error: any) {
+      res.status(400).json({ error: error.message });
+    }
+  });
+
+  app.delete("/api/flights/:id", async (req, res) => {
+    const userId = req.body.userId || req.query.userId as string;
+    if (!userId) {
+      return res.status(401).json({ error: "User ID required" });
+    }
+
+    const flight = await storage.getFlight(req.params.id);
+    if (!flight) {
+      return res.status(404).json({ error: "Flight not found" });
+    }
+
+    if (flight.userId !== userId) {
+      return res.status(403).json({ error: "Access denied" });
+    }
+
+    const deleted = await storage.deleteFlight(req.params.id);
+    res.json({ success: deleted });
+  });
+
+  // Hotel routes
+  app.get("/api/trips/:tripId/hotels", validateTripOwnership, async (req, res) => {
+    const hotels = await storage.getHotelsByTripId(req.params.tripId);
+    res.json(hotels);
+  });
+
+  app.post("/api/trips/:tripId/hotels", validateTripOwnership, async (req, res) => {
+    try {
+      const hotelData = insertHotelSchema.parse({
+        ...req.body,
+        tripId: req.params.tripId,
+        userId: req.body.userId,
+      });
+      const hotel = await storage.createHotel(hotelData);
+      res.json(hotel);
+    } catch (error: any) {
+      res.status(400).json({ error: error.message });
+    }
+  });
+
+  app.patch("/api/hotels/:id", async (req, res) => {
+    try {
+      const userId = req.body.userId || req.query.userId as string;
+      if (!userId) {
+        return res.status(401).json({ error: "User ID required" });
+      }
+
+      const hotel = await storage.getHotel(req.params.id);
+      if (!hotel) {
+        return res.status(404).json({ error: "Hotel not found" });
+      }
+
+      if (hotel.userId !== userId) {
+        return res.status(403).json({ error: "Access denied" });
+      }
+
+      const updateData = insertHotelSchema.partial().parse(req.body);
+      const updated = await storage.updateHotel(req.params.id, updateData);
+      res.json(updated);
+    } catch (error: any) {
+      res.status(400).json({ error: error.message });
+    }
+  });
+
+  app.delete("/api/hotels/:id", async (req, res) => {
+    const userId = req.body.userId || req.query.userId as string;
+    if (!userId) {
+      return res.status(401).json({ error: "User ID required" });
+    }
+
+    const hotel = await storage.getHotel(req.params.id);
+    if (!hotel) {
+      return res.status(404).json({ error: "Hotel not found" });
+    }
+
+    if (hotel.userId !== userId) {
+      return res.status(403).json({ error: "Access denied" });
+    }
+
+    const deleted = await storage.deleteHotel(req.params.id);
+    res.json({ success: deleted });
+  });
+
+  // Transport routes
+  app.get("/api/trips/:tripId/transport", validateTripOwnership, async (req, res) => {
+    const transport = await storage.getTransportByTripId(req.params.tripId);
+    res.json(transport);
+  });
+
+  app.post("/api/trips/:tripId/transport", validateTripOwnership, async (req, res) => {
+    try {
+      const transportData = insertTransportSchema.parse({
+        ...req.body,
+        tripId: req.params.tripId,
+        userId: req.body.userId,
+      });
+      const transport = await storage.createTransport(transportData);
+      res.json(transport);
+    } catch (error: any) {
+      res.status(400).json({ error: error.message });
+    }
+  });
+
+  app.patch("/api/transport/:id", async (req, res) => {
+    try {
+      const userId = req.body.userId || req.query.userId as string;
+      if (!userId) {
+        return res.status(401).json({ error: "User ID required" });
+      }
+
+      const transport = await storage.getTransport(req.params.id);
+      if (!transport) {
+        return res.status(404).json({ error: "Transport not found" });
+      }
+
+      if (transport.userId !== userId) {
+        return res.status(403).json({ error: "Access denied" });
+      }
+
+      const updateData = insertTransportSchema.partial().parse(req.body);
+      const updated = await storage.updateTransport(req.params.id, updateData);
+      res.json(updated);
+    } catch (error: any) {
+      res.status(400).json({ error: error.message });
+    }
+  });
+
+  app.delete("/api/transport/:id", async (req, res) => {
+    const userId = req.body.userId || req.query.userId as string;
+    if (!userId) {
+      return res.status(401).json({ error: "User ID required" });
+    }
+
+    const transport = await storage.getTransport(req.params.id);
+    if (!transport) {
+      return res.status(404).json({ error: "Transport not found" });
+    }
+
+    if (transport.userId !== userId) {
+      return res.status(403).json({ error: "Access denied" });
+    }
+
+    const deleted = await storage.deleteTransport(req.params.id);
+    res.json({ success: deleted });
+  });
+
+  // Restaurant routes
+  app.get("/api/trips/:tripId/restaurants", validateTripOwnership, async (req, res) => {
+    const restaurants = await storage.getRestaurantsByTripId(req.params.tripId);
+    res.json(restaurants);
+  });
+
+  app.post("/api/trips/:tripId/restaurants", validateTripOwnership, async (req, res) => {
+    try {
+      const restaurantData = insertRestaurantSchema.parse({
+        ...req.body,
+        tripId: req.params.tripId,
+        userId: req.body.userId,
+      });
+      const restaurant = await storage.createRestaurant(restaurantData);
+      res.json(restaurant);
+    } catch (error: any) {
+      res.status(400).json({ error: error.message });
+    }
+  });
+
+  app.patch("/api/restaurants/:id", async (req, res) => {
+    try {
+      const userId = req.body.userId || req.query.userId as string;
+      if (!userId) {
+        return res.status(401).json({ error: "User ID required" });
+      }
+
+      const restaurant = await storage.getRestaurant(req.params.id);
+      if (!restaurant) {
+        return res.status(404).json({ error: "Restaurant not found" });
+      }
+
+      if (restaurant.userId !== userId) {
+        return res.status(403).json({ error: "Access denied" });
+      }
+
+      const updateData = insertRestaurantSchema.partial().parse(req.body);
+      const updated = await storage.updateRestaurant(req.params.id, updateData);
+      res.json(updated);
+    } catch (error: any) {
+      res.status(400).json({ error: error.message });
+    }
+  });
+
+  app.delete("/api/restaurants/:id", async (req, res) => {
+    const userId = req.body.userId || req.query.userId as string;
+    if (!userId) {
+      return res.status(401).json({ error: "User ID required" });
+    }
+
+    const restaurant = await storage.getRestaurant(req.params.id);
+    if (!restaurant) {
+      return res.status(404).json({ error: "Restaurant not found" });
+    }
+
+    if (restaurant.userId !== userId) {
+      return res.status(403).json({ error: "Access denied" });
+    }
+
+    const deleted = await storage.deleteRestaurant(req.params.id);
+    res.json({ success: deleted });
+  });
+
+  // Activity routes
+  app.get("/api/trips/:tripId/activities", validateTripOwnership, async (req, res) => {
+    const activities = await storage.getActivitiesByTripId(req.params.tripId);
+    res.json(activities);
+  });
+
+  app.post("/api/trips/:tripId/activities", validateTripOwnership, async (req, res) => {
+    try {
+      const activityData = insertActivitySchema.parse({
+        ...req.body,
+        tripId: req.params.tripId,
+        userId: req.body.userId,
+      });
+      const activity = await storage.createActivity(activityData);
+      res.json(activity);
+    } catch (error: any) {
+      res.status(400).json({ error: error.message });
+    }
+  });
+
+  app.patch("/api/activities/:id", async (req, res) => {
+    try {
+      const userId = req.body.userId || req.query.userId as string;
+      if (!userId) {
+        return res.status(401).json({ error: "User ID required" });
+      }
+
+      const activity = await storage.getActivity(req.params.id);
+      if (!activity) {
+        return res.status(404).json({ error: "Activity not found" });
+      }
+
+      if (activity.userId !== userId) {
+        return res.status(403).json({ error: "Access denied" });
+      }
+
+      const updateData = insertActivitySchema.partial().parse(req.body);
+      const updated = await storage.updateActivity(req.params.id, updateData);
+      res.json(updated);
+    } catch (error: any) {
+      res.status(400).json({ error: error.message });
+    }
+  });
+
+  app.delete("/api/activities/:id", async (req, res) => {
+    const userId = req.body.userId || req.query.userId as string;
+    if (!userId) {
+      return res.status(401).json({ error: "User ID required" });
+    }
+
+    const activity = await storage.getActivity(req.params.id);
+    if (!activity) {
+      return res.status(404).json({ error: "Activity not found" });
+    }
+
+    if (activity.userId !== userId) {
+      return res.status(403).json({ error: "Access denied" });
+    }
+
+    const deleted = await storage.deleteActivity(req.params.id);
+    res.json({ success: deleted });
   });
 
   // Verification route

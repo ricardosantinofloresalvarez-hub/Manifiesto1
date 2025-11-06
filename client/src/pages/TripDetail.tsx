@@ -10,6 +10,7 @@ import TopAppBar from '@/components/TopAppBar';
 import BottomNavigation from '@/components/BottomNavigation';
 import ManifestItemCard from '@/components/ManifestItemCard';
 import EmptyState from '@/components/EmptyState';
+import ItineraryTab from '@/components/ItineraryTab';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -35,14 +36,8 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Download, MapPin, Calendar, Plane, Hotel, UtensilsCrossed, Activity } from 'lucide-react';
+import { Download, MapPin, Calendar } from 'lucide-react';
 import beachImg from '@assets/generated_images/Beach_destination_photo_a88a2d29.png';
-
-const mockItinerary = [
-  { type: 'flight', title: 'Vuelo CDMX - CUN', date: '2025-06-15', time: '10:00 AM' },
-  { type: 'hotel', title: 'Hotel Riu Palace', date: '2025-06-15', time: '14:00 PM' },
-  { type: 'activity', title: 'Tour Chichén Itzá', date: '2025-06-17', time: '08:00 AM' },
-];
 
 export default function TripDetail() {
   const { id: tripId } = useParams();
@@ -226,16 +221,6 @@ export default function TripDetail() {
     },
   });
 
-  const getItineraryIcon = (type: string) => {
-    switch (type) {
-      case 'flight': return <Plane className="h-5 w-5" />;
-      case 'hotel': return <Hotel className="h-5 w-5" />;
-      case 'activity': return <Activity className="h-5 w-5" />;
-      case 'restaurant': return <UtensilsCrossed className="h-5 w-5" />;
-      default: return <MapPin className="h-5 w-5" />;
-    }
-  };
-
   const totalValue = items.reduce((sum, item) => sum + (item.estimatedValue || 0), 0);
 
   const handleGenerateCertificate = () => {
@@ -395,22 +380,8 @@ export default function TripDetail() {
             <TabsTrigger value="settings" data-testid="tab-settings">{t('settings')}</TabsTrigger>
           </TabsList>
 
-          <TabsContent value="itinerary" className="space-y-3">
-            {mockItinerary.map((item, index) => (
-              <Card key={index} className="p-4 hover-elevate">
-                <div className="flex items-start gap-3">
-                  <div className="p-2 rounded-full bg-primary/10 text-primary">
-                    {getItineraryIcon(item.type)}
-                  </div>
-                  <div className="flex-1">
-                    <h4 className="font-medium">{item.title}</h4>
-                    <p className="text-sm text-muted-foreground">
-                      {item.date} - {item.time}
-                    </p>
-                  </div>
-                </div>
-              </Card>
-            ))}
+          <TabsContent value="itinerary">
+            <ItineraryTab tripId={tripId!} />
           </TabsContent>
 
           <TabsContent value="manifest" className="space-y-4">
