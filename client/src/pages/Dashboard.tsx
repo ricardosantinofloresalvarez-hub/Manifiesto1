@@ -1,9 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useLocation } from 'wouter';
-import { useQuery, useMutation } from '@tanstack/react-query';
 import { useAuth } from '@/lib/auth';
-import { queryClient } from '@/lib/queryClient';
+import { useTrips, useCreateTrip } from '@/hooks/useTrips';
 import TopAppBar from '@/components/TopAppBar';
 import BottomNavigation from '@/components/BottomNavigation';
 import TripCard from '@/components/TripCard';
@@ -21,7 +20,6 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import type { Trip } from '@shared/schema';
 import beachImg from '@assets/generated_images/Beach_destination_photo_a88a2d29.png';
 import mountainImg from '@assets/generated_images/Mountain_destination_photo_988c16a1.png';
 import cityImg from '@assets/generated_images/City_destination_photo_450e6abe.png';
@@ -42,48 +40,36 @@ export default function Dashboard() {
     notes: '',
   });
 
-  const { data: trips = [], isLoading: isTripsLoading } = useQuery<Trip[]>({
-    queryKey: ['/api/trips', { userId: user?.id }],
-    queryFn: async () => {
-      if (!user?.id) return [];
-      const res = await fetch(`/api/trips?userId=${user.id}`);
-      if (!res.ok) throw new Error('Failed to fetch trips');
-      return res.json();
-    },
-    enabled: !!user?.id,
-  });
+  const { data: trips = [], isLoading: isTripsLoading } = useTrips(user?.id || null);
 
-  const createTripMutation = useMutation({
-    mutationFn: async (data: typeof formData) => {
-      const res = await fetch('/api/trips', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          ...data,
-          userId: user!.id,
-          imageUrl: defaultImages[Math.floor(Math.random() * defaultImages.length)],
-        }),
-      });
-      if (!res.ok) throw new Error('Failed to create trip');
-      return res.json();
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/trips'] });
-      setShowCreateDialog(false);
-      setFormData({ title: '', destination: '', startDate: '', endDate: '', notes: '' });
-      toast({
-        title: 'Viaje creado',
-        description: 'Tu viaje se ha creado exitosamente',
-      });
-    },
-    onError: () => {
-      toast({
-        title: 'Error',
-        description: 'No se pudo crear el viaje',
-        variant: 'destructive',
-      });
-    },
-  });
+  const createTripMutation = useCreateTrip();
+
+  const handleCreateTripMutation = () => {
+    createTripMutation.mutate(
+      {
+        ...formData,
+        userId: user!.id,
+        imageUrl: defaultImages[Math.floor(Math.random() * defaultImages.length)],
+      },
+      {
+        onSuccess: () => {
+          setShowCreateDialog(false);
+          setFormData({ title: '', destination: '', startDate: '', endDate: '', notes: '' });
+          toast({
+            title: 'Viaje creado',
+            description: 'Tu viaje se ha creado exitosamente',
+          });
+        },
+        onError: () => {
+          toast({
+            title: 'Error',
+            description: 'No se pudo crear el viaje',
+            variant: 'destructive',
+          });
+        },
+      }
+    );
+  };
 
   const handleCreateTrip = () => {
     if (!formData.title || !formData.destination || !formData.startDate || !formData.endDate) {
@@ -94,7 +80,7 @@ export default function Dashboard() {
       });
       return;
     }
-    createTripMutation.mutate(formData);
+    handleCreateTripMutation();
   };
 
   useEffect(() => {
