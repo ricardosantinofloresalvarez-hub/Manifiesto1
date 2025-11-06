@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useLocation } from 'wouter';
+import { useCertificateByHash } from '@/hooks/useCertificates';
 import TopAppBar from '@/components/TopAppBar';
 import BottomNavigation from '@/components/BottomNavigation';
 import VerificationResult from '@/components/VerificationResult';
@@ -15,50 +16,69 @@ export default function Verify() {
   const [location] = useLocation();
   const { toast } = useToast();
   const [hash, setHash] = useState('');
-  const [verificationResult, setVerificationResult] = useState<any>(null);
-  const [isVerifying, setIsVerifying] = useState(false);
+  const [shouldVerify, setShouldVerify] = useState(false);
+  
+  // Use Firestore hook for certificate verification
+  const { data: certificate, isLoading: isVerifying, error } = useCertificateByHash(
+    shouldVerify && hash ? hash : null
+  );
 
+  // Extract hash from URL params on mount
   useEffect(() => {
     const params = new URLSearchParams(location.split('?')[1]);
     const hashParam = params.get('hash');
     if (hashParam) {
       setHash(hashParam);
-      handleVerifyHash(hashParam);
+      setShouldVerify(true);
     }
   }, [location]);
 
-  const handleVerifyHash = async (hashToVerify: string) => {
-    if (!hashToVerify) return;
-
-    setIsVerifying(true);
-    try {
-      const res = await fetch(`/api/verify/${hashToVerify}`);
-      if (!res.ok) throw new Error('Verification failed');
-      
-      const result = await res.json();
-      setVerificationResult(result);
-      
-      if (!result.valid) {
-        toast({
-          title: 'Verificación fallida',
-          description: 'El hash proporcionado no corresponde a ningún manifiesto válido',
-          variant: 'destructive',
-        });
-      }
-    } catch (error) {
+  // Show toast notifications based on verification status
+  useEffect(() => {
+    if (error) {
       toast({
         title: 'Error',
         description: 'No se pudo verificar el manifiesto. Intenta de nuevo.',
         variant: 'destructive',
       });
-      setVerificationResult({ valid: false });
-    } finally {
-      setIsVerifying(false);
+      // Reset to allow retry
+      setShouldVerify(false);
+    } else if (shouldVerify && !isVerifying && certificate === null) {
+      // Hash not found in database
+      toast({
+        title: 'Verificación fallida',
+        description: 'El hash proporcionado no corresponde a ningún manifiesto válido',
+        variant: 'destructive',
+      });
+      // Reset to allow retry
+      setShouldVerify(false);
+    } else if (shouldVerify && certificate && !certificate.verified) {
+      // Certificate found but not verified
+      toast({
+        title: 'Verificación fallida',
+        description: 'El manifiesto no pudo ser verificado',
+        variant: 'destructive',
+      });
+      // Reset to allow retry
+      setShouldVerify(false);
+    } else if (shouldVerify && certificate?.verified) {
+      // Successful verification
+      toast({
+        title: 'Verificación exitosa',
+        description: 'El manifiesto es válido y ha sido verificado correctamente',
+      });
+    }
+  }, [error, certificate, shouldVerify, isVerifying, toast]);
+
+  const handleVerify = () => {
+    if (hash) {
+      setShouldVerify(true);
     }
   };
 
-  const handleVerify = () => {
-    handleVerifyHash(hash);
+  const handleReset = () => {
+    setHash('');
+    setShouldVerify(false);
   };
 
   return (
@@ -66,7 +86,7 @@ export default function Verify() {
       <TopAppBar title={t('verifyManifest')} />
 
       <div className="p-4 max-w-2xl mx-auto">
-        {!verificationResult ? (
+        {!shouldVerify || !certificate ? (
           <Card className="p-6">
             <h2 className="text-xl font-semibold mb-4">Verificar Manifiesto</h2>
             <p className="text-muted-foreground mb-6">
@@ -96,10 +116,16 @@ export default function Verify() {
           </Card>
         ) : (
           <>
-            <VerificationResult {...verificationResult} />
+            <VerificationResult 
+              valid={certificate.verified || false}
+              certificate={certificate}
+              trip={certificate.trip}
+              items={certificate.items}
+              user={certificate.user}
+            />
             <Button
               variant="outline"
-              onClick={() => setVerificationResult(null)}
+              onClick={handleReset}
               className="w-full mt-6"
               data-testid="button-verify-another"
             >

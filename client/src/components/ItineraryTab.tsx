@@ -1,8 +1,23 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useQuery, useMutation } from '@tanstack/react-query';
-import { queryClient, apiRequest } from '@/lib/queryClient';
-import { useAuth } from '@/lib/auth';
+import { useToast } from '@/hooks/use-toast';
+import { 
+  useFlights, 
+  useCreateFlight, 
+  useDeleteFlight,
+  useHotels,
+  useCreateHotel,
+  useDeleteHotel,
+  useTransport,
+  useCreateTransport,
+  useDeleteTransport,
+  useRestaurants,
+  useCreateRestaurant,
+  useDeleteRestaurant,
+  useActivities,
+  useCreateActivity,
+  useDeleteActivity
+} from '@/hooks/useItineraries';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -12,8 +27,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { Plane, Hotel, Train, UtensilsCrossed, CalendarDays, ChevronDown, Plus, Pencil, Trash2 } from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
-import type { Flight, Hotel as HotelType, Transport, Restaurant, Activity } from '@shared/schema';
 
 interface ItineraryTabProps {
   tripId: string;
@@ -21,34 +34,14 @@ interface ItineraryTabProps {
 
 export default function ItineraryTab({ tripId }: ItineraryTabProps) {
   const { t } = useTranslation();
-  const { user } = useAuth();
   const { toast } = useToast();
   
-  // Fetch all itinerary data
-  const { data: flights = [] } = useQuery<Flight[]>({
-    queryKey: ['/api/trips', tripId, 'flights'],
-    enabled: !!tripId,
-  });
-  
-  const { data: hotels = [] } = useQuery<HotelType[]>({
-    queryKey: ['/api/trips', tripId, 'hotels'],
-    enabled: !!tripId,
-  });
-  
-  const { data: transport = [] } = useQuery<Transport[]>({
-    queryKey: ['/api/trips', tripId, 'transport'],
-    enabled: !!tripId,
-  });
-  
-  const { data: restaurants = [] } = useQuery<Restaurant[]>({
-    queryKey: ['/api/trips', tripId, 'restaurants'],
-    enabled: !!tripId,
-  });
-  
-  const { data: activities = [] } = useQuery<Activity[]>({
-    queryKey: ['/api/trips', tripId, 'activities'],
-    enabled: !!tripId,
-  });
+  // Fetch all itinerary data using Firestore hooks
+  const { data: flights = [] } = useFlights(tripId);
+  const { data: hotels = [] } = useHotels(tripId);
+  const { data: transport = [] } = useTransport(tripId);
+  const { data: restaurants = [] } = useRestaurants(tripId);
+  const { data: activities = [] } = useActivities(tripId);
 
   // Flight form state
   const [flightForm, setFlightForm] = useState({
@@ -61,27 +54,9 @@ export default function ItineraryTab({ tripId }: ItineraryTabProps) {
     notes: '',
   });
 
-  // Flight mutations
-  const createFlight = useMutation({
-    mutationFn: async (data: typeof flightForm) => {
-      return apiRequest(`/api/trips/${tripId}/flights`, 'POST', { ...data, userId: user?.id });
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/trips', tripId, 'flights'] });
-      setFlightForm({ airline: '', flightNumber: '', departureAirport: '', arrivalAirport: '', departureDateTime: '', arrivalDateTime: '', notes: '' });
-      toast({ title: t('success'), description: t('flightAdded') || 'Vuelo agregado' });
-    },
-  });
-
-  const deleteFlight = useMutation({
-    mutationFn: async (id: string) => {
-      return apiRequest(`/api/flights/${id}`, 'DELETE', { userId: user?.id });
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/trips', tripId, 'flights'] });
-      toast({ title: t('success'), description: t('flightDeleted') || 'Vuelo eliminado' });
-    },
-  });
+  // Flight mutations using Firestore hooks
+  const createFlightMutation = useCreateFlight();
+  const deleteFlightMutation = useDeleteFlight();
 
   // Hotel form state  
   const [hotelForm, setHotelForm] = useState({
@@ -93,27 +68,9 @@ export default function ItineraryTab({ tripId }: ItineraryTabProps) {
     notes: '',
   });
 
-  // Hotel mutations
-  const createHotel = useMutation({
-    mutationFn: async (data: typeof hotelForm) => {
-      return apiRequest(`/api/trips/${tripId}/hotels`, 'POST', { ...data, userId: user?.id });
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/trips', tripId, 'hotels'] });
-      setHotelForm({ name: '', address: '', checkInDate: '', checkOutDate: '', reservationLink: '', notes: '' });
-      toast({ title: t('success'), description: t('hotelAdded') || 'Hotel agregado' });
-    },
-  });
-
-  const deleteHotel = useMutation({
-    mutationFn: async (id: string) => {
-      return apiRequest(`/api/hotels/${id}`, 'DELETE', { userId: user?.id });
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/trips', tripId, 'hotels'] });
-      toast({ title: t('success'), description: t('hotelDeleted') || 'Hotel eliminado' });
-    },
-  });
+  // Hotel mutations using Firestore hooks
+  const createHotelMutation = useCreateHotel();
+  const deleteHotelMutation = useDeleteHotel();
 
   // Transport form state
   const [transportForm, setTransportForm] = useState({
@@ -126,27 +83,9 @@ export default function ItineraryTab({ tripId }: ItineraryTabProps) {
     notes: '',
   });
 
-  // Transport mutations
-  const createTransport = useMutation({
-    mutationFn: async (data: typeof transportForm) => {
-      return apiRequest(`/api/trips/${tripId}/transport`, 'POST', { ...data, userId: user?.id });
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/trips', tripId, 'transport'] });
-      setTransportForm({ type: 'train', company: '', route: '', departureDateTime: '', arrivalDateTime: '', ticketNumber: '', notes: '' });
-      toast({ title: t('success'), description: t('transportAdded') || 'Transporte agregado' });
-    },
-  });
-
-  const deleteTransport = useMutation({
-    mutationFn: async (id: string) => {
-      return apiRequest(`/api/transport/${id}`, 'DELETE', { userId: user?.id });
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/trips', tripId, 'transport'] });
-      toast({ title: t('success'), description: t('transportDeleted') || 'Transporte eliminado' });
-    },
-  });
+  // Transport mutations using Firestore hooks
+  const createTransportMutation = useCreateTransport();
+  const deleteTransportMutation = useDeleteTransport();
 
   // Restaurant form state
   const [restaurantForm, setRestaurantForm] = useState({
@@ -157,27 +96,9 @@ export default function ItineraryTab({ tripId }: ItineraryTabProps) {
     notes: '',
   });
 
-  // Restaurant mutations
-  const createRestaurant = useMutation({
-    mutationFn: async (data: typeof restaurantForm) => {
-      return apiRequest(`/api/trips/${tripId}/restaurants`, 'POST', { ...data, userId: user?.id });
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/trips', tripId, 'restaurants'] });
-      setRestaurantForm({ name: '', address: '', reservationDateTime: '', placeLink: '', notes: '' });
-      toast({ title: t('success'), description: t('restaurantAdded') || 'Restaurante agregado' });
-    },
-  });
-
-  const deleteRestaurant = useMutation({
-    mutationFn: async (id: string) => {
-      return apiRequest(`/api/restaurants/${id}`, 'DELETE', { userId: user?.id });
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/trips', tripId, 'restaurants'] });
-      toast({ title: t('success'), description: t('restaurantDeleted') || 'Restaurante eliminado' });
-    },
-  });
+  // Restaurant mutations using Firestore hooks
+  const createRestaurantMutation = useCreateRestaurant();
+  const deleteRestaurantMutation = useDeleteRestaurant();
 
   // Activity form state
   const [activityForm, setActivityForm] = useState({
@@ -187,27 +108,9 @@ export default function ItineraryTab({ tripId }: ItineraryTabProps) {
     notes: '',
   });
 
-  // Activity mutations
-  const createActivity = useMutation({
-    mutationFn: async (data: typeof activityForm) => {
-      return apiRequest(`/api/trips/${tripId}/activities`, 'POST', { ...data, userId: user?.id });
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/trips', tripId, 'activities'] });
-      setActivityForm({ name: '', location: '', activityDateTime: '', notes: '' });
-      toast({ title: t('success'), description: t('activityAdded') || 'Actividad agregada' });
-    },
-  });
-
-  const deleteActivity = useMutation({
-    mutationFn: async (id: string) => {
-      return apiRequest(`/api/activities/${id}`, 'DELETE', { userId: user?.id });
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/trips', tripId, 'activities'] });
-      toast({ title: t('success'), description: t('activityDeleted') || 'Actividad eliminada' });
-    },
-  });
+  // Activity mutations using Firestore hooks
+  const createActivityMutation = useCreateActivity();
+  const deleteActivityMutation = useDeleteActivity();
 
   const formatDateTime = (dateTime: string) => {
     return new Date(dateTime).toLocaleString('es-ES', { 
@@ -251,7 +154,14 @@ export default function ItineraryTab({ tripId }: ItineraryTabProps) {
                       <Button
                         variant="ghost"
                         size="icon"
-                        onClick={() => deleteFlight.mutate(flight.id)}
+                        onClick={() => deleteFlightMutation.mutate(
+                          { id: flight.id, tripId },
+                          {
+                            onSuccess: () => {
+                              toast({ title: t('success'), description: t('flightDeleted') || 'Vuelo eliminado' });
+                            },
+                          }
+                        )}
                         data-testid={`button-delete-flight-${flight.id}`}
                       >
                         <Trash2 className="h-4 w-4" />
@@ -336,8 +246,16 @@ export default function ItineraryTab({ tripId }: ItineraryTabProps) {
                       />
                     </div>
                     <Button
-                      onClick={() => createFlight.mutate(flightForm)}
-                      disabled={createFlight.isPending || !flightForm.airline || !flightForm.flightNumber || !flightForm.departureDateTime}
+                      onClick={() => createFlightMutation.mutate(
+                        { tripId, ...flightForm },
+                        {
+                          onSuccess: () => {
+                            setFlightForm({ airline: '', flightNumber: '', departureAirport: '', arrivalAirport: '', departureDateTime: '', arrivalDateTime: '', notes: '' });
+                            toast({ title: t('success'), description: t('flightAdded') || 'Vuelo agregado' });
+                          },
+                        }
+                      )}
+                      disabled={createFlightMutation.isPending || !flightForm.airline || !flightForm.flightNumber || !flightForm.departureDateTime}
                       className="w-full"
                       data-testid="button-save-flight"
                     >
@@ -387,7 +305,14 @@ export default function ItineraryTab({ tripId }: ItineraryTabProps) {
                       <Button
                         variant="ghost"
                         size="icon"
-                        onClick={() => deleteHotel.mutate(hotel.id)}
+                        onClick={() => deleteHotelMutation.mutate(
+                          { id: hotel.id, tripId },
+                          {
+                            onSuccess: () => {
+                              toast({ title: t('success'), description: t('hotelDeleted') || 'Hotel eliminado' });
+                            },
+                          }
+                        )}
                         data-testid={`button-delete-hotel-${hotel.id}`}
                       >
                         <Trash2 className="h-4 w-4" />
@@ -462,8 +387,16 @@ export default function ItineraryTab({ tripId }: ItineraryTabProps) {
                       />
                     </div>
                     <Button
-                      onClick={() => createHotel.mutate(hotelForm)}
-                      disabled={createHotel.isPending || !hotelForm.name || !hotelForm.address || !hotelForm.checkInDate || !hotelForm.checkOutDate}
+                      onClick={() => createHotelMutation.mutate(
+                        { tripId, ...hotelForm },
+                        {
+                          onSuccess: () => {
+                            setHotelForm({ name: '', address: '', checkInDate: '', checkOutDate: '', reservationLink: '', notes: '' });
+                            toast({ title: t('success'), description: t('hotelAdded') || 'Hotel agregado' });
+                          },
+                        }
+                      )}
+                      disabled={createHotelMutation.isPending || !hotelForm.name || !hotelForm.address || !hotelForm.checkInDate || !hotelForm.checkOutDate}
                       className="w-full"
                       data-testid="button-save-hotel"
                     >
@@ -507,7 +440,14 @@ export default function ItineraryTab({ tripId }: ItineraryTabProps) {
                       <Button
                         variant="ghost"
                         size="icon"
-                        onClick={() => deleteTransport.mutate(item.id)}
+                        onClick={() => deleteTransportMutation.mutate(
+                          { id: item.id, tripId },
+                          {
+                            onSuccess: () => {
+                              toast({ title: t('success'), description: t('transportDeleted') || 'Transporte eliminado' });
+                            },
+                          }
+                        )}
                         data-testid={`button-delete-transport-${item.id}`}
                       >
                         <Trash2 className="h-4 w-4" />
@@ -596,8 +536,16 @@ export default function ItineraryTab({ tripId }: ItineraryTabProps) {
                       />
                     </div>
                     <Button
-                      onClick={() => createTransport.mutate(transportForm)}
-                      disabled={createTransport.isPending || !transportForm.company || !transportForm.route || !transportForm.departureDateTime}
+                      onClick={() => createTransportMutation.mutate(
+                        { tripId, ...transportForm },
+                        {
+                          onSuccess: () => {
+                            setTransportForm({ type: 'train', company: '', route: '', departureDateTime: '', arrivalDateTime: '', ticketNumber: '', notes: '' });
+                            toast({ title: t('success'), description: t('transportAdded') || 'Transporte agregado' });
+                          },
+                        }
+                      )}
+                      disabled={createTransportMutation.isPending || !transportForm.company || !transportForm.route || !transportForm.departureDateTime}
                       className="w-full"
                       data-testid="button-save-transport"
                     >
@@ -644,7 +592,14 @@ export default function ItineraryTab({ tripId }: ItineraryTabProps) {
                       <Button
                         variant="ghost"
                         size="icon"
-                        onClick={() => deleteRestaurant.mutate(restaurant.id)}
+                        onClick={() => deleteRestaurantMutation.mutate(
+                          { id: restaurant.id, tripId },
+                          {
+                            onSuccess: () => {
+                              toast({ title: t('success'), description: t('restaurantDeleted') || 'Restaurante eliminado' });
+                            },
+                          }
+                        )}
                         data-testid={`button-delete-restaurant-${restaurant.id}`}
                       >
                         <Trash2 className="h-4 w-4" />
@@ -709,8 +664,16 @@ export default function ItineraryTab({ tripId }: ItineraryTabProps) {
                       />
                     </div>
                     <Button
-                      onClick={() => createRestaurant.mutate(restaurantForm)}
-                      disabled={createRestaurant.isPending || !restaurantForm.name || !restaurantForm.address || !restaurantForm.reservationDateTime}
+                      onClick={() => createRestaurantMutation.mutate(
+                        { tripId, ...restaurantForm },
+                        {
+                          onSuccess: () => {
+                            setRestaurantForm({ name: '', address: '', reservationDateTime: '', placeLink: '', notes: '' });
+                            toast({ title: t('success'), description: t('restaurantAdded') || 'Restaurante agregado' });
+                          },
+                        }
+                      )}
+                      disabled={createRestaurantMutation.isPending || !restaurantForm.name || !restaurantForm.address || !restaurantForm.reservationDateTime}
                       className="w-full"
                       data-testid="button-save-restaurant"
                     >
@@ -752,7 +715,14 @@ export default function ItineraryTab({ tripId }: ItineraryTabProps) {
                       <Button
                         variant="ghost"
                         size="icon"
-                        onClick={() => deleteActivity.mutate(activity.id)}
+                        onClick={() => deleteActivityMutation.mutate(
+                          { id: activity.id, tripId },
+                          {
+                            onSuccess: () => {
+                              toast({ title: t('success'), description: t('activityDeleted') || 'Actividad eliminada' });
+                            },
+                          }
+                        )}
                         data-testid={`button-delete-activity-${activity.id}`}
                       >
                         <Trash2 className="h-4 w-4" />
@@ -808,8 +778,16 @@ export default function ItineraryTab({ tripId }: ItineraryTabProps) {
                       />
                     </div>
                     <Button
-                      onClick={() => createActivity.mutate(activityForm)}
-                      disabled={createActivity.isPending || !activityForm.name || !activityForm.location || !activityForm.activityDateTime}
+                      onClick={() => createActivityMutation.mutate(
+                        { tripId, ...activityForm },
+                        {
+                          onSuccess: () => {
+                            setActivityForm({ name: '', location: '', activityDateTime: '', notes: '' });
+                            toast({ title: t('success'), description: t('activityAdded') || 'Actividad agregada' });
+                          },
+                        }
+                      )}
+                      disabled={createActivityMutation.isPending || !activityForm.name || !activityForm.location || !activityForm.activityDateTime}
                       className="w-full"
                       data-testid="button-save-activity"
                     >
