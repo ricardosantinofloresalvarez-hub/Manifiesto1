@@ -82,7 +82,7 @@ export function useCreateItineraryItem(type: ItineraryType) {
         id: docRef.id,
         ...data,
         createdAt: new Date().toISOString(),
-      } as ItineraryItem;
+      } as unknown as ItineraryItem;
     },
     onSuccess: (item: any) => {
       queryClient.invalidateQueries({ queryKey: ["/api/trips", item.tripId, type] });
@@ -125,4 +125,69 @@ export function useDeleteItineraryItem(type: ItineraryType) {
       queryClient.invalidateQueries({ queryKey: ["/api/trips", variables.tripId, type] });
     },
   });
+}
+
+// Specific hooks for Flights
+export function useCreateFlight() {
+  return useCreateItineraryItem("flights");
+}
+
+export function useUpdateFlight() {
+  return useUpdateItineraryItem("flights");
+}
+
+export function useDeleteFlight() {
+  return useDeleteItineraryItem("flights");
+}
+
+// Specific hooks for Hotels
+export function useCreateHotel() {
+  return useCreateItineraryItem("hotels");
+}
+
+export function useUpdateHotel() {
+  return useUpdateItineraryItem("hotels");
+}
+
+export function useDeleteHotel() {
+  return useDeleteItineraryItem("hotels");
+}
+
+// Specific hooks for Transport
+export function useCreateTransport() {
+  return useCreateItineraryItem("transport");
+}
+
+export function useUpdateTransport() {
+  return useUpdateItineraryItem("transport");
+}
+
+export function useDeleteTransport() {
+  return useDeleteItineraryItem("transport");
+}
+
+// Specific hooks for Restaurants
+export function useCreateRestaurant() {
+  return useCreateItineraryItem("restaurants");
+}
+
+export function useUpdateRestaurant() {
+  return useUpdateItineraryItem("restaurants");
+}
+
+export function useDeleteRestaurant() {
+  return useDeleteItineraryItem("restaurants");
+}
+
+// Specific hooks for Activities
+export function useCreateActivity() {
+  return useCreateItineraryItem("activities");
+}
+
+export function useUpdateActivity() {
+  return useUpdateItineraryItem("activities");
+}
+
+export function useDeleteActivity() {
+  return useDeleteItineraryItem("activities");
 }
