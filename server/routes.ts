@@ -1,16 +1,5 @@
-import type { Express, Request, Response, NextFunction } from "express";
+import type { Express, Request, Response } from "express";
 import { createServer, type Server } from "http";
-import { storage } from "./storage";
-import { 
-  insertTripSchema, 
-  insertManifestItemSchema,
-  insertUserSchema,
-  insertFlightSchema,
-  insertHotelSchema,
-  insertTransportSchema,
-  insertRestaurantSchema,
-  insertActivitySchema
-} from "@shared/schema";
 import { createHash } from "crypto";
 import PDFDocument from "pdfkit";
 import QRCode from "qrcode";
@@ -21,211 +10,33 @@ const upload = multer({
   limits: { fileSize: 5 * 1024 * 1024 }, // 5MB limit
 });
 
-async function validateTripOwnership(req: Request, res: Response, next: NextFunction) {
-  const tripId = req.params.id || req.params.tripId;
-  const userId = req.body.userId || req.query.userId as string;
-  
-  if (!userId) {
-    return res.status(401).json({ error: "User ID required" });
-  }
-  
-  if (tripId) {
-    const trip = await storage.getTrip(tripId);
-    if (!trip) {
-      return res.status(404).json({ error: "Trip not found" });
-    }
-    if (trip.userId !== userId) {
-      return res.status(403).json({ error: "Access denied" });
-    }
-  }
-  
-  next();
-}
-
-async function validateItemOwnership(req: Request, res: Response, next: NextFunction) {
-  const itemId = req.params.id;
-  const userId = req.body.userId || req.query.userId as string;
-  
-  if (!userId) {
-    return res.status(401).json({ error: "User ID required" });
-  }
-  
-  const item = await storage.getManifestItem(itemId);
-  if (!item) {
-    return res.status(404).json({ error: "Item not found" });
-  }
-  
-  const trip = await storage.getTrip(item.tripId);
-  if (!trip || trip.userId !== userId) {
-    return res.status(403).json({ error: "Access denied" });
-  }
-  
-  next();
-}
-
 export async function registerRoutes(app: Express): Promise<Server> {
-  // User routes
-  app.post("/api/users", async (req, res) => {
-    try {
-      const userData = insertUserSchema.parse(req.body);
-      const existingUser = await storage.getUserByEmail(userData.email);
-      
-      if (existingUser) {
-        return res.status(400).json({ error: "Email already exists" });
-      }
-
-      const user = await storage.createUser(userData);
-      res.json(user);
-    } catch (error: any) {
-      res.status(400).json({ error: error.message });
-    }
-  });
-
-  app.get("/api/users/:email", async (req, res) => {
-    const user = await storage.getUserByEmail(req.params.email);
-    if (!user) {
-      return res.status(404).json({ error: "User not found" });
-    }
-    res.json(user);
-  });
-
-  // Trip routes
-  app.get("/api/trips", validateTripOwnership, async (req, res) => {
-    const userId = req.query.userId as string;
-    if (!userId) {
-      return res.status(400).json({ error: "userId is required" });
-    }
-    
-    const trips = await storage.getTripsByUserId(userId);
-    
-    // For each trip, get item count
-    const tripsWithCounts = await Promise.all(
-      trips.map(async (trip) => {
-        const items = await storage.getManifestItemsByTripId(trip.id);
-        const certificates = await storage.getCertificatesByTripId(trip.id);
-        return {
-          ...trip,
-          itemCount: items.length,
-          verified: certificates.length > 0,
-        };
-      })
-    );
-    
-    res.json(tripsWithCounts);
-  });
-
-  app.get("/api/trips/:id", validateTripOwnership, async (req, res) => {
-    const trip = await storage.getTrip(req.params.id);
-    if (!trip) {
-      return res.status(404).json({ error: "Trip not found" });
-    }
-    
-    const items = await storage.getManifestItemsByTripId(trip.id);
-    const certificates = await storage.getCertificatesByTripId(trip.id);
-    
-    res.json({
-      ...trip,
-      itemCount: items.length,
-      verified: certificates.length > 0,
-    });
-  });
-
-  app.post("/api/trips", async (req, res) => {
-    try {
-      const tripData = insertTripSchema.parse(req.body);
-      const trip = await storage.createTrip(tripData);
-      res.json(trip);
-    } catch (error: any) {
-      res.status(400).json({ error: error.message });
-    }
-  });
-
-  app.patch("/api/trips/:id", validateTripOwnership, async (req, res) => {
-    try {
-      const updateData = insertTripSchema.partial().parse(req.body);
-      const trip = await storage.updateTrip(req.params.id, updateData);
-      if (!trip) {
-        return res.status(404).json({ error: "Trip not found" });
-      }
-      res.json(trip);
-    } catch (error: any) {
-      res.status(400).json({ error: error.message });
-    }
-  });
-
-  app.delete("/api/trips/:id", validateTripOwnership, async (req, res) => {
-    const deleted = await storage.deleteTrip(req.params.id);
-    if (!deleted) {
-      return res.status(404).json({ error: "Trip not found" });
-    }
-    res.json({ success: true });
-  });
-
-  // Manifest Item routes
-  app.get("/api/trips/:tripId/items", validateTripOwnership, async (req, res) => {
-    const items = await storage.getManifestItemsByTripId(req.params.tripId);
-    res.json(items);
-  });
-
-  app.post("/api/trips/:tripId/items", validateTripOwnership, async (req, res) => {
-    try {
-      const itemData = insertManifestItemSchema.parse({
-        ...req.body,
-        tripId: req.params.tripId,
-      });
-      const item = await storage.createManifestItem(itemData);
-      res.json(item);
-    } catch (error: any) {
-      res.status(400).json({ error: error.message });
-    }
-  });
-
-  app.patch("/api/items/:id", validateItemOwnership, async (req, res) => {
-    try {
-      const updateData = insertManifestItemSchema.partial().parse(req.body);
-      const item = await storage.updateManifestItem(req.params.id, updateData);
-      if (!item) {
-        return res.status(404).json({ error: "Item not found" });
-      }
-      res.json(item);
-    } catch (error: any) {
-      res.status(400).json({ error: error.message });
-    }
-  });
-
-  app.delete("/api/items/:id", validateItemOwnership, async (req, res) => {
-    const deleted = await storage.deleteManifestItem(req.params.id);
-    if (!deleted) {
-      return res.status(404).json({ error: "Item not found" });
-    }
-    res.json({ success: true });
-  });
-
-  // Image upload route
+  // Image upload endpoint
   app.post("/api/upload", upload.single("image"), async (req, res) => {
-    if (!req.file) {
-      return res.status(400).json({ error: "No file uploaded" });
-    }
-    
-    // Convert to base64 for in-memory storage
-    const base64Image = `data:${req.file.mimetype};base64,${req.file.buffer.toString('base64')}`;
-    res.json({ imageUrl: base64Image });
-  });
-
-  // Certificate generation route
-  app.post("/api/trips/:tripId/certificate", validateTripOwnership, async (req, res) => {
     try {
-      const trip = await storage.getTrip(req.params.tripId);
-      if (!trip) {
-        return res.status(404).json({ error: "Trip not found" });
+      if (!req.file) {
+        return res.status(400).json({ error: "No file uploaded" });
       }
 
-      const items = await storage.getManifestItemsByTripId(req.params.tripId);
-      const user = await storage.getUser(trip.userId);
+      const base64Image = `data:${req.file.mimetype};base64,${req.file.buffer.toString("base64")}`;
+      res.json({ url: base64Image });
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // PDF Certificate Generation - receives all data in request body
+  app.post("/api/trips/:tripId/certificate", async (req, res) => {
+    try {
+      const { trip, items, user } = req.body;
+
+      if (!trip || !items || !user) {
+        return res.status(400).json({ error: "Missing required data: trip, items, user" });
+      }
 
       // Calculate totals
       const itemCount = items.length;
-      const totalValue = items.reduce((sum, item) => sum + (item.estimatedValue || 0), 0);
+      const totalValue = items.reduce((sum: number, item: any) => sum + (item.estimatedValue || 0), 0);
 
       // Create manifest data
       const manifestData = JSON.stringify({
@@ -233,8 +44,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         tripTitle: trip.title,
         destination: trip.destination,
         userId: trip.userId,
-        userName: user?.name || "Unknown",
-        items: items.map(item => ({
+        userName: user.name || "Unknown",
+        items: items.map((item: any) => ({
           name: item.name,
           category: item.category,
           quantity: item.quantity,
@@ -250,16 +61,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Generate hash
       const hash = createHash('sha256').update(manifestData).digest('hex');
-
-      // Save certificate
-      const certificate = await storage.createCertificate({
-        tripId: trip.id,
-        hash,
-        manifestData,
-        itemCount,
-        totalValue,
-        verified: true,
-      });
 
       // Generate QR code
       const qrCodeDataURL = await QRCode.toDataURL(`${process.env.REPLIT_DEV_DOMAIN || 'http://localhost:5000'}/verify?hash=${hash}`);
@@ -283,421 +84,119 @@ export async function registerRoutes(app: Express): Promise<Server> {
         doc.fontSize(12).font('Helvetica')
           .text(`Título: ${trip.title}`)
           .text(`Destino: ${trip.destination}`)
-          .text(`Fechas: ${trip.startDate} - ${trip.endDate}`)
-          .text(`Usuario: ${user?.name || 'Unknown'}`)
-          .moveDown();
+          .text(`Fechas: ${new Date(trip.startDate).toLocaleDateString()} - ${new Date(trip.endDate).toLocaleDateString()}`)
+          .text(`Usuario: ${user.name} (${user.email})`);
+        doc.moveDown();
 
-        // Manifest summary
-        doc.fontSize(14).font('Helvetica-Bold').text('Resumen del Manifiesto');
+        // Summary
+        doc.fontSize(14).font('Helvetica-Bold').text('Resumen');
         doc.fontSize(12).font('Helvetica')
           .text(`Total de artículos: ${itemCount}`)
-          .text(`Valor total estimado: $${totalValue.toLocaleString()}`)
-          .moveDown();
+          .text(`Valor total estimado: $${totalValue.toLocaleString()}`);
+        doc.moveDown();
 
         // Items list
-        doc.fontSize(14).font('Helvetica-Bold').text('Artículos');
-        doc.fontSize(10).font('Helvetica');
-        
-        items.forEach((item, index) => {
-          let itemText = `${index + 1}. ${item.name} (${item.category}) - Cantidad: ${item.quantity}`;
-          if (item.estimatedValue) itemText += ` - Valor: $${item.estimatedValue}`;
-          if (item.serialNumber) itemText += ` - S/N: ${item.serialNumber}`;
-          if (item.luggageBrand) {
-            const sizeMap: Record<string, string> = {
-              small: 'Pequeña',
-              medium: 'Mediana',
-              large: 'Grande',
-              xlarge: 'Extra Grande'
-            };
-            const sizeLabel = item.luggageSize ? sizeMap[item.luggageSize] || item.luggageSize : '';
-            itemText += ` - Maleta: ${item.luggageBrand}${sizeLabel ? ` (${sizeLabel})` : ''}`;
+        doc.fontSize(14).font('Helvetica-Bold').text('Lista de Artículos');
+        doc.moveDown(0.5);
+
+        items.forEach((item: any, index: number) => {
+          doc.fontSize(12).font('Helvetica-Bold').text(`${index + 1}. ${item.name}`);
+          doc.fontSize(10).font('Helvetica')
+            .text(`   Categoría: ${item.category}`)
+            .text(`   Cantidad: ${item.quantity}`)
+            .text(`   Valor estimado: $${(item.estimatedValue || 0).toLocaleString()}`);
+          
+          if (item.serialNumber) {
+            doc.text(`   Número de serie: ${item.serialNumber}`);
           }
-          const security: string[] = [];
-          if (item.isSealed) security.push('Sellada');
-          if (item.isLocked) security.push('Con Candado');
-          if (security.length > 0) itemText += ` - ${security.join(', ')}`;
-          doc.text(itemText);
+
+          // Luggage metadata
+          if (item.luggageBrand || item.luggageSize || item.isSealed || item.isLocked) {
+            doc.fontSize(10).font('Helvetica-Bold').text(`   Detalles del Equipaje:`);
+            if (item.luggageBrand) {
+              doc.fontSize(10).font('Helvetica').text(`   - Marca: ${item.luggageBrand}`);
+            }
+            if (item.luggageSize) {
+              const sizeMap: any = {
+                small: 'Pequeña',
+                medium: 'Mediana',
+                large: 'Grande',
+                xlarge: 'Extra Grande'
+              };
+              doc.text(`   - Tamaño: ${sizeMap[item.luggageSize] || item.luggageSize}`);
+            }
+            if (item.isSealed) {
+              doc.text(`   - Estado: Sellada`);
+            }
+            if (item.isLocked) {
+              doc.text(`   - Seguridad: Con Candado`);
+            }
+          }
+          
+          doc.moveDown(0.5);
         });
 
         doc.moveDown();
 
-        // Verification section
-        doc.fontSize(14).font('Helvetica-Bold').text('Verificación');
+        // Certification
+        doc.fontSize(14).font('Helvetica-Bold').text('Certificación');
         doc.fontSize(10).font('Helvetica')
-          .text(`Hash SHA-256: ${hash}`)
-          .text(`Fecha de certificación: ${new Date().toLocaleString('es-ES')}`)
+          .text('Este manifiesto ha sido certificado mediante hash SHA-256:')
+          .fontSize(8)
+          .text(hash, { align: 'center' })
           .moveDown();
 
         // QR Code
-        doc.fontSize(12).font('Helvetica-Bold').text('Código QR de Verificación:', { align: 'center' });
-        const qrImageBuffer = Buffer.from(qrCodeDataURL.split(',')[1], 'base64');
-        doc.image(qrImageBuffer, { fit: [200, 200], align: 'center' });
+        doc.fontSize(10).text('Escanea para verificar:', { align: 'center' });
+        doc.image(qrCodeDataURL, {
+          fit: [150, 150],
+          align: 'center',
+        });
+
+        doc.moveDown();
+        doc.fontSize(8).text(`Generado el ${new Date().toLocaleString()}`, { align: 'center' });
 
         doc.end();
       });
 
       const pdfBuffer = Buffer.concat(chunks);
 
+      // Return both PDF and certificate data for frontend to save
       res.json({
-        certificate,
-        pdfUrl: `data:application/pdf;base64,${pdfBuffer.toString('base64')}`,
-        qrCode: qrCodeDataURL,
+        pdf: pdfBuffer.toString('base64'),
+        certificate: {
+          tripId: trip.id,
+          hash,
+          manifestData,
+          itemCount,
+          totalValue,
+          verified: true,
+        }
       });
     } catch (error: any) {
+      console.error('PDF generation error:', error);
       res.status(500).json({ error: error.message });
     }
   });
 
-  // Flight routes
-  app.get("/api/trips/:tripId/flights", validateTripOwnership, async (req, res) => {
-    const flights = await storage.getFlightsByTripId(req.params.tripId);
-    res.json(flights);
-  });
-
-  app.post("/api/trips/:tripId/flights", validateTripOwnership, async (req, res) => {
-    try {
-      const flightData = insertFlightSchema.parse({
-        ...req.body,
-        tripId: req.params.tripId,
-        userId: req.body.userId,
-      });
-      const flight = await storage.createFlight(flightData);
-      res.json(flight);
-    } catch (error: any) {
-      res.status(400).json({ error: error.message });
-    }
-  });
-
-  app.patch("/api/flights/:id", async (req, res) => {
-    try {
-      const userId = req.body.userId || req.query.userId as string;
-      if (!userId) {
-        return res.status(401).json({ error: "User ID required" });
-      }
-
-      const flight = await storage.getFlight(req.params.id);
-      if (!flight) {
-        return res.status(404).json({ error: "Flight not found" });
-      }
-
-      if (flight.userId !== userId) {
-        return res.status(403).json({ error: "Access denied" });
-      }
-
-      const updateData = insertFlightSchema.partial().parse(req.body);
-      const updated = await storage.updateFlight(req.params.id, updateData);
-      res.json(updated);
-    } catch (error: any) {
-      res.status(400).json({ error: error.message });
-    }
-  });
-
-  app.delete("/api/flights/:id", async (req, res) => {
-    const userId = req.body.userId || req.query.userId as string;
-    if (!userId) {
-      return res.status(401).json({ error: "User ID required" });
-    }
-
-    const flight = await storage.getFlight(req.params.id);
-    if (!flight) {
-      return res.status(404).json({ error: "Flight not found" });
-    }
-
-    if (flight.userId !== userId) {
-      return res.status(403).json({ error: "Access denied" });
-    }
-
-    const deleted = await storage.deleteFlight(req.params.id);
-    res.json({ success: deleted });
-  });
-
-  // Hotel routes
-  app.get("/api/trips/:tripId/hotels", validateTripOwnership, async (req, res) => {
-    const hotels = await storage.getHotelsByTripId(req.params.tripId);
-    res.json(hotels);
-  });
-
-  app.post("/api/trips/:tripId/hotels", validateTripOwnership, async (req, res) => {
-    try {
-      const hotelData = insertHotelSchema.parse({
-        ...req.body,
-        tripId: req.params.tripId,
-        userId: req.body.userId,
-      });
-      const hotel = await storage.createHotel(hotelData);
-      res.json(hotel);
-    } catch (error: any) {
-      res.status(400).json({ error: error.message });
-    }
-  });
-
-  app.patch("/api/hotels/:id", async (req, res) => {
-    try {
-      const userId = req.body.userId || req.query.userId as string;
-      if (!userId) {
-        return res.status(401).json({ error: "User ID required" });
-      }
-
-      const hotel = await storage.getHotel(req.params.id);
-      if (!hotel) {
-        return res.status(404).json({ error: "Hotel not found" });
-      }
-
-      if (hotel.userId !== userId) {
-        return res.status(403).json({ error: "Access denied" });
-      }
-
-      const updateData = insertHotelSchema.partial().parse(req.body);
-      const updated = await storage.updateHotel(req.params.id, updateData);
-      res.json(updated);
-    } catch (error: any) {
-      res.status(400).json({ error: error.message });
-    }
-  });
-
-  app.delete("/api/hotels/:id", async (req, res) => {
-    const userId = req.body.userId || req.query.userId as string;
-    if (!userId) {
-      return res.status(401).json({ error: "User ID required" });
-    }
-
-    const hotel = await storage.getHotel(req.params.id);
-    if (!hotel) {
-      return res.status(404).json({ error: "Hotel not found" });
-    }
-
-    if (hotel.userId !== userId) {
-      return res.status(403).json({ error: "Access denied" });
-    }
-
-    const deleted = await storage.deleteHotel(req.params.id);
-    res.json({ success: deleted });
-  });
-
-  // Transport routes
-  app.get("/api/trips/:tripId/transport", validateTripOwnership, async (req, res) => {
-    const transport = await storage.getTransportByTripId(req.params.tripId);
-    res.json(transport);
-  });
-
-  app.post("/api/trips/:tripId/transport", validateTripOwnership, async (req, res) => {
-    try {
-      const transportData = insertTransportSchema.parse({
-        ...req.body,
-        tripId: req.params.tripId,
-        userId: req.body.userId,
-      });
-      const transport = await storage.createTransport(transportData);
-      res.json(transport);
-    } catch (error: any) {
-      res.status(400).json({ error: error.message });
-    }
-  });
-
-  app.patch("/api/transport/:id", async (req, res) => {
-    try {
-      const userId = req.body.userId || req.query.userId as string;
-      if (!userId) {
-        return res.status(401).json({ error: "User ID required" });
-      }
-
-      const transport = await storage.getTransport(req.params.id);
-      if (!transport) {
-        return res.status(404).json({ error: "Transport not found" });
-      }
-
-      if (transport.userId !== userId) {
-        return res.status(403).json({ error: "Access denied" });
-      }
-
-      const updateData = insertTransportSchema.partial().parse(req.body);
-      const updated = await storage.updateTransport(req.params.id, updateData);
-      res.json(updated);
-    } catch (error: any) {
-      res.status(400).json({ error: error.message });
-    }
-  });
-
-  app.delete("/api/transport/:id", async (req, res) => {
-    const userId = req.body.userId || req.query.userId as string;
-    if (!userId) {
-      return res.status(401).json({ error: "User ID required" });
-    }
-
-    const transport = await storage.getTransport(req.params.id);
-    if (!transport) {
-      return res.status(404).json({ error: "Transport not found" });
-    }
-
-    if (transport.userId !== userId) {
-      return res.status(403).json({ error: "Access denied" });
-    }
-
-    const deleted = await storage.deleteTransport(req.params.id);
-    res.json({ success: deleted });
-  });
-
-  // Restaurant routes
-  app.get("/api/trips/:tripId/restaurants", validateTripOwnership, async (req, res) => {
-    const restaurants = await storage.getRestaurantsByTripId(req.params.tripId);
-    res.json(restaurants);
-  });
-
-  app.post("/api/trips/:tripId/restaurants", validateTripOwnership, async (req, res) => {
-    try {
-      const restaurantData = insertRestaurantSchema.parse({
-        ...req.body,
-        tripId: req.params.tripId,
-        userId: req.body.userId,
-      });
-      const restaurant = await storage.createRestaurant(restaurantData);
-      res.json(restaurant);
-    } catch (error: any) {
-      res.status(400).json({ error: error.message });
-    }
-  });
-
-  app.patch("/api/restaurants/:id", async (req, res) => {
-    try {
-      const userId = req.body.userId || req.query.userId as string;
-      if (!userId) {
-        return res.status(401).json({ error: "User ID required" });
-      }
-
-      const restaurant = await storage.getRestaurant(req.params.id);
-      if (!restaurant) {
-        return res.status(404).json({ error: "Restaurant not found" });
-      }
-
-      if (restaurant.userId !== userId) {
-        return res.status(403).json({ error: "Access denied" });
-      }
-
-      const updateData = insertRestaurantSchema.partial().parse(req.body);
-      const updated = await storage.updateRestaurant(req.params.id, updateData);
-      res.json(updated);
-    } catch (error: any) {
-      res.status(400).json({ error: error.message });
-    }
-  });
-
-  app.delete("/api/restaurants/:id", async (req, res) => {
-    const userId = req.body.userId || req.query.userId as string;
-    if (!userId) {
-      return res.status(401).json({ error: "User ID required" });
-    }
-
-    const restaurant = await storage.getRestaurant(req.params.id);
-    if (!restaurant) {
-      return res.status(404).json({ error: "Restaurant not found" });
-    }
-
-    if (restaurant.userId !== userId) {
-      return res.status(403).json({ error: "Access denied" });
-    }
-
-    const deleted = await storage.deleteRestaurant(req.params.id);
-    res.json({ success: deleted });
-  });
-
-  // Activity routes
-  app.get("/api/trips/:tripId/activities", validateTripOwnership, async (req, res) => {
-    const activities = await storage.getActivitiesByTripId(req.params.tripId);
-    res.json(activities);
-  });
-
-  app.post("/api/trips/:tripId/activities", validateTripOwnership, async (req, res) => {
-    try {
-      const activityData = insertActivitySchema.parse({
-        ...req.body,
-        tripId: req.params.tripId,
-        userId: req.body.userId,
-      });
-      const activity = await storage.createActivity(activityData);
-      res.json(activity);
-    } catch (error: any) {
-      res.status(400).json({ error: error.message });
-    }
-  });
-
-  app.patch("/api/activities/:id", async (req, res) => {
-    try {
-      const userId = req.body.userId || req.query.userId as string;
-      if (!userId) {
-        return res.status(401).json({ error: "User ID required" });
-      }
-
-      const activity = await storage.getActivity(req.params.id);
-      if (!activity) {
-        return res.status(404).json({ error: "Activity not found" });
-      }
-
-      if (activity.userId !== userId) {
-        return res.status(403).json({ error: "Access denied" });
-      }
-
-      const updateData = insertActivitySchema.partial().parse(req.body);
-      const updated = await storage.updateActivity(req.params.id, updateData);
-      res.json(updated);
-    } catch (error: any) {
-      res.status(400).json({ error: error.message });
-    }
-  });
-
-  app.delete("/api/activities/:id", async (req, res) => {
-    const userId = req.body.userId || req.query.userId as string;
-    if (!userId) {
-      return res.status(401).json({ error: "User ID required" });
-    }
-
-    const activity = await storage.getActivity(req.params.id);
-    if (!activity) {
-      return res.status(404).json({ error: "Activity not found" });
-    }
-
-    if (activity.userId !== userId) {
-      return res.status(403).json({ error: "Access denied" });
-    }
-
-    const deleted = await storage.deleteActivity(req.params.id);
-    res.json({ success: deleted });
-  });
-
-  // Verification route
+  // Certificate verification endpoint - expects certificate data in query or looks it up
   app.get("/api/verify/:hash", async (req, res) => {
-    const certificate = await storage.getCertificateByHash(req.params.hash);
+    // This endpoint will be called from the Verify page
+    // The frontend will pass the certificate data from Firestore
+    // For now, we just validate the hash format
+    const hash = req.params.hash;
     
-    if (!certificate) {
-      return res.json({ valid: false });
+    if (!hash || hash.length !== 64) {
+      return res.json({ valid: false, error: "Invalid hash format" });
     }
 
-    const trip = await storage.getTrip(certificate.tripId);
-    const user = trip ? await storage.getUser(trip.userId) : undefined;
-    
-    // Parse manifestData to include full item details with luggage metadata
-    let manifestItems = [];
-    try {
-      const parsedData = JSON.parse(certificate.manifestData);
-      manifestItems = parsedData.items || [];
-    } catch (e) {
-      // If parsing fails, continue with empty array
-    }
-
-    res.json({
-      valid: true,
-      manifestId: certificate.id,
-      userName: user?.name,
-      tripTitle: trip?.title,
-      destination: trip?.destination,
-      itemCount: certificate.itemCount,
-      totalValue: certificate.totalValue,
-      items: manifestItems,
-      timestamp: certificate.createdAt,
-      hash: certificate.hash,
+    // Return a response indicating the frontend should look up the certificate
+    res.json({ 
+      requiresLookup: true,
+      hash 
     });
   });
 
   const httpServer = createServer(app);
-
   return httpServer;
 }
