@@ -18,7 +18,7 @@ import {
   type Activity,
   type InsertActivity
 } from "@shared/schema";
-import { randomUUID } from "crypto";
+import { db } from "./firebase";
 
 export interface IStorage {
   // User methods
@@ -81,334 +81,391 @@ export interface IStorage {
   deleteActivity(id: string): Promise<boolean>;
 }
 
-export class MemStorage implements IStorage {
-  private users: Map<string, User>;
-  private trips: Map<string, Trip>;
-  private manifestItems: Map<string, ManifestItem>;
-  private certificates: Map<string, ManifestCertificate>;
-  private flights: Map<string, Flight>;
-  private hotels: Map<string, Hotel>;
-  private transport: Map<string, Transport>;
-  private restaurants: Map<string, Restaurant>;
-  private activities: Map<string, Activity>;
-
-  constructor() {
-    this.users = new Map();
-    this.trips = new Map();
-    this.manifestItems = new Map();
-    this.certificates = new Map();
-    this.flights = new Map();
-    this.hotels = new Map();
-    this.transport = new Map();
-    this.restaurants = new Map();
-    this.activities = new Map();
-  }
+export class FirestoreStorage implements IStorage {
+  private usersCollection = db.collection('users');
+  private tripsCollection = db.collection('trips');
+  private manifestItemsCollection = db.collection('manifestItems');
+  private certificatesCollection = db.collection('certificates');
+  private flightsCollection = db.collection('flights');
+  private hotelsCollection = db.collection('hotels');
+  private transportCollection = db.collection('transport');
+  private restaurantsCollection = db.collection('restaurants');
+  private activitiesCollection = db.collection('activities');
 
   // User methods
   async getUser(id: string): Promise<User | undefined> {
-    return this.users.get(id);
+    const doc = await this.usersCollection.doc(id).get();
+    if (!doc.exists) return undefined;
+    return { id: doc.id, ...doc.data() } as User;
   }
 
   async getUserByEmail(email: string): Promise<User | undefined> {
-    return Array.from(this.users.values()).find(
-      (user) => user.email === email,
-    );
+    const snapshot = await this.usersCollection
+      .where('email', '==', email)
+      .limit(1)
+      .get();
+    
+    if (snapshot.empty) return undefined;
+    const doc = snapshot.docs[0];
+    return { id: doc.id, ...doc.data() } as User;
   }
 
   async createUser(insertUser: InsertUser): Promise<User> {
-    const id = randomUUID();
-    const user: User = { ...insertUser, id };
-    this.users.set(id, user);
+    const docRef = await this.usersCollection.add(insertUser);
+    const user: User = { id: docRef.id, ...insertUser };
     return user;
   }
 
   // Trip methods
   async getTrip(id: string): Promise<Trip | undefined> {
-    return this.trips.get(id);
+    const doc = await this.tripsCollection.doc(id).get();
+    if (!doc.exists) return undefined;
+    return { id: doc.id, ...doc.data() } as Trip;
   }
 
   async getTripsByUserId(userId: string): Promise<Trip[]> {
-    return Array.from(this.trips.values())
-      .filter(trip => trip.userId === userId)
-      .sort((a, b) => new Date(b.createdAt!).getTime() - new Date(a.createdAt!).getTime());
+    const snapshot = await this.tripsCollection
+      .where('userId', '==', userId)
+      .orderBy('createdAt', 'desc')
+      .get();
+    
+    return snapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data()
+    } as Trip));
   }
 
   async createTrip(insertTrip: InsertTrip): Promise<Trip> {
-    const id = randomUUID();
-    const trip: Trip = { 
+    const tripData = {
       ...insertTrip,
-      id,
-      imageUrl: insertTrip.imageUrl ?? null,
-      notes: insertTrip.notes ?? null,
-      createdAt: new Date()
+      createdAt: new Date().toISOString()
     };
-    this.trips.set(id, trip);
-    return trip;
+    const docRef = await this.tripsCollection.add(tripData);
+    return { id: docRef.id, ...tripData } as any as Trip;
   }
 
-  async updateTrip(id: string, update: Partial<InsertTrip>): Promise<Trip | undefined> {
-    const trip = this.trips.get(id);
-    if (!trip) return undefined;
+  async updateTrip(id: string, trip: Partial<InsertTrip>): Promise<Trip | undefined> {
+    const docRef = this.tripsCollection.doc(id);
+    const doc = await docRef.get();
     
-    const updated = { ...trip, ...update };
-    this.trips.set(id, updated);
-    return updated;
+    if (!doc.exists) return undefined;
+    
+    await docRef.update(trip);
+    const updated = await docRef.get();
+    return { id: updated.id, ...updated.data() } as Trip;
   }
 
   async deleteTrip(id: string): Promise<boolean> {
-    return this.trips.delete(id);
+    try {
+      await this.tripsCollection.doc(id).delete();
+      return true;
+    } catch {
+      return false;
+    }
   }
 
   // Manifest Item methods
   async getManifestItem(id: string): Promise<ManifestItem | undefined> {
-    return this.manifestItems.get(id);
+    const doc = await this.manifestItemsCollection.doc(id).get();
+    if (!doc.exists) return undefined;
+    return { id: doc.id, ...doc.data() } as ManifestItem;
   }
 
   async getManifestItemsByTripId(tripId: string): Promise<ManifestItem[]> {
-    return Array.from(this.manifestItems.values())
-      .filter(item => item.tripId === tripId)
-      .sort((a, b) => new Date(b.createdAt!).getTime() - new Date(a.createdAt!).getTime());
+    const snapshot = await this.manifestItemsCollection
+      .where('tripId', '==', tripId)
+      .orderBy('createdAt', 'desc')
+      .get();
+    
+    return snapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data()
+    } as ManifestItem));
   }
 
   async createManifestItem(insertItem: InsertManifestItem): Promise<ManifestItem> {
-    const id = randomUUID();
-    const item: ManifestItem = { 
+    const itemData = {
       ...insertItem,
-      id,
-      quantity: insertItem.quantity ?? 1,
-      estimatedValue: insertItem.estimatedValue ?? null,
-      serialNumber: insertItem.serialNumber ?? null,
-      imageUrl: insertItem.imageUrl ?? null,
-      luggageBrand: insertItem.luggageBrand ?? null,
-      luggageSize: insertItem.luggageSize ?? null,
-      isSealed: insertItem.isSealed ?? false,
-      isLocked: insertItem.isLocked ?? false,
-      createdAt: new Date()
+      createdAt: new Date().toISOString()
     };
-    this.manifestItems.set(id, item);
-    return item;
+    const docRef = await this.manifestItemsCollection.add(itemData);
+    return { id: docRef.id, ...itemData } as any as ManifestItem;
   }
 
-  async updateManifestItem(id: string, update: Partial<InsertManifestItem>): Promise<ManifestItem | undefined> {
-    const item = this.manifestItems.get(id);
-    if (!item) return undefined;
+  async updateManifestItem(id: string, item: Partial<InsertManifestItem>): Promise<ManifestItem | undefined> {
+    const docRef = this.manifestItemsCollection.doc(id);
+    const doc = await docRef.get();
     
-    const updated = { ...item, ...update };
-    this.manifestItems.set(id, updated);
-    return updated;
+    if (!doc.exists) return undefined;
+    
+    await docRef.update(item);
+    const updated = await docRef.get();
+    return { id: updated.id, ...updated.data() } as ManifestItem;
   }
 
   async deleteManifestItem(id: string): Promise<boolean> {
-    return this.manifestItems.delete(id);
+    try {
+      await this.manifestItemsCollection.doc(id).delete();
+      return true;
+    } catch {
+      return false;
+    }
   }
 
   // Certificate methods
   async createCertificate(insertCert: InsertManifestCertificate): Promise<ManifestCertificate> {
-    const id = randomUUID();
-    const cert: ManifestCertificate = { 
+    const certData = {
       ...insertCert,
-      id,
-      totalValue: insertCert.totalValue ?? null,
-      verified: insertCert.verified ?? true,
-      createdAt: new Date()
+      createdAt: new Date().toISOString(),
+      verified: false
     };
-    this.certificates.set(id, cert);
-    return cert;
+    const docRef = await this.certificatesCollection.add(certData);
+    return { id: docRef.id, ...certData } as any as ManifestCertificate;
   }
 
   async getCertificateByHash(hash: string): Promise<ManifestCertificate | undefined> {
-    return Array.from(this.certificates.values()).find(cert => cert.hash === hash);
+    const snapshot = await this.certificatesCollection
+      .where('hash', '==', hash)
+      .limit(1)
+      .get();
+    
+    if (snapshot.empty) return undefined;
+    const doc = snapshot.docs[0];
+    return { id: doc.id, ...doc.data() } as ManifestCertificate;
   }
 
   async getCertificatesByTripId(tripId: string): Promise<ManifestCertificate[]> {
-    return Array.from(this.certificates.values())
-      .filter(cert => cert.tripId === tripId)
-      .sort((a, b) => new Date(b.createdAt!).getTime() - new Date(a.createdAt!).getTime());
+    const snapshot = await this.certificatesCollection
+      .where('tripId', '==', tripId)
+      .orderBy('createdAt', 'desc')
+      .get();
+    
+    return snapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data()
+    } as ManifestCertificate));
   }
 
   // Flight methods
   async getFlight(id: string): Promise<Flight | undefined> {
-    return this.flights.get(id);
+    const doc = await this.flightsCollection.doc(id).get();
+    if (!doc.exists) return undefined;
+    return { id: doc.id, ...doc.data() } as Flight;
   }
 
   async getFlightsByTripId(tripId: string): Promise<Flight[]> {
-    return Array.from(this.flights.values())
-      .filter(flight => flight.tripId === tripId)
-      .sort((a, b) => new Date(a.departureDateTime).getTime() - new Date(b.departureDateTime).getTime());
+    const snapshot = await this.flightsCollection
+      .where('tripId', '==', tripId)
+      .orderBy('departureDateTime', 'asc')
+      .get();
+    
+    return snapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data()
+    } as Flight));
   }
 
   async createFlight(insertFlight: InsertFlight): Promise<Flight> {
-    const id = randomUUID();
-    const flight: Flight = { 
-      ...insertFlight,
-      id,
-      notes: insertFlight.notes ?? null,
-      createdAt: new Date()
-    };
-    this.flights.set(id, flight);
-    return flight;
+    const docRef = await this.flightsCollection.add(insertFlight);
+    return { id: docRef.id, ...insertFlight } as Flight;
   }
 
-  async updateFlight(id: string, update: Partial<InsertFlight>): Promise<Flight | undefined> {
-    const flight = this.flights.get(id);
-    if (!flight) return undefined;
+  async updateFlight(id: string, flight: Partial<InsertFlight>): Promise<Flight | undefined> {
+    const docRef = this.flightsCollection.doc(id);
+    const doc = await docRef.get();
     
-    const updated = { ...flight, ...update };
-    this.flights.set(id, updated);
-    return updated;
+    if (!doc.exists) return undefined;
+    
+    await docRef.update(flight);
+    const updated = await docRef.get();
+    return { id: updated.id, ...updated.data() } as Flight;
   }
 
   async deleteFlight(id: string): Promise<boolean> {
-    return this.flights.delete(id);
+    try {
+      await this.flightsCollection.doc(id).delete();
+      return true;
+    } catch {
+      return false;
+    }
   }
 
   // Hotel methods
   async getHotel(id: string): Promise<Hotel | undefined> {
-    return this.hotels.get(id);
+    const doc = await this.hotelsCollection.doc(id).get();
+    if (!doc.exists) return undefined;
+    return { id: doc.id, ...doc.data() } as Hotel;
   }
 
   async getHotelsByTripId(tripId: string): Promise<Hotel[]> {
-    return Array.from(this.hotels.values())
-      .filter(hotel => hotel.tripId === tripId)
-      .sort((a, b) => new Date(a.checkInDate).getTime() - new Date(b.checkInDate).getTime());
+    const snapshot = await this.hotelsCollection
+      .where('tripId', '==', tripId)
+      .orderBy('checkInDate', 'asc')
+      .get();
+    
+    return snapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data()
+    } as Hotel));
   }
 
   async createHotel(insertHotel: InsertHotel): Promise<Hotel> {
-    const id = randomUUID();
-    const hotel: Hotel = { 
-      ...insertHotel,
-      id,
-      reservationLink: insertHotel.reservationLink ?? null,
-      notes: insertHotel.notes ?? null,
-      createdAt: new Date()
-    };
-    this.hotels.set(id, hotel);
-    return hotel;
+    const docRef = await this.hotelsCollection.add(insertHotel);
+    return { id: docRef.id, ...insertHotel } as Hotel;
   }
 
-  async updateHotel(id: string, update: Partial<InsertHotel>): Promise<Hotel | undefined> {
-    const hotel = this.hotels.get(id);
-    if (!hotel) return undefined;
+  async updateHotel(id: string, hotel: Partial<InsertHotel>): Promise<Hotel | undefined> {
+    const docRef = this.hotelsCollection.doc(id);
+    const doc = await docRef.get();
     
-    const updated = { ...hotel, ...update };
-    this.hotels.set(id, updated);
-    return updated;
+    if (!doc.exists) return undefined;
+    
+    await docRef.update(hotel);
+    const updated = await docRef.get();
+    return { id: updated.id, ...updated.data() } as Hotel;
   }
 
   async deleteHotel(id: string): Promise<boolean> {
-    return this.hotels.delete(id);
+    try {
+      await this.hotelsCollection.doc(id).delete();
+      return true;
+    } catch {
+      return false;
+    }
   }
 
   // Transport methods
   async getTransport(id: string): Promise<Transport | undefined> {
-    return this.transport.get(id);
+    const doc = await this.transportCollection.doc(id).get();
+    if (!doc.exists) return undefined;
+    return { id: doc.id, ...doc.data() } as Transport;
   }
 
   async getTransportByTripId(tripId: string): Promise<Transport[]> {
-    return Array.from(this.transport.values())
-      .filter(t => t.tripId === tripId)
-      .sort((a, b) => new Date(a.departureDateTime).getTime() - new Date(b.departureDateTime).getTime());
+    const snapshot = await this.transportCollection
+      .where('tripId', '==', tripId)
+      .orderBy('departureDateTime', 'asc')
+      .get();
+    
+    return snapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data()
+    } as Transport));
   }
 
   async createTransport(insertTransport: InsertTransport): Promise<Transport> {
-    const id = randomUUID();
-    const transport: Transport = { 
-      ...insertTransport,
-      id,
-      arrivalDateTime: insertTransport.arrivalDateTime ?? null,
-      ticketNumber: insertTransport.ticketNumber ?? null,
-      notes: insertTransport.notes ?? null,
-      createdAt: new Date()
-    };
-    this.transport.set(id, transport);
-    return transport;
+    const docRef = await this.transportCollection.add(insertTransport);
+    return { id: docRef.id, ...insertTransport } as Transport;
   }
 
-  async updateTransport(id: string, update: Partial<InsertTransport>): Promise<Transport | undefined> {
-    const transport = this.transport.get(id);
-    if (!transport) return undefined;
+  async updateTransport(id: string, transport: Partial<InsertTransport>): Promise<Transport | undefined> {
+    const docRef = this.transportCollection.doc(id);
+    const doc = await docRef.get();
     
-    const updated = { ...transport, ...update };
-    this.transport.set(id, updated);
-    return updated;
+    if (!doc.exists) return undefined;
+    
+    await docRef.update(transport);
+    const updated = await docRef.get();
+    return { id: updated.id, ...updated.data() } as Transport;
   }
 
   async deleteTransport(id: string): Promise<boolean> {
-    return this.transport.delete(id);
+    try {
+      await this.transportCollection.doc(id).delete();
+      return true;
+    } catch {
+      return false;
+    }
   }
 
   // Restaurant methods
   async getRestaurant(id: string): Promise<Restaurant | undefined> {
-    return this.restaurants.get(id);
+    const doc = await this.restaurantsCollection.doc(id).get();
+    if (!doc.exists) return undefined;
+    return { id: doc.id, ...doc.data() } as Restaurant;
   }
 
   async getRestaurantsByTripId(tripId: string): Promise<Restaurant[]> {
-    return Array.from(this.restaurants.values())
-      .filter(r => r.tripId === tripId)
-      .sort((a, b) => new Date(a.reservationDateTime).getTime() - new Date(b.reservationDateTime).getTime());
+    const snapshot = await this.restaurantsCollection
+      .where('tripId', '==', tripId)
+      .orderBy('reservationDateTime', 'asc')
+      .get();
+    
+    return snapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data()
+    } as Restaurant));
   }
 
   async createRestaurant(insertRestaurant: InsertRestaurant): Promise<Restaurant> {
-    const id = randomUUID();
-    const restaurant: Restaurant = { 
-      ...insertRestaurant,
-      id,
-      placeLink: insertRestaurant.placeLink ?? null,
-      notes: insertRestaurant.notes ?? null,
-      createdAt: new Date()
-    };
-    this.restaurants.set(id, restaurant);
-    return restaurant;
+    const docRef = await this.restaurantsCollection.add(insertRestaurant);
+    return { id: docRef.id, ...insertRestaurant } as Restaurant;
   }
 
-  async updateRestaurant(id: string, update: Partial<InsertRestaurant>): Promise<Restaurant | undefined> {
-    const restaurant = this.restaurants.get(id);
-    if (!restaurant) return undefined;
+  async updateRestaurant(id: string, restaurant: Partial<InsertRestaurant>): Promise<Restaurant | undefined> {
+    const docRef = this.restaurantsCollection.doc(id);
+    const doc = await docRef.get();
     
-    const updated = { ...restaurant, ...update };
-    this.restaurants.set(id, updated);
-    return updated;
+    if (!doc.exists) return undefined;
+    
+    await docRef.update(restaurant);
+    const updated = await docRef.get();
+    return { id: updated.id, ...updated.data() } as Restaurant;
   }
 
   async deleteRestaurant(id: string): Promise<boolean> {
-    return this.restaurants.delete(id);
+    try {
+      await this.restaurantsCollection.doc(id).delete();
+      return true;
+    } catch {
+      return false;
+    }
   }
 
   // Activity methods
   async getActivity(id: string): Promise<Activity | undefined> {
-    return this.activities.get(id);
+    const doc = await this.activitiesCollection.doc(id).get();
+    if (!doc.exists) return undefined;
+    return { id: doc.id, ...doc.data() } as Activity;
   }
 
   async getActivitiesByTripId(tripId: string): Promise<Activity[]> {
-    return Array.from(this.activities.values())
-      .filter(a => a.tripId === tripId)
-      .sort((a, b) => new Date(a.activityDateTime).getTime() - new Date(b.activityDateTime).getTime());
+    const snapshot = await this.activitiesCollection
+      .where('tripId', '==', tripId)
+      .orderBy('activityDateTime', 'asc')
+      .get();
+    
+    return snapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data()
+    } as Activity));
   }
 
   async createActivity(insertActivity: InsertActivity): Promise<Activity> {
-    const id = randomUUID();
-    const activity: Activity = { 
-      ...insertActivity,
-      id,
-      notes: insertActivity.notes ?? null,
-      createdAt: new Date()
-    };
-    this.activities.set(id, activity);
-    return activity;
+    const docRef = await this.activitiesCollection.add(insertActivity);
+    return { id: docRef.id, ...insertActivity } as Activity;
   }
 
-  async updateActivity(id: string, update: Partial<InsertActivity>): Promise<Activity | undefined> {
-    const activity = this.activities.get(id);
-    if (!activity) return undefined;
+  async updateActivity(id: string, activity: Partial<InsertActivity>): Promise<Activity | undefined> {
+    const docRef = this.activitiesCollection.doc(id);
+    const doc = await docRef.get();
     
-    const updated = { ...activity, ...update };
-    this.activities.set(id, updated);
-    return updated;
+    if (!doc.exists) return undefined;
+    
+    await docRef.update(activity);
+    const updated = await docRef.get();
+    return { id: updated.id, ...updated.data() } as Activity;
   }
 
   async deleteActivity(id: string): Promise<boolean> {
-    return this.activities.delete(id);
+    try {
+      await this.activitiesCollection.doc(id).delete();
+      return true;
+    } catch {
+      return false;
+    }
   }
 }
 
-export const storage = new MemStorage();
+// Use Firestore storage
+export const storage = new FirestoreStorage();

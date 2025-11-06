@@ -1,12 +1,14 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { apiRequest } from './queryClient';
+import { signInAnonymously, onAuthStateChanged, signOut } from 'firebase/auth';
+import { doc, getDoc, setDoc } from 'firebase/firestore';
+import { auth, db } from './firebase';
 import type { User } from '@shared/schema';
 
 interface AuthContextType {
   user: User | null;
   isLoading: boolean;
   login: (email: string, name: string) => Promise<void>;
-  logout: () => void;
+  logout: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -16,40 +18,71 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    const storedUser = localStorage.getItem('user');
-    if (storedUser) {
-      setUser(JSON.parse(storedUser));
-    }
-    setIsLoading(false);
+    // Listen to Firebase Auth state changes
+    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+      if (firebaseUser) {
+        // User is signed in, fetch user data from Firestore
+        try {
+          const userDocRef = doc(db, 'users', firebaseUser.uid);
+          const userDoc = await getDoc(userDocRef);
+          
+          if (userDoc.exists()) {
+            const userData = { id: userDoc.id, ...userDoc.data() } as User;
+            setUser(userData);
+            localStorage.setItem('user', JSON.stringify(userData));
+          }
+        } catch (error) {
+          console.error('Error fetching user from Firestore:', error);
+        }
+      } else {
+        // User is signed out
+        setUser(null);
+        localStorage.removeItem('user');
+      }
+      setIsLoading(false);
+    });
+
+    return () => unsubscribe();
   }, []);
 
   const login = async (email: string, name: string) => {
     try {
-      const userRes = await fetch(`/api/users/${encodeURIComponent(email)}`);
-      let existingUser: User;
-      
-      if (userRes.ok) {
-        existingUser = await userRes.json();
-      } else {
-        const createRes = await fetch('/api/users', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email, name }),
-        });
-        existingUser = await createRes.json();
-      }
+      // Sign in anonymously with Firebase
+      const userCredential = await signInAnonymously(auth);
+      const firebaseUser = userCredential.user;
 
-      setUser(existingUser);
-      localStorage.setItem('user', JSON.stringify(existingUser));
+      // Create or update user document in Firestore
+      const userDocRef = doc(db, 'users', firebaseUser.uid);
+      const userData = {
+        email,
+        name,
+      };
+
+      await setDoc(userDocRef, userData, { merge: true });
+
+      const user: User = {
+        id: firebaseUser.uid,
+        email,
+        name,
+      };
+
+      setUser(user);
+      localStorage.setItem('user', JSON.stringify(user));
     } catch (error) {
       console.error('Login failed:', error);
       throw error;
     }
   };
 
-  const logout = () => {
-    setUser(null);
-    localStorage.removeItem('user');
+  const logout = async () => {
+    try {
+      await signOut(auth);
+      setUser(null);
+      localStorage.removeItem('user');
+    } catch (error) {
+      console.error('Logout failed:', error);
+      throw error;
+    }
   };
 
   return (
