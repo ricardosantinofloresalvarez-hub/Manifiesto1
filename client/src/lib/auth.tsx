@@ -47,9 +47,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const login = async (email: string, name: string) => {
     try {
+      console.log('🔐 Starting login process...');
+      
       // Sign in anonymously with Firebase
+      console.log('📱 Attempting anonymous sign-in...');
       const userCredential = await signInAnonymously(auth);
       const firebaseUser = userCredential.user;
+      console.log('✅ Anonymous sign-in successful, UID:', firebaseUser.uid);
 
       // Create or update user document in Firestore
       const userDocRef = doc(db, 'users', firebaseUser.uid);
@@ -58,7 +62,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         name,
       };
 
+      console.log('💾 Saving user data to Firestore...');
       await setDoc(userDocRef, userData, { merge: true });
+      console.log('✅ User data saved to Firestore');
 
       const user: User = {
         id: firebaseUser.uid,
@@ -68,8 +74,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       setUser(user);
       localStorage.setItem('user', JSON.stringify(user));
+      console.log('✅ Login complete, user set in state and localStorage');
     } catch (error) {
-      console.error('Login failed:', error);
+      console.error('❌ Login failed:', error);
+      console.error('Error details:', JSON.stringify(error, null, 2));
       throw error;
     }
   };
