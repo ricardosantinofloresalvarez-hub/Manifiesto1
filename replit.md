@@ -6,7 +6,7 @@ Manifiesto is a Progressive Web App for managing travel luggage with verifiable 
 
 ## Current Status
 
-✅ **Complete MVP Implementation with Firebase/Firestore**
+🔄 **Firebase/Firestore Migration in Progress (Client-Side Architecture)**
 
 ### Completed Features:
 - Full-stack application with Express backend and React frontend
@@ -34,10 +34,21 @@ Manifiesto is a Progressive Web App for managing travel luggage with verifiable 
 
 ### Tech Stack:
 - **Frontend**: React 18, TypeScript, Wouter, TanStack Query, Shadcn/UI, Tailwind CSS
-- **Backend**: Express.js, TypeScript, PDFKit, QRCode, Multer
-- **Database**: Firebase/Firestore (client-side access)
+- **Backend**: Express.js, TypeScript, PDFKit, QRCode, Multer (PDF generation only)
+- **Database**: Firebase/Firestore (direct client-side access via custom hooks)
 - **Authentication**: Firebase Anonymous Auth
 - **Languages**: i18next for Spanish/English support
+
+### Firestore Integration:
+- **✅ Completed**: Custom hooks for Firestore CRUD operations
+  - `useTrips`, `useManifestItems`, `useItineraries`, `useCertificates`
+  - All hooks use Firestore SDK directly from frontend
+- **✅ Completed**: Backend simplified to only handle PDF generation and uploads
+- **🔄 In Progress**: Updating all components to use new Firestore hooks
+  - ✅ Dashboard.tsx (completed)
+  - ⏳ TripDetail.tsx (pending)
+  - ⏳ ItineraryTab.tsx (pending)
+  - ⏳ Verify.tsx (pending - needs useCertificateByHash)
 
 ## Project Structure
 

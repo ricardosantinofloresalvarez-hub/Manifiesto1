@@ -1,11 +1,17 @@
 import { useState, useEffect } from 'react';
 import { useParams, useLocation } from 'wouter';
 import { useTranslation } from 'react-i18next';
-import { useQuery, useMutation } from '@tanstack/react-query';
 import { useAuth } from '@/lib/auth';
-import { queryClient, apiRequest } from '@/lib/queryClient';
 import { useToast } from '@/hooks/use-toast';
-import type { ManifestItem, Trip } from '@shared/schema';
+import { useTrip } from '@/hooks/useTrips';
+import { 
+  useManifestItems, 
+  useCreateManifestItem, 
+  useUpdateManifestItem, 
+  useDeleteManifestItem 
+} from '@/hooks/useManifestItems';
+import { useGenerateCertificate } from '@/hooks/useCertificates';
+import type { ManifestItem } from '@shared/schema';
 import TopAppBar from '@/components/TopAppBar';
 import BottomNavigation from '@/components/BottomNavigation';
 import ManifestItemCard from '@/components/ManifestItemCard';
@@ -70,165 +76,61 @@ export default function TripDetail() {
     }
   }, [isLoading, user, setLocation]);
 
-  // Fetch trip data
-  const { data: trip, isLoading: isTripLoading } = useQuery<Trip>({
-    queryKey: ['/api/trips', tripId],
-    queryFn: async () => {
-      const res = await fetch(`/api/trips/${tripId}?userId=${user!.id}`);
-      if (!res.ok) throw new Error('Failed to fetch trip');
-      return res.json();
-    },
-    enabled: !!tripId && !!user,
-  });
+  // Fetch trip data using Firestore hook
+  const { data: trip, isLoading: isTripLoading } = useTrip(tripId || null);
 
-  // Fetch manifest items
-  const { data: items = [], isLoading: isItemsLoading } = useQuery<ManifestItem[]>({
-    queryKey: ['/api/trips', tripId, 'items'],
-    queryFn: async () => {
-      const res = await fetch(`/api/trips/${tripId}/items?userId=${user!.id}`);
-      if (!res.ok) throw new Error('Failed to fetch items');
-      return res.json();
-    },
-    enabled: !!tripId && !!user,
-  });
+  // Fetch manifest items using Firestore hook
+  const { data: items = [], isLoading: isItemsLoading } = useManifestItems(tripId || null);
 
-  // Add item mutation
-  const addItemMutation = useMutation({
-    mutationFn: async (data: any) => {
-      const response = await apiRequest('POST', `/api/trips/${tripId}/items`, {
-        ...data,
-        userId: user!.id,
-      });
-      return response.json();
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/trips', tripId, 'items'] });
-      queryClient.invalidateQueries({ queryKey: ['/api/trips', tripId] });
-      toast({
-        title: t('success'),
-        description: t('itemAdded'),
-      });
-      setShowAddItemDialog(false);
-      setFormData({
-        name: '',
-        category: 'electronics',
-        quantity: '1',
-        estimatedValue: '',
-        serialNumber: '',
-        luggageBrand: '',
-        luggageSize: '',
-        isSealed: false,
-        isLocked: false,
-      });
-    },
-    onError: (error: Error) => {
-      toast({
-        title: t('error'),
-        description: error.message,
-        variant: 'destructive',
-      });
-    },
-  });
+  // Add item mutation using Firestore hook
+  const addItemMutation = useCreateManifestItem();
 
-  // Update item mutation
-  const updateItemMutation = useMutation({
-    mutationFn: async ({ id, data }: { id: string; data: any }) => {
-      const response = await apiRequest('PATCH', `/api/items/${id}`, {
-        ...data,
-        userId: user!.id,
-      });
-      return response.json();
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/trips', tripId, 'items'] });
-      queryClient.invalidateQueries({ queryKey: ['/api/trips', tripId] });
-      toast({
-        title: t('success'),
-        description: 'Artículo actualizado',
-      });
-      setShowEditItemDialog(false);
-      setEditingItem(null);
-    },
-    onError: (error: Error) => {
-      toast({
-        title: t('error'),
-        description: error.message,
-        variant: 'destructive',
-      });
-    },
-  });
+  // Update item mutation using Firestore hook
+  const updateItemMutation = useUpdateManifestItem();
 
-  // Delete item mutation
-  const deleteItemMutation = useMutation({
-    mutationFn: async (itemId: string) => {
-      const response = await apiRequest('DELETE', `/api/items/${itemId}`, {
-        userId: user!.id,
-      });
-      return response.json();
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/trips', tripId, 'items'] });
-      queryClient.invalidateQueries({ queryKey: ['/api/trips', tripId] });
-      toast({
-        title: t('success'),
-        description: 'Artículo eliminado',
-      });
-      setShowDeleteConfirm(false);
-      setDeletingItemId(null);
-    },
-    onError: (error: Error) => {
-      toast({
-        title: t('error'),
-        description: error.message,
-        variant: 'destructive',
-      });
-    },
-  });
+  // Delete item mutation using Firestore hook
+  const deleteItemMutation = useDeleteManifestItem();
 
-  // Generate certificate mutation
-  const generateCertificateMutation = useMutation({
-    mutationFn: async () => {
-      const response = await apiRequest('POST', `/api/trips/${tripId}/certificate`, {
-        userId: user!.id,
-      });
-      return response.json();
-    },
-    onSuccess: (data: { pdfUrl: string; certificate: { hash: string } }) => {
-      queryClient.invalidateQueries({ queryKey: ['/api/trips', tripId] });
-      
-      // Save hash for display
-      setGeneratedHash(data.certificate.hash);
-      
-      // Download PDF
-      const link = document.createElement('a');
-      link.href = data.pdfUrl;
-      link.download = `manifest-${tripId}.pdf`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      
-      toast({
-        title: t('success'),
-        description: t('certificateGenerated'),
-      });
-    },
-    onError: (error: Error) => {
-      toast({
-        title: t('error'),
-        description: error.message,
-        variant: 'destructive',
-      });
-    },
-  });
+  // Generate certificate mutation using Firestore hook
+  const generateCertificateMutation = useGenerateCertificate();
 
   const totalValue = items.reduce((sum, item) => sum + (item.estimatedValue || 0), 0);
 
   const handleGenerateCertificate = () => {
-    generateCertificateMutation.mutate();
+    if (!trip || !user) return;
+    
+    generateCertificateMutation.mutate(
+      { trip, items, user },
+      {
+        onSuccess: (data) => {
+          setGeneratedHash(data.hash);
+          
+          // Download PDF
+          const link = document.createElement('a');
+          link.href = `data:application/pdf;base64,${data.pdf}`;
+          link.download = `manifest-${tripId}.pdf`;
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+          
+          toast({
+            title: t('success'),
+            description: t('certificateGenerated'),
+          });
+        },
+        onError: (error: Error) => {
+          toast({
+            title: t('error'),
+            description: error.message,
+            variant: 'destructive',
+          });
+        },
+      }
+    );
   };
 
   const handleAddItem = () => {
-    if (!formData.name.trim()) {
+    if (!formData.name.trim() || !tripId) {
       toast({
         title: t('error'),
         description: 'Item name is required',
@@ -236,17 +138,47 @@ export default function TripDetail() {
       });
       return;
     }
-    addItemMutation.mutate({
-      name: formData.name,
-      category: formData.category,
-      quantity: parseInt(formData.quantity) || 1,
-      estimatedValue: formData.estimatedValue ? parseFloat(formData.estimatedValue) : undefined,
-      serialNumber: formData.serialNumber || undefined,
-      luggageBrand: formData.luggageBrand || undefined,
-      luggageSize: formData.luggageSize || undefined,
-      isSealed: formData.isSealed,
-      isLocked: formData.isLocked,
-    });
+    addItemMutation.mutate(
+      {
+        tripId,
+        name: formData.name,
+        category: formData.category,
+        quantity: parseInt(formData.quantity) || 1,
+        estimatedValue: formData.estimatedValue ? parseFloat(formData.estimatedValue) : undefined,
+        serialNumber: formData.serialNumber || undefined,
+        luggageBrand: formData.luggageBrand || undefined,
+        luggageSize: formData.luggageSize || undefined,
+        isSealed: formData.isSealed,
+        isLocked: formData.isLocked,
+      },
+      {
+        onSuccess: () => {
+          toast({
+            title: t('success'),
+            description: t('itemAdded'),
+          });
+          setShowAddItemDialog(false);
+          setFormData({
+            name: '',
+            category: 'electronics',
+            quantity: '1',
+            estimatedValue: '',
+            serialNumber: '',
+            luggageBrand: '',
+            luggageSize: '',
+            isSealed: false,
+            isLocked: false,
+          });
+        },
+        onError: (error: Error) => {
+          toast({
+            title: t('error'),
+            description: error.message,
+            variant: 'destructive',
+          });
+        },
+      }
+    );
   };
 
   const handleEditItem = (item: ManifestItem) => {
@@ -274,20 +206,39 @@ export default function TripDetail() {
       });
       return;
     }
-    updateItemMutation.mutate({ 
-      id: editingItem.id, 
-      data: {
-        name: formData.name,
-        category: formData.category,
-        quantity: parseInt(formData.quantity) || 1,
-        estimatedValue: formData.estimatedValue ? parseFloat(formData.estimatedValue) : undefined,
-        serialNumber: formData.serialNumber || undefined,
-        luggageBrand: formData.luggageBrand || undefined,
-        luggageSize: formData.luggageSize || undefined,
-        isSealed: formData.isSealed,
-        isLocked: formData.isLocked,
+    updateItemMutation.mutate(
+      { 
+        id: editingItem.id, 
+        data: {
+          name: formData.name,
+          category: formData.category,
+          quantity: parseInt(formData.quantity) || 1,
+          estimatedValue: formData.estimatedValue ? parseFloat(formData.estimatedValue) : undefined,
+          serialNumber: formData.serialNumber || undefined,
+          luggageBrand: formData.luggageBrand || undefined,
+          luggageSize: formData.luggageSize || undefined,
+          isSealed: formData.isSealed,
+          isLocked: formData.isLocked,
+        }
+      },
+      {
+        onSuccess: () => {
+          toast({
+            title: t('success'),
+            description: 'Artículo actualizado',
+          });
+          setShowEditItemDialog(false);
+          setEditingItem(null);
+        },
+        onError: (error: Error) => {
+          toast({
+            title: t('error'),
+            description: error.message,
+            variant: 'destructive',
+          });
+        },
       }
-    });
+    );
   };
 
   const handleDeleteItem = (itemId: string) => {
@@ -296,8 +247,27 @@ export default function TripDetail() {
   };
 
   const confirmDelete = () => {
-    if (deletingItemId) {
-      deleteItemMutation.mutate(deletingItemId);
+    if (deletingItemId && tripId) {
+      deleteItemMutation.mutate(
+        { id: deletingItemId, tripId },
+        {
+          onSuccess: () => {
+            toast({
+              title: t('success'),
+              description: 'Artículo eliminado',
+            });
+            setShowDeleteConfirm(false);
+            setDeletingItemId(null);
+          },
+          onError: (error: Error) => {
+            toast({
+              title: t('error'),
+              description: error.message,
+              variant: 'destructive',
+            });
+          },
+        }
+      );
     }
   };
 
