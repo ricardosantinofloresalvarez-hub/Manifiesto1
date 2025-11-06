@@ -6,16 +6,23 @@ Manifiesto is a Progressive Web App for managing travel luggage with verifiable 
 
 ## Current Status
 
-✅ **Complete MVP Implementation**
+✅ **Complete MVP Implementation with Firebase/Firestore**
 
 ### Completed Features:
 - Full-stack application with Express backend and React frontend
-- User authentication (simple email/name login)
+- **Firebase Authentication** (Anonymous Auth for demo/MVP)
+- **Firestore Database** for persistent data storage (test mode enabled)
 - Trip management (CRUD operations)
 - Manifest item management with categories, values, and luggage metadata
   - Editable quantity and value fields (fixed form input bug)
   - Luggage description: brand, size (Pequeña/Mediana/Grande/Extra Grande)
   - Security features: sealed status (Sellada) and lock status (Con Candado)
+- **Itinerary Management** with 5 types:
+  - ✈️ Flights (airline, flight number, departure/arrival)
+  - 🏨 Hotels (name, address, check-in/out dates)
+  - 🚗 Transport (type, company, departure/arrival)
+  - 🍽️ Restaurants (name, address, reservation time)
+  - 🎯 Activities (name, location, scheduled time)
 - PDF certificate generation with QR codes and SHA-256 hashing
   - Includes all luggage metadata in certificate
 - Web-based verification system
@@ -28,7 +35,8 @@ Manifiesto is a Progressive Web App for managing travel luggage with verifiable 
 ### Tech Stack:
 - **Frontend**: React 18, TypeScript, Wouter, TanStack Query, Shadcn/UI, Tailwind CSS
 - **Backend**: Express.js, TypeScript, PDFKit, QRCode, Multer
-- **Storage**: In-memory (MemStorage) - ready for database migration
+- **Database**: Firebase/Firestore (client-side access)
+- **Authentication**: Firebase Anonymous Auth
 - **Languages**: i18next for Spanish/English support
 
 ## Project Structure
@@ -137,19 +145,22 @@ Anyone → Verify Page → Enter hash OR Scan QR → View verification result wi
 
 ## Known Limitations (Demo/Prototype)
 
-1. **Storage**: Uses in-memory storage, data resets on server restart
-2. **Authentication**: Basic auth without sessions, stored in localStorage
-3. **Authorization**: No API-level auth checks, any client can access any data
-4. **Image Storage**: Base64 in memory, not suitable for production scale
+1. **Storage**: Uses Firestore in test mode (30-day unrestricted access)
+2. **Authentication**: Firebase Anonymous Auth (no real user accounts)
+3. **Authorization**: Firestore test mode allows unrestricted read/write access
+4. **Image Storage**: Base64 in Firestore, not suitable for production scale
 5. **Validation**: Limited validation on PATCH endpoints
+6. **Backend**: Firebase Admin initialized without full credentials (limited functionality)
 
 ## Future Enhancements (Phase 2)
 
 ### Security & Infrastructure
-- [ ] Migrate to PostgreSQL database
-- [ ] Implement proper authentication (Firebase, JWT)
-- [ ] Add API authorization middleware
-- [ ] Store images in cloud storage (S3, Firebase Storage)
+- [x] Migrate to Firestore database (✅ Completed - test mode)
+- [x] Implement Firebase Authentication (✅ Completed - Anonymous Auth)
+- [ ] Configure Firebase production security rules
+- [ ] Migrate to proper Firebase Auth (email/password, Google sign-in)
+- [ ] Set up Firebase Admin with Service Account credentials
+- [ ] Store images in Firebase Storage (currently using Base64)
 - [ ] Add input validation for all endpoints
 - [ ] Implement rate limiting
 
@@ -185,10 +196,12 @@ Application runs on port 5000
 ### Architecture Decisions
 
 1. **Monorepo Structure**: Frontend and backend in same repo for easier development
-2. **In-Memory Storage**: Quick MVP, easy to migrate to Drizzle ORM + PostgreSQL
+2. **Firebase/Firestore**: Using Firestore from frontend (client-side SDK) for MVP simplicity
+   - Backend uses Firebase Admin SDK (limited mode without service account)
+   - Production will need Firebase Admin with full credentials
 3. **Shared Types**: TypeScript types shared between frontend/backend via /shared
 4. **React Query**: Automatic caching, refetching, and state management for server data
-5. **Base64 Images**: Simplifies demo, but should migrate to blob storage for production
+5. **Base64 Images**: Simplifies demo, but should migrate to Firebase Storage for production
 6. **Form Input Strategy**: Quantity and value fields use string state internally, converted to numbers for API to fix editability issues in controlled inputs
 
 ### Testing Strategy
