@@ -1,0 +1,86 @@
+Actúa como un arquitecto senior de software.
+
+Contexto:
+Estoy desarrollando una app llamada “Manifiesto”. Actualmente el modelo de datos está mal acoplado y quiero hacer una REESTRUCTURACIÓN CORRECTA de la arquitectura, priorizando claridad y escalabilidad.
+
+OBJETIVO PRINCIPAL:
+Cambiar el modelo para que el núcleo sea la MALTA (Luggage / Manifiesto individual), no el viaje ni los artículos.
+
+Nueva jerarquía obligatoria:
+Usuario
+ └── Viaje
+      └── Maleta (Manifiesto)
+           └── Artículos
+
+Cada maleta genera su PROPIO certificado PDF + hash.
+Un viaje puede tener múltiples maletas.
+Cada maleta tiene sus propias fotos (abierta / cerrada).
+
+MODELO DE DATOS DESEADO:
+
+Maleta (Luggage):
+- id
+- tripId
+- brand (ej: Samsonite)
+- type (ej: documentada, mano)
+- color (opcional)
+- nickname (opcional)
+- openPhotoUrl
+- closedPhotoUrl
+- isSealed
+- isLocked
+- certificateHash
+- certificatePdfUrl
+- isPremium (true si excede las 2 gratuitas)
+- createdAt
+
+Artículo (ManifestItem):
+- id
+- tripId
+- luggageId  ← referencia obligatoria
+- name
+- category
+- brand (marca del artículo)
+- quantity
+- estimatedValue
+- serialNumber (opcional)
+
+REGLAS IMPORTANTES:
+- Los artículos NO deben tener datos de la maleta (marca, tipo, etc).
+- Todo certificado es POR MALETA, no por viaje.
+- El viaje solo agrupa maletas.
+- Máximo 2 maletas gratis por viaje.
+- La 3ra maleta debe activar paywall (solo lógica, no pagos aún).
+
+UI DESEADA (conceptual, no diseño):
+Tabs:
+- Itinerario
+- Maletas
+  - Lista de maletas del viaje
+  - Detalle de maleta:
+    - Fotos abierta/cerrada
+    - Artículos de ESA maleta
+    - Botón "Generar certificado"
+  - Botón “Agregar maleta”
+- Settings
+
+FLUJO DE USUARIO:
+1. Crear viaje
+2. Crear maleta
+3. Agregar artículos a ESA maleta
+4. Subir fotos
+5. Generar certificado (PDF + QR)
+6. Repetir por cada maleta
+7. Bloquear creación de maleta 3 (paywall)
+
+INSTRUCCIONES AL AGENTE:
+1. NO modifiques código todavía.
+2. Analiza el código actual.
+3. Dime exactamente:
+   - qué partes están mal acopladas
+   - qué archivos habría que cambiar
+   - qué se puede reutilizar
+4. Propón un plan de migración en pasos pequeños y seguros.
+5. Espera confirmación antes de escribir código.
+
+Este refactor es crítico. Prioriza claridad sobre velocidad.
