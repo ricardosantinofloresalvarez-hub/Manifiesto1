@@ -648,6 +648,14 @@ export default function TripDetail() {
               user={user ? { name: user.name || 'Usuario', email: user.email || '' } : null}
             />
 
+            {/* LEGACY: Sección de artículos a nivel viaje - OCULTA en Fase 2C
+                Los artículos ahora se gestionan desde el detalle de cada maleta.
+                Para reactivar, cambiar showLegacyManifest a true */}
+            {(() => {
+              const showLegacyManifest = false;
+              if (!showLegacyManifest) return null;
+              return (
+              <>
             <div className="flex items-center justify-between">
               <div>
                 <h3 className="font-semibold text-lg">
@@ -795,9 +803,13 @@ export default function TripDetail() {
                           </Button>
                         </>
                       )}
-                    </TabsContent>
+              </>
+              );
+            })()}
+            {/* FIN LEGACY - artículos a nivel viaje */}
+          </TabsContent>
 
-                    <TabsContent value="settings" className="space-y-4">
+          <TabsContent value="settings" className="space-y-4">
                       <Card className="p-6">
                         <h3 className="font-semibold mb-4">Detalles del Viaje</h3>
                         <div className="space-y-4">
