@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -19,10 +20,11 @@ import {
   CheckCircle,
   Download,
 } from 'lucide-react';
-import { useManifestItems } from '@/hooks/useManifestItems';
+import { useManifestItems, useDeleteManifestItem } from '@/hooks/useManifestItems';
 import { useGenerateLuggageCertificate } from '@/hooks/useCertificates';
 import { useToast } from '@/hooks/use-toast';
 import ManifestItemCard from '@/components/ManifestItemCard';
+import ManifestItemForm from '@/components/ManifestItemForm';
 import type { Luggage, ManifestItem, Trip } from '@shared/schema';
 import {
   LUGGAGE_SIZES,
@@ -35,9 +37,6 @@ interface LuggageDetailDialogProps {
   user: { name: string; email: string } | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onAddItem?: () => void;
-  onEditItem?: (item: ManifestItem) => void;
-  onDeleteItem?: (item: ManifestItem) => void;
 }
 
 export default function LuggageDetailDialog({
@@ -46,13 +45,29 @@ export default function LuggageDetailDialog({
   user,
   open,
   onOpenChange,
-  onAddItem,
-  onEditItem,
-  onDeleteItem,
 }: LuggageDetailDialogProps) {
   const { toast } = useToast();
   const { data: items, isLoading, error } = useManifestItems(luggage?.id ?? null);
   const generateCertificate = useGenerateLuggageCertificate();
+  const deleteItemMutation = useDeleteManifestItem();
+
+  const [showItemForm, setShowItemForm] = useState(false);
+  const [editingItem, setEditingItem] = useState<ManifestItem | null>(null);
+
+  const handleDeleteItem = async (item: ManifestItem) => {
+    if (!luggage) return;
+    try {
+      await deleteItemMutation.mutateAsync({ id: item.id, luggageId: luggage.id });
+      toast({ title: 'Artículo eliminado', description: 'El artículo ha sido eliminado.' });
+    } catch (err) {
+      toast({ title: 'Error', description: 'No se pudo eliminar el artículo.', variant: 'destructive' });
+    }
+  };
+
+  const handleItemFormSuccess = () => {
+    setShowItemForm(false);
+    setEditingItem(null);
+  };
 
   const getSizeLabel = (size: string | null | undefined) => {
     if (!size) return null;
@@ -207,7 +222,7 @@ export default function LuggageDetailDialog({
             <Button
               variant="outline"
               size="sm"
-              onClick={onAddItem}
+              onClick={() => { setEditingItem(null); setShowItemForm(true); }}
               data-testid="button-add-item"
             >
               <Plus className="h-4 w-4 mr-1" />
@@ -264,7 +279,7 @@ export default function LuggageDetailDialog({
                 <p className="text-sm text-muted-foreground mb-4">
                   Esta maleta aún no tiene artículos registrados.
                 </p>
-                <Button variant="outline" onClick={onAddItem} data-testid="button-add-first-item">
+                <Button variant="outline" onClick={() => { setEditingItem(null); setShowItemForm(true); }} data-testid="button-add-first-item">
                   <Plus className="h-4 w-4 mr-1" />
                   Agregar primer artículo
                 </Button>
@@ -282,14 +297,27 @@ export default function LuggageDetailDialog({
                   estimatedValue={item.value ?? undefined}
                   serialNumber={item.serialNumber ?? undefined}
                   imageUrl={item.photoUrl ?? undefined}
-                  onEdit={() => onEditItem?.(item)}
-                  onDelete={() => onDeleteItem?.(item)}
+                  onEdit={() => { setEditingItem(item); setShowItemForm(true); }}
+                  onDelete={() => handleDeleteItem(item)}
                 />
               ))
             )}
           </div>
         </ScrollArea>
       </DialogContent>
+
+      {showItemForm && luggage && (
+        <ManifestItemForm
+          luggageId={luggage.id}
+          item={editingItem}
+          open={showItemForm}
+          onOpenChange={(open) => {
+            setShowItemForm(open);
+            if (!open) setEditingItem(null);
+          }}
+          onSuccess={handleItemFormSuccess}
+        />
+      )}
     </Dialog>
   );
 }

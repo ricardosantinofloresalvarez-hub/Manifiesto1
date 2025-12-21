@@ -642,7 +642,11 @@ export default function TripDetail() {
           </TabsContent>
 
           <TabsContent value="manifest" className="space-y-4">
-            <LuggageTab tripId={tripId!} />
+            <LuggageTab 
+              tripId={tripId!} 
+              trip={trip || null}
+              user={user ? { name: user.name || 'Usuario', email: user.email || '' } : null}
+            />
 
             <div className="flex items-center justify-between">
               <div>

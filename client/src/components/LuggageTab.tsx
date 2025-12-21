@@ -42,6 +42,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Plus, Briefcase, AlertCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import LuggageCard from '@/components/LuggageCard';
+import LuggageDetailDialog from '@/components/LuggageDetailDialog';
 import {
   useLuggage,
   useCreateLuggage,
@@ -54,7 +55,7 @@ import {
   LUGGAGE_SIZES,
   LUGGAGE_TYPE_OPTIONS,
 } from '@/constants/manifestItems';
-import type { Luggage, InsertLuggage } from '@shared/schema';
+import type { Luggage, InsertLuggage, Trip } from '@shared/schema';
 
 const luggageFormSchema = z.object({
   nickname: z.string().optional(),
@@ -70,13 +71,17 @@ type LuggageFormValues = z.infer<typeof luggageFormSchema>;
 
 interface LuggageTabProps {
   tripId: string;
+  trip: Trip | null;
+  user: { name: string; email: string } | null;
 }
 
-export default function LuggageTab({ tripId }: LuggageTabProps) {
+export default function LuggageTab({ tripId, trip, user }: LuggageTabProps) {
   const { toast } = useToast();
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [editingLuggage, setEditingLuggage] = useState<Luggage | null>(null);
   const [deletingLuggage, setDeletingLuggage] = useState<Luggage | null>(null);
+  const [selectedLuggage, setSelectedLuggage] = useState<Luggage | null>(null);
+  const [detailOpen, setDetailOpen] = useState(false);
 
   const { data: luggageList, isLoading, error } = useLuggage(tripId);
   const createMutation = useCreateLuggage();
@@ -179,6 +184,11 @@ export default function LuggageTab({ tripId }: LuggageTabProps) {
     setEditingLuggage(luggage);
   };
 
+  const openDetail = (luggage: Luggage) => {
+    setSelectedLuggage(luggage);
+    setDetailOpen(true);
+  };
+
   if (error) {
     return (
       <div className="flex flex-col items-center justify-center py-12 text-center">
@@ -220,6 +230,7 @@ export default function LuggageTab({ tripId }: LuggageTabProps) {
               luggage={item}
               onEdit={openEdit}
               onDelete={setDeletingLuggage}
+              onClick={openDetail}
             />
           ))}
         </div>
@@ -643,6 +654,17 @@ export default function LuggageTab({ tripId }: LuggageTabProps) {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <LuggageDetailDialog
+        luggage={selectedLuggage}
+        trip={trip}
+        user={user}
+        open={detailOpen}
+        onOpenChange={(open) => {
+          setDetailOpen(open);
+          if (!open) setSelectedLuggage(null);
+        }}
+      />
     </div>
   );
 }
