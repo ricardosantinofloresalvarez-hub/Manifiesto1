@@ -42,7 +42,6 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Plus, Briefcase, AlertCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import LuggageCard from '@/components/LuggageCard';
-import LuggageDetailDialog from '@/components/LuggageDetailDialog';
 import {
   useLuggage,
   useCreateLuggage,
@@ -50,17 +49,12 @@ import {
   useDeleteLuggage,
 } from '@/hooks/useLuggage';
 import {
-  useCreateManifestItem,
-  useUpdateManifestItem,
-  useDeleteManifestItem,
-} from '@/hooks/useManifestItems';
-import {
   LUGGAGE_BRANDS,
   LUGGAGE_COLORS,
   LUGGAGE_SIZES,
   LUGGAGE_TYPE_OPTIONS,
 } from '@/constants/manifestItems';
-import type { Luggage, InsertLuggage, Trip } from '@shared/schema';
+import type { Luggage, InsertLuggage } from '@shared/schema';
 
 const luggageFormSchema = z.object({
   nickname: z.string().optional(),
