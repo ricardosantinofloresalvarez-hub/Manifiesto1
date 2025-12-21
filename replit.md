@@ -7,6 +7,33 @@ Manifiesto is a Progressive Web App for managing travel luggage with verifiable 
 ## Current Status
 
 ✅ **Firebase/Firestore Migration - 100% COMPLETE (Client-Side Architecture)**
+🔄 **Luggage-Centric Refactor - PHASE 1 COMPLETE (Backend/Structure Only)**
+
+### Refactor Progress (Luggage-Centric Architecture):
+
+**Completed (Phase 1 - Backend/Structure):**
+- ✅ PASO 1: Updated data model in shared/schema.ts
+  - Luggage table: Added color, nickname, certificateHash, certificatePdfUrl, isPremium fields
+  - ManifestCertificate: Added luggageId field (tripId now optional for backward compatibility)
+  - ManifestItem: Added insertManifestItemSchema, serialNumber field
+- ✅ PASO 3: Refactored useCertificates hook
+  - Added useCertificatesByLuggage(luggageId) query
+  - Added useGenerateLuggageCertificate() mutation with guards for missing docs
+- ✅ PASO 4: Created new endpoint POST /api/luggage/:luggageId/certificate
+  - Generates PDF certificate for individual luggage with photos, items, QR code
+  - Supports both value and estimatedValue for backward compatibility
+
+**Pending (Phase 2 - UI):**
+- 🔲 PASO 2: Create/extend useLuggage hook with full CRUD
+- 🔲 PASO 5: Create LuggageTab, LuggageCard, LuggageDetail components
+- 🔲 PASO 6: Refactor TripDetail.tsx to use new Luggage tab
+- 🔲 PASO 7: Implement paywall logic (2 free luggage per trip)
+
+**Target Architecture:**
+```
+Trip → Luggage (individual manifest) → Items → Certificate
+```
+Each luggage piece generates its own PDF certificate with QR code and SHA-256 hash.
 
 ### Completed Features:
 - Full-stack application with Express backend and React frontend
@@ -98,7 +125,8 @@ Manifiesto is a Progressive Web App for managing travel luggage with verifiable 
 - DELETE /api/items/:id - Delete item
 
 ### Certificates
-- POST /api/trips/:tripId/certificate - Generate PDF certificate
+- POST /api/trips/:tripId/certificate - Generate PDF certificate (legacy, trip-level)
+- POST /api/luggage/:luggageId/certificate - Generate PDF certificate (NEW, luggage-level)
 - GET /api/verify/:hash - Verify manifest by hash
 
 ### Uploads
@@ -112,16 +140,23 @@ Manifiesto is a Progressive Web App for managing travel luggage with verifiable 
 ### Trip
 - id, userId, title, destination, startDate, endDate, notes, imageUrl, createdAt
 
-### ManifestItem
-- id, tripId, name, category, quantity, estimatedValue, serialNumber, imageUrl, createdAt
-- **Luggage Metadata** (optional):
-  - luggageBrand: string (e.g., "Samsonite", "Tumi")
-  - luggageSize: string enum (small/medium/large/xlarge)
-  - isSealed: boolean (security seal status)
-  - isLocked: boolean (lock/padlock status)
+### Luggage (NEW - individual manifest/suitcase)
+- id, tripId, travelerId (optional)
+- brand, size, type, color, nickname
+- isSealed, isLocked (security features)
+- openPhotoUrl, closedPhotoUrl (photos)
+- certificateHash, certificatePdfUrl (generated certificate)
+- isPremium (for paywall - 3rd luggage+)
+- createdAt
+
+### ManifestItem (items inside luggage)
+- id, luggageId (required), name, category, brand
+- quantity, value, serialNumber (optional, for electronics)
+- photoUrl, notes, createdAt
 
 ### ManifestCertificate
-- id, tripId, hash, manifestData, itemCount, totalValue, verified, createdAt
+- id, tripId (optional, legacy), luggageId (NEW)
+- hash, manifestData, itemCount, totalValue, verified, createdAt
 
 ## Design System
 
