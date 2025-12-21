@@ -19,6 +19,7 @@ import BottomNavigation from "@/components/BottomNavigation";
 import ManifestItemCard from "@/components/ManifestItemCard";
 import EmptyState from "@/components/EmptyState";
 import ItineraryTab from "@/components/ItineraryTab";
+import LuggageTab from "@/components/LuggageTab";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -641,6 +642,8 @@ export default function TripDetail() {
           </TabsContent>
 
           <TabsContent value="manifest" className="space-y-4">
+            <LuggageTab tripId={tripId!} />
+
             <div className="flex items-center justify-between">
               <div>
                 <h3 className="font-semibold text-lg">
