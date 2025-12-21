@@ -210,3 +210,38 @@ export const ITEM_CATEGORIES = {
 } as const;
 
 export type ItemCategory = keyof typeof ITEM_CATEGORIES;
+
+export const LUGGAGE_COLORS = [
+  'Negro',
+  'Azul',
+  'Rojo',
+  'Gris',
+  'Verde',
+  'Rosa',
+  'Morado',
+  'Naranja',
+  'Blanco',
+  'Café/Marrón',
+  'Dorado',
+  'Plateado',
+  'Multicolor',
+  'Otro',
+] as const;
+
+export const LUGGAGE_SIZES = [
+  { value: 'small', label: 'Pequeña (cabina)' },
+  { value: 'medium', label: 'Mediana' },
+  { value: 'large', label: 'Grande' },
+  { value: 'xlarge', label: 'Extra Grande' },
+] as const;
+
+export const LUGGAGE_TYPE_OPTIONS = [
+  { value: 'cabin', label: 'Equipaje de mano' },
+  { value: 'checked', label: 'Equipaje documentado' },
+  { value: 'backpack', label: 'Mochila' },
+  { value: 'handbag', label: 'Bolso/Cartera' },
+] as const;
+
+export type LuggageColor = typeof LUGGAGE_COLORS[number];
+export type LuggageSize = typeof LUGGAGE_SIZES[number]['value'];
+export type LuggageType = typeof LUGGAGE_TYPE_OPTIONS[number]['value'];

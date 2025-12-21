@@ -104,7 +104,7 @@ export function useDeleteLuggage() {
       const itemsRef = collection(db, "manifestItems");
       const itemsQuery = query(itemsRef, where("luggageId", "==", id));
       const itemsSnapshot = await getDocs(itemsQuery);
-      await Promise.all(itemsSnapshot.docs.map(doc => deleteDoc(doc.ref)));
+      await Promise.all(itemsSnapshot.docs.map(d => deleteDoc(d.ref)));
 
       // Then delete the luggage
       await deleteDoc(doc(db, "luggage", id));
@@ -113,6 +113,41 @@ export function useDeleteLuggage() {
     onSuccess: (variables) => {
       queryClient.invalidateQueries({ queryKey: ["/api/luggage", variables.tripId] });
       queryClient.invalidateQueries({ queryKey: ["/api/manifestItems"] });
+    },
+  });
+}
+
+export function useUpdateLuggagePhotos() {
+  return useMutation({
+    mutationFn: async ({
+      luggageId,
+      tripId,
+      openPhotoUrl,
+      closedPhotoUrl,
+    }: {
+      luggageId: string;
+      tripId: string;
+      openPhotoUrl?: string;
+      closedPhotoUrl?: string;
+    }) => {
+      const luggageRef = doc(db, "luggage", luggageId);
+
+      const updateData: Record<string, string> = {};
+      if (openPhotoUrl !== undefined) updateData.openPhotoUrl = openPhotoUrl;
+      if (closedPhotoUrl !== undefined) updateData.closedPhotoUrl = closedPhotoUrl;
+
+      await updateDoc(luggageRef, updateData);
+
+      const updated = await getDoc(luggageRef);
+      return {
+        id: updated.id,
+        ...updated.data(),
+        createdAt: updated.data()?.createdAt?.toDate?.()?.toISOString() || new Date().toISOString(),
+      } as Luggage;
+    },
+    onSuccess: (luggage) => {
+      queryClient.invalidateQueries({ queryKey: ["/api/luggage", luggage.tripId] });
+      queryClient.invalidateQueries({ queryKey: ["/api/luggage", luggage.id] });
     },
   });
 }
