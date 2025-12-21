@@ -6,6 +6,16 @@ Manifiesto is a Progressive Web App designed to streamline travel luggage manage
 ## User Preferences
 ⚠️ **IMPORTANT: Do not initiate new phases without explicit user approval.**
 
+## Current Progress - Phase 2C (Critical Fix)
+**Status: IN PROGRESS (2/3 tasks completed)**
+
+- ✅ **TAREA 1**: ManifestItemForm already uses luggageId automatically (no changes needed)
+- ✅ **TAREA 2**: Legacy trip-level items section hidden in TripDetail.tsx (IIFE with showLegacyManifest=false)
+- 🔲 **TAREA 3**: Pending - Verify "Generate Certificate" button in LuggageDetailDialog (validate items > 0, generate PDF, trigger download)
+
+**Files modified in Phase 2C:**
+- client/src/pages/TripDetail.tsx - Legacy manifest section wrapped in IIFE to hide it
+
 ## System Architecture
 Manifiesto is a full-stack application built with a React frontend and an Express.js backend. It follows a luggage-centric architecture where each piece of luggage can generate its own individual PDF certificate.
 
