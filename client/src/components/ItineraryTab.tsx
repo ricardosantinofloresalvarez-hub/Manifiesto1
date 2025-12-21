@@ -18,6 +18,7 @@ import {
   useCreateActivity,
   useDeleteActivity
 } from '@/hooks/useItineraries';
+import { useFlightCertificates } from '@/hooks/useFlightCertificates';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -26,7 +27,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { Plane, Hotel, Train, UtensilsCrossed, CalendarDays, ChevronDown, Plus, Pencil, Trash2 } from 'lucide-react';
+import { Plane, Hotel, Train, UtensilsCrossed, CalendarDays, ChevronDown, Plus, Trash2, Camera } from 'lucide-react';
 
 interface ItineraryTabProps {
   tripId: string;
@@ -35,15 +36,22 @@ interface ItineraryTabProps {
 export default function ItineraryTab({ tripId }: ItineraryTabProps) {
   const { t } = useTranslation();
   const { toast } = useToast();
-  
-  // Fetch all itinerary data using Firestore hooks
+
+  const { uploadCertificate, uploading } = useFlightCertificates();
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+
+  const [isFlightDialogOpen, setIsFlightDialogOpen] = useState(false);
+  const [isHotelDialogOpen, setIsHotelDialogOpen] = useState(false);
+  const [isTransportDialogOpen, setIsTransportDialogOpen] = useState(false);
+  const [isRestaurantDialogOpen, setIsRestaurantDialogOpen] = useState(false);
+  const [isActivityDialogOpen, setIsActivityDialogOpen] = useState(false);
+
   const { data: flights = [] } = useFlights(tripId);
   const { data: hotels = [] } = useHotels(tripId);
   const { data: transport = [] } = useTransport(tripId);
   const { data: restaurants = [] } = useRestaurants(tripId);
   const { data: activities = [] } = useActivities(tripId);
 
-  // Flight form state
   const [flightForm, setFlightForm] = useState({
     airline: '',
     flightNumber: '',
@@ -54,11 +62,9 @@ export default function ItineraryTab({ tripId }: ItineraryTabProps) {
     notes: '',
   });
 
-  // Flight mutations using Firestore hooks
   const createFlightMutation = useCreateFlight();
   const deleteFlightMutation = useDeleteFlight();
 
-  // Hotel form state  
   const [hotelForm, setHotelForm] = useState({
     name: '',
     address: '',
@@ -68,11 +74,9 @@ export default function ItineraryTab({ tripId }: ItineraryTabProps) {
     notes: '',
   });
 
-  // Hotel mutations using Firestore hooks
   const createHotelMutation = useCreateHotel();
   const deleteHotelMutation = useDeleteHotel();
 
-  // Transport form state
   const [transportForm, setTransportForm] = useState({
     type: 'train' as 'train' | 'bus' | 'ferry',
     company: '',
@@ -83,11 +87,9 @@ export default function ItineraryTab({ tripId }: ItineraryTabProps) {
     notes: '',
   });
 
-  // Transport mutations using Firestore hooks
   const createTransportMutation = useCreateTransport();
   const deleteTransportMutation = useDeleteTransport();
 
-  // Restaurant form state
   const [restaurantForm, setRestaurantForm] = useState({
     name: '',
     address: '',
@@ -96,11 +98,9 @@ export default function ItineraryTab({ tripId }: ItineraryTabProps) {
     notes: '',
   });
 
-  // Restaurant mutations using Firestore hooks
   const createRestaurantMutation = useCreateRestaurant();
   const deleteRestaurantMutation = useDeleteRestaurant();
 
-  // Activity form state
   const [activityForm, setActivityForm] = useState({
     name: '',
     location: '',
@@ -108,7 +108,6 @@ export default function ItineraryTab({ tripId }: ItineraryTabProps) {
     notes: '',
   });
 
-  // Activity mutations using Firestore hooks
   const createActivityMutation = useCreateActivity();
   const deleteActivityMutation = useDeleteActivity();
 
@@ -124,7 +123,6 @@ export default function ItineraryTab({ tripId }: ItineraryTabProps) {
 
   return (
     <div className="space-y-6">
-      {/* Flights Section */}
       <Collapsible defaultOpen>
         <Card className="p-6">
           <CollapsibleTrigger className="flex items-center justify-between w-full">
@@ -143,13 +141,22 @@ export default function ItineraryTab({ tripId }: ItineraryTabProps) {
                 flights.map((flight) => (
                   <Card key={flight.id} className="p-4" data-testid={`flight-card-${flight.id}`}>
                     <div className="flex justify-between items-start">
-                      <div className="space-y-1">
+                      <div className="space-y-1 flex-1">
                         <h4 className="font-semibold">{flight.airline} {flight.flightNumber}</h4>
                         <p className="text-sm text-muted-foreground">
                           {flight.departureAirport} → {flight.arrivalAirport}
                         </p>
                         <p className="text-sm">{formatDateTime(flight.departureDateTime)} - {formatDateTime(flight.arrivalDateTime)}</p>
                         {flight.notes && <p className="text-sm text-muted-foreground">{flight.notes}</p>}
+                        {flight.certificateUrl && (
+                          <div className="mt-2">
+                            <img 
+                              src={flight.certificateUrl} 
+                              alt="Certificado de vuelo" 
+                              className="w-full max-w-xs rounded-md border"
+                            />
+                          </div>
+                        )}
                       </div>
                       <Button
                         variant="ghost"
@@ -171,7 +178,7 @@ export default function ItineraryTab({ tripId }: ItineraryTabProps) {
                 ))
               )}
 
-              <Dialog>
+              <Dialog open={isFlightDialogOpen} onOpenChange={setIsFlightDialogOpen}>
                 <DialogTrigger asChild>
                   <Button className="w-full" data-testid="button-add-flight">
                     <Plus className="h-4 w-4 mr-2" />
@@ -245,21 +252,51 @@ export default function ItineraryTab({ tripId }: ItineraryTabProps) {
                         data-testid="input-flight-notes"
                       />
                     </div>
-                    <Button
-                      onClick={() => createFlightMutation.mutate(
-                        { tripId, ...flightForm },
-                        {
-                          onSuccess: () => {
-                            setFlightForm({ airline: '', flightNumber: '', departureAirport: '', arrivalAirport: '', departureDateTime: '', arrivalDateTime: '', notes: '' });
-                            toast({ title: t('success'), description: t('flightAdded') || 'Vuelo agregado' });
-                          },
-                        }
+                    <div>
+                      <Label className="flex items-center gap-2">
+                        <Camera className="h-4 w-4" />
+                        Certificado de vuelo (foto)
+                      </Label>
+                      <Input
+                        type="file"
+                        accept="image/*"
+                        onChange={(e) => setSelectedFile(e.target.files?.[0] || null)}
+                        data-testid="input-flight-certificate"
+                      />
+                      {selectedFile && (
+                        <p className="text-sm text-muted-foreground mt-1">
+                          📎 {selectedFile.name}
+                        </p>
                       )}
-                      disabled={createFlightMutation.isPending || !flightForm.airline || !flightForm.flightNumber || !flightForm.departureDateTime}
+                    </div>
+                    <Button
+                      onClick={async () => {
+                        try {
+                          let certificateUrl = '';
+                          if (selectedFile) {
+                            const tempId = Date.now().toString();
+                            certificateUrl = await uploadCertificate(selectedFile, tempId);
+                          }
+                          createFlightMutation.mutate(
+                            { tripId, ...flightForm, certificateUrl },
+                            {
+                              onSuccess: () => {
+                                setFlightForm({ airline: '', flightNumber: '', departureAirport: '', arrivalAirport: '', departureDateTime: '', arrivalDateTime: '', notes: '' });
+                                setSelectedFile(null);
+                                setIsFlightDialogOpen(false);
+                                toast({ title: t('success'), description: t('flightAdded') || 'Vuelo agregado' });
+                              },
+                            }
+                          );
+                        } catch (error) {
+                          toast({ title: t('error'), description: 'Error al subir la foto', variant: 'destructive' });
+                        }
+                      }}
+                      disabled={createFlightMutation.isPending || uploading || !flightForm.airline || !flightForm.flightNumber || !flightForm.departureDateTime}
                       className="w-full"
                       data-testid="button-save-flight"
                     >
-                      {t('save')}
+                      {uploading ? 'Subiendo foto...' : t('save')}
                     </Button>
                   </div>
                 </DialogContent>
@@ -268,8 +305,6 @@ export default function ItineraryTab({ tripId }: ItineraryTabProps) {
           </CollapsibleContent>
         </Card>
       </Collapsible>
-
-      {/* Hotels Section */}
       <Collapsible defaultOpen>
         <Card className="p-6">
           <CollapsibleTrigger className="flex items-center justify-between w-full">
@@ -322,7 +357,7 @@ export default function ItineraryTab({ tripId }: ItineraryTabProps) {
                 ))
               )}
 
-              <Dialog>
+              <Dialog open={isHotelDialogOpen} onOpenChange={setIsHotelDialogOpen}>
                 <DialogTrigger asChild>
                   <Button className="w-full" data-testid="button-add-hotel">
                     <Plus className="h-4 w-4 mr-2" />
@@ -392,6 +427,7 @@ export default function ItineraryTab({ tripId }: ItineraryTabProps) {
                         {
                           onSuccess: () => {
                             setHotelForm({ name: '', address: '', checkInDate: '', checkOutDate: '', reservationLink: '', notes: '' });
+                            setIsHotelDialogOpen(false);
                             toast({ title: t('success'), description: t('hotelAdded') || 'Hotel agregado' });
                           },
                         }
@@ -410,7 +446,6 @@ export default function ItineraryTab({ tripId }: ItineraryTabProps) {
         </Card>
       </Collapsible>
 
-      {/* Transport Section */}
       <Collapsible defaultOpen>
         <Card className="p-6">
           <CollapsibleTrigger className="flex items-center justify-between w-full">
@@ -457,7 +492,7 @@ export default function ItineraryTab({ tripId }: ItineraryTabProps) {
                 ))
               )}
 
-              <Dialog>
+              <Dialog open={isTransportDialogOpen} onOpenChange={setIsTransportDialogOpen}>
                 <DialogTrigger asChild>
                   <Button className="w-full" data-testid="button-add-transport">
                     <Plus className="h-4 w-4 mr-2" />
@@ -541,6 +576,7 @@ export default function ItineraryTab({ tripId }: ItineraryTabProps) {
                         {
                           onSuccess: () => {
                             setTransportForm({ type: 'train', company: '', route: '', departureDateTime: '', arrivalDateTime: '', ticketNumber: '', notes: '' });
+                            setIsTransportDialogOpen(false);
                             toast({ title: t('success'), description: t('transportAdded') || 'Transporte agregado' });
                           },
                         }
@@ -558,8 +594,6 @@ export default function ItineraryTab({ tripId }: ItineraryTabProps) {
           </CollapsibleContent>
         </Card>
       </Collapsible>
-
-      {/* Restaurants Section */}
       <Collapsible defaultOpen>
         <Card className="p-6">
           <CollapsibleTrigger className="flex items-center justify-between w-full">
@@ -609,7 +643,7 @@ export default function ItineraryTab({ tripId }: ItineraryTabProps) {
                 ))
               )}
 
-              <Dialog>
+              <Dialog open={isRestaurantDialogOpen} onOpenChange={setIsRestaurantDialogOpen}>
                 <DialogTrigger asChild>
                   <Button className="w-full" data-testid="button-add-restaurant">
                     <Plus className="h-4 w-4 mr-2" />
@@ -669,6 +703,7 @@ export default function ItineraryTab({ tripId }: ItineraryTabProps) {
                         {
                           onSuccess: () => {
                             setRestaurantForm({ name: '', address: '', reservationDateTime: '', placeLink: '', notes: '' });
+                            setIsRestaurantDialogOpen(false);
                             toast({ title: t('success'), description: t('restaurantAdded') || 'Restaurante agregado' });
                           },
                         }
@@ -686,120 +721,119 @@ export default function ItineraryTab({ tripId }: ItineraryTabProps) {
           </CollapsibleContent>
         </Card>
       </Collapsible>
-
-      {/* Activities Section */}
       <Collapsible defaultOpen>
-        <Card className="p-6">
-          <CollapsibleTrigger className="flex items-center justify-between w-full">
-            <div className="flex items-center gap-3">
-              <CalendarDays className="h-6 w-6 text-primary" />
-              <h3 className="text-lg font-semibold">{t('activities')}</h3>
-              <span className="text-sm text-muted-foreground">({activities.length})</span>
-            </div>
-            <ChevronDown className="h-5 w-5" />
-          </CollapsibleTrigger>
-          <CollapsibleContent className="mt-4">
-            <div className="space-y-4">
-              {activities.length === 0 ? (
-                <p className="text-sm text-muted-foreground">{t('noActivities')}</p>
-              ) : (
-                activities.map((activity) => (
-                  <Card key={activity.id} className="p-4" data-testid={`activity-card-${activity.id}`}>
-                    <div className="flex justify-between items-start">
-                      <div className="space-y-1">
-                        <h4 className="font-semibold">{activity.name}</h4>
-                        <p className="text-sm text-muted-foreground">{activity.location}</p>
-                        <p className="text-sm">{formatDateTime(activity.activityDateTime)}</p>
-                        {activity.notes && <p className="text-sm text-muted-foreground">{activity.notes}</p>}
-                      </div>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => deleteActivityMutation.mutate(
-                          { id: activity.id, tripId },
-                          {
-                            onSuccess: () => {
-                              toast({ title: t('success'), description: t('activityDeleted') || 'Actividad eliminada' });
-                            },
-                          }
-                        )}
-                        data-testid={`button-delete-activity-${activity.id}`}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </Card>
-                ))
-              )}
-
-              <Dialog>
-                <DialogTrigger asChild>
-                  <Button className="w-full" data-testid="button-add-activity">
-                    <Plus className="h-4 w-4 mr-2" />
-                    {t('addActivity')}
-                  </Button>
-                </DialogTrigger>
-                <DialogContent>
-                  <DialogHeader>
-                    <DialogTitle>{t('addActivity')}</DialogTitle>
-                  </DialogHeader>
-                  <div className="space-y-4">
-                    <div>
-                      <Label>{t('activityName')}</Label>
-                      <Input
-                        value={activityForm.name}
-                        onChange={(e) => setActivityForm({ ...activityForm, name: e.target.value })}
-                        data-testid="input-activity-name"
-                      />
-                    </div>
-                    <div>
-                      <Label>{t('location')}</Label>
-                      <Input
-                        value={activityForm.location}
-                        onChange={(e) => setActivityForm({ ...activityForm, location: e.target.value })}
-                        data-testid="input-activity-location"
-                      />
-                    </div>
-                    <div>
-                      <Label>{t('activityTime')}</Label>
-                      <Input
-                        type="datetime-local"
-                        value={activityForm.activityDateTime}
-                        onChange={(e) => setActivityForm({ ...activityForm, activityDateTime: e.target.value })}
-                        data-testid="input-activity-datetime"
-                      />
-                    </div>
-                    <div>
-                      <Label>{t('notes')}</Label>
-                      <Textarea
-                        value={activityForm.notes}
-                        onChange={(e) => setActivityForm({ ...activityForm, notes: e.target.value })}
-                        data-testid="input-activity-notes"
-                      />
-                    </div>
-                    <Button
-                      onClick={() => createActivityMutation.mutate(
-                        { tripId, ...activityForm },
-                        {
-                          onSuccess: () => {
-                            setActivityForm({ name: '', location: '', activityDateTime: '', notes: '' });
-                            toast({ title: t('success'), description: t('activityAdded') || 'Actividad agregada' });
-                          },
-                        }
-                      )}
-                      disabled={createActivityMutation.isPending || !activityForm.name || !activityForm.location || !activityForm.activityDateTime}
-                      className="w-full"
-                      data-testid="button-save-activity"
-                    >
-                      {t('save')}
-                    </Button>
+              <Card className="p-6">
+                <CollapsibleTrigger className="flex items-center justify-between w-full">
+                  <div className="flex items-center gap-3">
+                    <CalendarDays className="h-6 w-6 text-primary" />
+                    <h3 className="text-lg font-semibold">{t('activities')}</h3>
+                    <span className="text-sm text-muted-foreground">({activities.length})</span>
                   </div>
-                </DialogContent>
-              </Dialog>
-            </div>
-          </CollapsibleContent>
-        </Card>
-      </Collapsible>
-    </div>
-  );
-}
+                  <ChevronDown className="h-5 w-5" />
+                </CollapsibleTrigger>
+                <CollapsibleContent className="mt-4">
+                  <div className="space-y-4">
+                    {activities.length === 0 ? (
+                      <p className="text-sm text-muted-foreground">{t('noActivities')}</p>
+                    ) : (
+                      activities.map((activity) => (
+                        <Card key={activity.id} className="p-4" data-testid={`activity-card-${activity.id}`}>
+                          <div className="flex justify-between items-start">
+                            <div className="space-y-1">
+                              <h4 className="font-semibold">{activity.name}</h4>
+                              <p className="text-sm text-muted-foreground">{activity.location}</p>
+                              <p className="text-sm">{formatDateTime(activity.activityDateTime)}</p>
+                              {activity.notes && <p className="text-sm text-muted-foreground">{activity.notes}</p>}
+                            </div>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => deleteActivityMutation.mutate(
+                                { id: activity.id, tripId },
+                                {
+                                  onSuccess: () => {
+                                    toast({ title: t('success'), description: t('activityDeleted') || 'Actividad eliminada' });
+                                  },
+                                }
+                              )}
+                              data-testid={`button-delete-activity-${activity.id}`}
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </Card>
+                      ))
+                    )}
+
+                    <Dialog open={isActivityDialogOpen} onOpenChange={setIsActivityDialogOpen}>
+                      <DialogTrigger asChild>
+                        <Button className="w-full" data-testid="button-add-activity">
+                          <Plus className="h-4 w-4 mr-2" />
+                          {t('addActivity')}
+                        </Button>
+                      </DialogTrigger>
+                      <DialogContent>
+                        <DialogHeader>
+                          <DialogTitle>{t('addActivity')}</DialogTitle>
+                        </DialogHeader>
+                        <div className="space-y-4">
+                          <div>
+                            <Label>{t('activityName')}</Label>
+                            <Input
+                              value={activityForm.name}
+                              onChange={(e) => setActivityForm({ ...activityForm, name: e.target.value })}
+                              data-testid="input-activity-name"
+                            />
+                          </div>
+                          <div>
+                            <Label>{t('location')}</Label>
+                            <Input
+                              value={activityForm.location}
+                              onChange={(e) => setActivityForm({ ...activityForm, location: e.target.value })}
+                              data-testid="input-activity-location"
+                            />
+                          </div>
+                          <div>
+                            <Label>{t('activityTime')}</Label>
+                            <Input
+                              type="datetime-local"
+                              value={activityForm.activityDateTime}
+                              onChange={(e) => setActivityForm({ ...activityForm, activityDateTime: e.target.value })}
+                              data-testid="input-activity-datetime"
+                            />
+                          </div>
+                          <div>
+                            <Label>{t('notes')}</Label>
+                            <Textarea
+                              value={activityForm.notes}
+                              onChange={(e) => setActivityForm({ ...activityForm, notes: e.target.value })}
+                              data-testid="input-activity-notes"
+                            />
+                          </div>
+                          <Button
+                            onClick={() => createActivityMutation.mutate(
+                              { tripId, ...activityForm },
+                              {
+                                onSuccess: () => {
+                                  setActivityForm({ name: '', location: '', activityDateTime: '', notes: '' });
+                                  setIsActivityDialogOpen(false);
+                                  toast({ title: t('success'), description: t('activityAdded') || 'Actividad agregada' });
+                                },
+                              }
+                            )}
+                            disabled={createActivityMutation.isPending || !activityForm.name || !activityForm.location || !activityForm.activityDateTime}
+                            className="w-full"
+                            data-testid="button-save-activity"
+                          >
+                            {t('save')}
+                          </Button>
+                        </div>
+                      </DialogContent>
+                    </Dialog>
+                  </div>
+                </CollapsibleContent>
+              </Card>
+            </Collapsible>
+          </div>
+        );
+      }

@@ -22,6 +22,17 @@ type ItineraryType = "flights" | "hotels" | "transport" | "restaurants" | "activ
 type ItineraryItem = Flight | Hotel | Transport | Restaurant | Activity;
 type InsertItineraryItem = InsertFlight | InsertHotel | InsertTransport | InsertRestaurant | InsertActivity;
 
+// Helper function to remove undefined values and convert empty strings to null
+function cleanDataForFirebase<T extends Record<string, any>>(data: T): T {
+  const cleaned: any = {};
+  for (const [key, value] of Object.entries(data)) {
+    if (value !== undefined) {
+      cleaned[key] = value === '' ? null : value;
+    }
+  }
+  return cleaned as T;
+}
+
 export function useItineraryItems<T extends ItineraryItem>(
   tripId: string | null, 
   type: ItineraryType
@@ -30,22 +41,32 @@ export function useItineraryItems<T extends ItineraryItem>(
     queryKey: ["/api/trips", tripId, type],
     queryFn: async () => {
       if (!tripId) return [];
-      
+
+      console.log(`🔍 Fetching ${type} for tripId:`, tripId);
+
       const itemsRef = collection(db, type);
       const q = query(
         itemsRef, 
         where("tripId", "==", tripId),
         orderBy("createdAt", "desc")
       );
-      
+
       const snapshot = await getDocs(q);
-      return snapshot.docs.map(doc => ({
+      const items = snapshot.docs.map(doc => ({
         id: doc.id,
         ...doc.data(),
         createdAt: doc.data().createdAt?.toDate?.()?.toISOString() || new Date().toISOString(),
       })) as T[];
+
+      console.log(`✅ Found ${items.length} ${type}`);
+
+      return items;
     },
     enabled: !!tripId,
+    staleTime: 0,
+    cacheTime: 0,
+    refetchOnMount: 'always',
+    refetchOnWindowFocus: true,
   });
 }
 
@@ -73,11 +94,14 @@ export function useCreateItineraryItem(type: ItineraryType) {
   return useMutation({
     mutationFn: async (data: InsertItineraryItem) => {
       const itemsRef = collection(db, type);
-      const docRef = await addDoc(itemsRef, {
+
+      const cleanedData = cleanDataForFirebase({
         ...data,
         createdAt: Timestamp.now(),
       });
-      
+
+      const docRef = await addDoc(itemsRef, cleanedData);
+
       return {
         id: docRef.id,
         ...data,
@@ -94,15 +118,16 @@ export function useUpdateItineraryItem(type: ItineraryType) {
   return useMutation({
     mutationFn: async ({ id, data }: { id: string; data: Partial<InsertItineraryItem> }) => {
       const itemRef = doc(db, type, id);
-      await updateDoc(itemRef, data);
-      
-      // Fetch the updated document
+
+      const cleanedData = cleanDataForFirebase(data);
+      await updateDoc(itemRef, cleanedData);
+
       const snapshot = await getDocs(
         query(collection(db, type), where("__name__", "==", id))
       );
       const updated = snapshot.docs[0];
       const itemData = updated.data();
-      
+
       return {
         id: updated.id,
         ...itemData,

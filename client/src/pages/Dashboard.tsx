@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useLocation } from 'wouter';
 import { useAuth } from '@/lib/auth';
-import { useTrips, useCreateTrip } from '@/hooks/useTrips';
+import { useTrips, useCreateTrip, useDeleteTrip } from '@/hooks/useTrips';
 import TopAppBar from '@/components/TopAppBar';
 import BottomNavigation from '@/components/BottomNavigation';
 import TripCard from '@/components/TripCard';
@@ -43,6 +43,28 @@ export default function Dashboard() {
   const { data: trips = [], isLoading: isTripsLoading } = useTrips(user?.id || null);
 
   const createTripMutation = useCreateTrip();
+  const deleteTripMutation = useDeleteTrip();
+
+  const handleDeleteTrip = (tripId: string) => {
+    deleteTripMutation.mutate(
+      { id: tripId, userId: user!.id },
+      {
+        onSuccess: () => {
+          toast({
+            title: 'Viaje eliminado',
+            description: 'El viaje se ha eliminado correctamente',
+          });
+        },
+        onError: () => {
+          toast({
+            title: 'Error',
+            description: 'No se pudo eliminar el viaje',
+            variant: 'destructive',
+          });
+        },
+      }
+    );
+  };
 
   const handleCreateTripMutation = () => {
     createTripMutation.mutate(
@@ -142,6 +164,7 @@ export default function Dashboard() {
                 verified={trip.verified || false}
                 imageUrl={trip.imageUrl || undefined}
                 onClick={() => setLocation(`/trip/${trip.id}`)}
+                onDelete={handleDeleteTrip}
               />
             ))}
           </div>

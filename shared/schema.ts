@@ -36,30 +36,49 @@ export const insertTripSchema = createInsertSchema(trips).omit({
 export type InsertTrip = z.infer<typeof insertTripSchema>;
 export type Trip = typeof trips.$inferSelect;
 
-export const manifestItems = pgTable("manifest_items", {
+// NEW: Travelers table (pasajeros/viajeros)
+export const travelers = pgTable("travelers", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   tripId: varchar("trip_id").notNull(),
   name: text("name").notNull(),
-  category: text("category").notNull(),
-  quantity: integer("quantity").notNull().default(1),
-  estimatedValue: real("estimated_value"),
-  serialNumber: text("serial_number"),
-  imageUrl: text("image_url"),
-  // Luggage metadata fields
-  luggageBrand: text("luggage_brand"),
-  luggageSize: text("luggage_size"),
-  isSealed: boolean("is_sealed").default(false),
-  isLocked: boolean("is_locked").default(false),
+  type: text("type").notNull(), // 'adult' | 'child'
+  age: integer("age"),
+  relation: text("relation"), // 'hijo', 'hija', 'sobrino', etc.
+  document: text("document"),
+  isMainTraveler: boolean("is_main_traveler").default(false),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
-export const insertManifestItemSchema = createInsertSchema(manifestItems).omit({
+export const insertTravelerSchema = createInsertSchema(travelers).omit({
   id: true,
   createdAt: true,
 });
 
-export type InsertManifestItem = z.infer<typeof insertManifestItemSchema>;
-export type ManifestItem = typeof manifestItems.$inferSelect;
+export type InsertTraveler = z.infer<typeof insertTravelerSchema>;
+export type Traveler = typeof travelers.$inferSelect;
+
+// NEW: Luggage table (maletas)
+export const luggage = pgTable("luggage", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  tripId: varchar("trip_id").notNull(),
+  travelerId: varchar("traveler_id"), // Optional: which traveler owns this luggage
+  brand: text("brand"),
+  size: text("size"), // 'small', 'medium', 'large', 'xlarge'
+  type: text("type"), // 'cabin', 'checked', 'backpack', 'handbag'
+  isSealed: boolean("is_sealed").default(false),
+  isLocked: boolean("is_locked").default(false),
+  openPhotoUrl: text("open_photo_url"),
+  closedPhotoUrl: text("closed_photo_url"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const insertLuggageSchema = createInsertSchema(luggage).omit({
+  id: true,
+  createdAt: true,
+});
+
+export type InsertLuggage = z.infer<typeof insertLuggageSchema>;
+export type Luggage = typeof luggage.$inferSelect;
 
 export const manifestCertificates = pgTable("manifest_certificates", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
@@ -92,6 +111,7 @@ export const flights = pgTable("flights", {
   departureDateTime: text("departure_date_time").notNull(),
   arrivalDateTime: text("arrival_date_time").notNull(),
   notes: text("notes"),
+  certificateUrl: text("certificate_url"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
@@ -188,3 +208,19 @@ export const insertActivitySchema = createInsertSchema(activities).omit({
 
 export type InsertActivity = z.infer<typeof insertActivitySchema>;
 export type Activity = typeof activities.$inferSelect;
+// Manifest Items (items dentro de cada maleta)
+export const manifestItems = pgTable("manifest_items", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  luggageId: varchar("luggage_id").notNull(),
+  name: text("name").notNull(),
+  category: text("category").notNull(),
+  brand: text("brand"), // ← AGREGA ESTA LÍNEA
+  quantity: integer("quantity").notNull().default(1),
+  value: real("value"),
+  photoUrl: text("photo_url"),
+  notes: text("notes"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export type InsertManifestItem = z.infer<typeof insertManifestItemSchema>;
+export type ManifestItem = typeof manifestItems.$inferSelect;

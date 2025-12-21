@@ -8,32 +8,66 @@ import {
   updateDoc, 
   deleteDoc, 
   doc,
-  orderBy,
   Timestamp 
 } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { queryClient } from "@/lib/queryClient";
 import type { ManifestItem, InsertManifestItem } from "@shared/schema";
 
-export function useManifestItems(tripId: string | null) {
+// Get items by luggage ID
+export function useManifestItems(luggageId: string | null) {
   return useQuery({
-    queryKey: ["/api/trips", tripId, "items"],
+    queryKey: ["/api/manifestItems", luggageId],
     queryFn: async () => {
-      if (!tripId) return [];
-      
+      if (!luggageId) return [];
+
       const itemsRef = collection(db, "manifestItems");
-      const q = query(
-        itemsRef, 
-        where("tripId", "==", tripId),
-        orderBy("createdAt", "desc")
-      );
-      
+      const q = query(itemsRef, where("luggageId", "==", luggageId));
+
       const snapshot = await getDocs(q);
-      return snapshot.docs.map(doc => ({
+      const items = snapshot.docs.map(doc => ({
         id: doc.id,
         ...doc.data(),
         createdAt: doc.data().createdAt?.toDate?.()?.toISOString() || new Date().toISOString(),
       })) as ManifestItem[];
+
+      return items;
+    },
+    enabled: !!luggageId,
+  });
+}
+
+// Get ALL items for a trip (across all luggage)
+export function useAllManifestItemsForTrip(tripId: string | null) {
+  return useQuery({
+    queryKey: ["/api/manifestItems/trip", tripId],
+    queryFn: async () => {
+      if (!tripId) return [];
+
+      // First get all luggage for this trip
+      const luggageRef = collection(db, "luggage");
+      const luggageQuery = query(luggageRef, where("tripId", "==", tripId));
+      const luggageSnapshot = await getDocs(luggageQuery);
+      const luggageIds = luggageSnapshot.docs.map(doc => doc.id);
+
+      if (luggageIds.length === 0) return [];
+
+      // Then get all items for those luggage pieces
+      const itemsRef = collection(db, "manifestItems");
+      const allItems: ManifestItem[] = [];
+
+      for (const luggageId of luggageIds) {
+        const itemsQuery = query(itemsRef, where("luggageId", "==", luggageId));
+        const itemsSnapshot = await getDocs(itemsQuery);
+        const items = itemsSnapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data(),
+          createdAt: doc.data().createdAt?.toDate?.()?.toISOString() || new Date().toISOString(),
+        })) as ManifestItem[];
+        allItems.push(...items);
+      }
+
+      return allItems;
     },
     enabled: !!tripId,
   });
@@ -47,16 +81,16 @@ export function useCreateManifestItem() {
         ...data,
         createdAt: Timestamp.now(),
       });
-      
+
       return {
         id: docRef.id,
         ...data,
         createdAt: new Date().toISOString(),
       } as ManifestItem;
     },
-    onSuccess: (item) => {
-      queryClient.invalidateQueries({ queryKey: ["/api/trips", item.tripId, "items"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/trips", item.tripId] });
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ["/api/manifestItems", variables.luggageId] });
+      queryClient.invalidateQueries({ queryKey: ["/api/manifestItems/trip"] });
     },
   });
 }
@@ -66,47 +100,23 @@ export function useUpdateManifestItem() {
     mutationFn: async ({ id, data }: { id: string; data: Partial<InsertManifestItem> }) => {
       const itemRef = doc(db, "manifestItems", id);
       await updateDoc(itemRef, data);
-      
-      // We need to return the tripId for cache invalidation
-      // Fetch the updated document to get current tripId
-      const snapshot = await getDocs(
-        query(collection(db, "manifestItems"), where("__name__", "==", id))
-      );
-      const updated = snapshot.docs[0];
-      const itemData = updated.data();
-      
-      return {
-        id: updated.id,
-        tripId: itemData.tripId,
-        name: itemData.name,
-        category: itemData.category,
-        imageUrl: itemData.imageUrl || null,
-        quantity: itemData.quantity || 1,
-        estimatedValue: itemData.estimatedValue || null,
-        serialNumber: itemData.serialNumber || null,
-        luggageBrand: itemData.luggageBrand || null,
-        luggageSize: itemData.luggageSize || null,
-        isSealed: itemData.isSealed || null,
-        isLocked: itemData.isLocked || null,
-        createdAt: itemData.createdAt?.toDate?.() || new Date(),
-      } as ManifestItem;
+      return { id, ...data };
     },
-    onSuccess: (item) => {
-      queryClient.invalidateQueries({ queryKey: ["/api/trips", item.tripId, "items"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/trips", item.tripId] });
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/manifestItems"] });
     },
   });
 }
 
 export function useDeleteManifestItem() {
   return useMutation({
-    mutationFn: async ({ id, tripId }: { id: string; tripId: string }) => {
+    mutationFn: async ({ id, luggageId }: { id: string; luggageId: string }) => {
       await deleteDoc(doc(db, "manifestItems", id));
-      return { id, tripId };
+      return { id, luggageId };
     },
     onSuccess: (variables) => {
-      queryClient.invalidateQueries({ queryKey: ["/api/trips", variables.tripId, "items"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/trips", variables.tripId] });
+      queryClient.invalidateQueries({ queryKey: ["/api/manifestItems", variables.luggageId] });
+      queryClient.invalidateQueries({ queryKey: ["/api/manifestItems/trip"] });
     },
   });
 }
