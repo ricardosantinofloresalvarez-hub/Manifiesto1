@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -16,10 +15,15 @@ import {
   ShieldCheck,
   Package,
   AlertCircle,
+  Loader2,
+  CheckCircle,
+  Download,
 } from 'lucide-react';
 import { useManifestItems } from '@/hooks/useManifestItems';
+import { useGenerateLuggageCertificate } from '@/hooks/useCertificates';
+import { useToast } from '@/hooks/use-toast';
 import ManifestItemCard from '@/components/ManifestItemCard';
-import type { Luggage, ManifestItem } from '@shared/schema';
+import type { Luggage, ManifestItem, Trip } from '@shared/schema';
 import {
   LUGGAGE_SIZES,
   LUGGAGE_TYPE_OPTIONS,
@@ -27,24 +31,28 @@ import {
 
 interface LuggageDetailDialogProps {
   luggage: Luggage | null;
+  trip: Trip | null;
+  user: { name: string; email: string } | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onAddItem?: () => void;
   onEditItem?: (item: ManifestItem) => void;
   onDeleteItem?: (item: ManifestItem) => void;
-  onGenerateCertificate?: () => void;
 }
 
 export default function LuggageDetailDialog({
   luggage,
+  trip,
+  user,
   open,
   onOpenChange,
   onAddItem,
   onEditItem,
   onDeleteItem,
-  onGenerateCertificate,
 }: LuggageDetailDialogProps) {
+  const { toast } = useToast();
   const { data: items, isLoading, error } = useManifestItems(luggage?.id ?? null);
+  const generateCertificate = useGenerateLuggageCertificate();
 
   const getSizeLabel = (size: string | null | undefined) => {
     if (!size) return null;
@@ -63,8 +71,76 @@ export default function LuggageDetailDialog({
     return color;
   };
 
+  const handleGenerateCertificate = async () => {
+    if (!luggage || !trip || !user) {
+      toast({
+        title: 'Error',
+        description: 'Faltan datos del viaje o usuario para generar el certificado.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    if (!items || items.length === 0) {
+      toast({
+        title: 'Sin artículos',
+        description: 'Agrega al menos un artículo antes de generar el certificado.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    try {
+      const result = await generateCertificate.mutateAsync({
+        luggage,
+        items,
+        trip: {
+          id: trip.id,
+          title: trip.title,
+          destination: trip.destination,
+          startDate: trip.startDate,
+          endDate: trip.endDate,
+        },
+        user,
+      });
+
+      toast({
+        title: 'Certificado generado',
+        description: `El certificado ha sido generado con el hash: ${result.hash.substring(0, 12)}...`,
+      });
+
+      if (result.pdf) {
+        const link = document.createElement('a');
+        link.href = result.pdf;
+        link.download = `manifiesto-${luggage.nickname || luggage.brand || 'maleta'}-${result.hash.substring(0, 8)}.pdf`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      }
+    } catch (err) {
+      toast({
+        title: 'Error',
+        description: 'No se pudo generar el certificado. Intenta de nuevo.',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const handleDownloadPdf = () => {
+    const pdfUrl = luggage?.certificatePdfUrl;
+    if (pdfUrl) {
+      const link = document.createElement('a');
+      link.href = pdfUrl;
+      link.download = `manifiesto-${luggage?.nickname || luggage?.brand || 'maleta'}.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+  };
+
   const totalValue = items?.reduce((sum, item) => sum + (item.value || 0), 0) || 0;
   const itemCount = items?.length || 0;
+  const hasCertificate = !!luggage?.certificateHash;
 
   if (!luggage) return null;
 
@@ -109,6 +185,12 @@ export default function LuggageDetailDialog({
                 Con Candado
               </Badge>
             )}
+            {hasCertificate && (
+              <Badge variant="default" className="gap-1 bg-green-600" data-testid="badge-certified">
+                <CheckCircle className="h-3 w-3" />
+                Certificada
+              </Badge>
+            )}
           </div>
         </DialogHeader>
 
@@ -131,14 +213,29 @@ export default function LuggageDetailDialog({
               <Plus className="h-4 w-4 mr-1" />
               Agregar Artículo
             </Button>
+            {hasCertificate ? (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleDownloadPdf}
+                data-testid="button-download-certificate"
+              >
+                <Download className="h-4 w-4 mr-1" />
+                Descargar PDF
+              </Button>
+            ) : null}
             <Button
               size="sm"
-              onClick={onGenerateCertificate}
-              disabled={itemCount === 0}
+              onClick={handleGenerateCertificate}
+              disabled={itemCount === 0 || generateCertificate.isPending || !trip || !user}
               data-testid="button-generate-certificate"
             >
-              <FileText className="h-4 w-4 mr-1" />
-              Generar Certificado
+              {generateCertificate.isPending ? (
+                <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+              ) : (
+                <FileText className="h-4 w-4 mr-1" />
+              )}
+              {hasCertificate ? 'Regenerar' : 'Generar'} Certificado
             </Button>
           </div>
         </div>

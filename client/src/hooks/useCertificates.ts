@@ -170,6 +170,7 @@ export function useGenerateLuggageCertificate() {
       queryClient.invalidateQueries({ queryKey: ["/api/luggage", variables.luggage.id, "certificates"] });
       queryClient.invalidateQueries({ queryKey: ["/api/luggage", variables.luggage.tripId] });
       queryClient.invalidateQueries({ queryKey: ["/api/trips", variables.trip.id, "certificates"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/luggage"] });
     },
   });
 }
