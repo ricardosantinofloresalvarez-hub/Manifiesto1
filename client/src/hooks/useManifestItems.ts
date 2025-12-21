@@ -97,13 +97,14 @@ export function useCreateManifestItem() {
 
 export function useUpdateManifestItem() {
   return useMutation({
-    mutationFn: async ({ id, data }: { id: string; data: Partial<InsertManifestItem> }) => {
+    mutationFn: async ({ id, data, luggageId }: { id: string; data: Partial<InsertManifestItem>; luggageId: string }) => {
       const itemRef = doc(db, "manifestItems", id);
       await updateDoc(itemRef, data);
-      return { id, ...data };
+      return { id, luggageId };
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/manifestItems"] });
+    onSuccess: (result) => {
+      queryClient.invalidateQueries({ queryKey: ["/api/manifestItems", result.luggageId] });
+      queryClient.invalidateQueries({ queryKey: ["/api/manifestItems/trip"] });
     },
   });
 }
