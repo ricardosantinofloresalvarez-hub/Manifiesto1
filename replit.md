@@ -23,8 +23,12 @@ Manifiesto is a Progressive Web App for managing travel luggage with verifiable 
   - Generates PDF certificate for individual luggage with photos, items, QR code
   - Supports both value and estimatedValue for backward compatibility
 
+**Completed (Phase 1.5 - Hooks/Constants):**
+- ✅ PASO 2 (parcial): Added useUpdateLuggagePhotos() hook
+- ✅ PASO 2 (parcial): Added LUGGAGE_COLORS, LUGGAGE_SIZES, LUGGAGE_TYPE_OPTIONS constants
+
 **Pending (Phase 2 - UI):**
-- 🔲 PASO 2: Create/extend useLuggage hook with full CRUD
+- 🔲 PASO 2 (resto): useLuggageWithStats, useLuggageCount (when UI needs them)
 - 🔲 PASO 5: Create LuggageTab, LuggageCard, LuggageDetail components
 - 🔲 PASO 6: Refactor TripDetail.tsx to use new Luggage tab
 - 🔲 PASO 7: Implement paywall logic (2 free luggage per trip)
