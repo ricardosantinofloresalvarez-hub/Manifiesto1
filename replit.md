@@ -7,7 +7,8 @@ Manifiesto is a Progressive Web App for managing travel luggage with verifiable 
 ## Current Status
 
 ✅ **Firebase/Firestore Migration - 100% COMPLETE (Client-Side Architecture)**
-🔄 **Luggage-Centric Refactor - PHASE 1 COMPLETE (Backend/Structure Only)**
+✅ **Luggage-Centric Refactor - PHASE 1 COMPLETE (Backend/Structure Only)**
+✅ **Luggage-Centric Refactor - PHASE 2A COMPLETE (UI Components - Alcance Reducido)**
 
 ### Refactor Progress (Luggage-Centric Architecture):
 
@@ -27,11 +28,43 @@ Manifiesto is a Progressive Web App for managing travel luggage with verifiable 
 - ✅ PASO 2 (parcial): Added useUpdateLuggagePhotos() hook
 - ✅ PASO 2 (parcial): Added LUGGAGE_COLORS, LUGGAGE_SIZES, LUGGAGE_TYPE_OPTIONS constants
 
-**Pending (Phase 2 - UI):**
-- 🔲 PASO 2 (resto): useLuggageWithStats, useLuggageCount (when UI needs them)
-- 🔲 PASO 5: Create LuggageTab, LuggageCard, LuggageDetail components
-- 🔲 PASO 6: Refactor TripDetail.tsx to use new Luggage tab
+**Completed (Phase 2A - UI Components - Alcance Reducido):**
+- ✅ LuggageCard.tsx - Componente visual para maleta individual
+  - Muestra: nickname, marca, tamaño, color, badges de seguridad (sellada/candado)
+  - Acciones: Edit/Delete con hover visibility
+  - Sin navegación
+- ✅ LuggageTab.tsx - CRUD completo vía dialogs
+  - Lista de maletas con grid responsive
+  - Estados: vacío, loading, error
+  - Dialog crear/editar con formulario completo (nickname, tipo, tamaño, marca, color, switches)
+  - AlertDialog para confirmación de eliminación
+  - Usa hooks: useLuggage, useCreateLuggage, useUpdateLuggage, useDeleteLuggage
+- ✅ Integración en TripDetail.tsx
+  - LuggageTab insertado dentro del tab "Manifiesto" existente
+  - Posición: arriba del listado de artículos
+  - Cambio mínimo: 1 import + 1 línea de componente
+
+**Archivos creados/modificados en Fase 2A:**
+| Archivo | Acción | Líneas |
+|---------|--------|--------|
+| client/src/components/LuggageCard.tsx | CREADO | ~110 |
+| client/src/components/LuggageTab.tsx | CREADO | ~650 |
+| client/src/pages/TripDetail.tsx | MODIFICADO | +2 líneas |
+
+**Explícitamente fuera de alcance (Fase 2A):**
+- 🔲 Página de detalle de maleta (LuggageDetail)
+- 🔲 Nuevo tab "Equipaje" separado
+- 🔲 Paywall logic (2 maletas gratis por viaje)
+- 🔲 Refactor de la estructura de artículos para vincular a luggage
+- 🔲 Hooks adicionales: useLuggageWithStats, useLuggageCount
+
+**⚠️ IMPORTANTE: No iniciar nuevas fases sin aprobación explícita del usuario.**
+
+**Pending (Phase 2B/3 - Por definir):**
+- 🔲 PASO 6: Refactor completo de TripDetail.tsx para arquitectura luggage-centric
 - 🔲 PASO 7: Implement paywall logic (2 free luggage per trip)
+- 🔲 Vincular ManifestItems a Luggage específico
+- 🔲 Página de detalle de maleta individual
 
 **Target Architecture:**
 ```
