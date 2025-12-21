@@ -58,7 +58,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       const itemCount = items.length;
-      const totalValue = items.reduce((sum: number, item: any) => sum + (item.estimatedValue || 0), 0);
+      const totalValue = items.reduce((sum: number, item: any) => sum + (item.value || item.estimatedValue || 0), 0);
 
       const manifestData = JSON.stringify({
         tripId: trip.id,
@@ -298,6 +298,259 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
     } catch (error: any) {
       console.error('PDF generation error:', error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.post("/api/luggage/:luggageId/certificate", async (req, res) => {
+    try {
+      const { luggageId } = req.params;
+      const { luggage, items, trip, user } = req.body;
+
+      console.log('🧳 ===== LUGGAGE CERTIFICATE GENERATION =====');
+      console.log('🆔 Luggage ID:', luggageId);
+      console.log('📸 Luggage openPhotoUrl:', luggage?.openPhotoUrl || 'NOT PROVIDED');
+      console.log('📸 Luggage closedPhotoUrl:', luggage?.closedPhotoUrl || 'NOT PROVIDED');
+      console.log('🔍 ==========================================');
+
+      if (!luggage || !items || !trip || !user) {
+        return res.status(400).json({ error: "Missing required data: luggage, items, trip, user" });
+      }
+
+      const itemCount = items.length;
+      const totalValue = items.reduce((sum: number, item: any) => sum + (item.value || item.estimatedValue || 0), 0);
+
+      const sizeMap: Record<string, string> = {
+        small: 'Pequeña',
+        medium: 'Mediana',
+        large: 'Grande',
+        xlarge: 'Extra Grande'
+      };
+
+      const manifestData = JSON.stringify({
+        luggageId: luggage.id,
+        tripId: trip.id,
+        tripTitle: trip.title,
+        destination: trip.destination,
+        userName: user.name || "Unknown",
+        userEmail: user.email,
+        luggage: {
+          brand: luggage.brand,
+          size: luggage.size,
+          type: luggage.type,
+          color: luggage.color,
+          nickname: luggage.nickname,
+          isSealed: luggage.isSealed,
+          isLocked: luggage.isLocked,
+        },
+        items: items.map((item: any) => ({
+          name: item.name,
+          category: item.category,
+          brand: item.brand,
+          quantity: item.quantity,
+          value: item.value || item.estimatedValue,
+          serialNumber: item.serialNumber,
+        })),
+        timestamp: new Date().toISOString(),
+      });
+
+      const hash = createHash('sha256').update(manifestData).digest('hex');
+
+      const doc = new PDFDocument({ size: 'A4', margin: 50 });
+      const chunks: Buffer[] = [];
+
+      doc.on('data', (chunk) => chunks.push(chunk));
+
+      await new Promise<void>(async (resolve, reject) => {
+        doc.on('end', () => resolve());
+        doc.on('error', reject);
+
+        doc.fontSize(24).font('Helvetica-Bold').text('Certificado de Equipaje', { align: 'center' });
+        doc.moveDown();
+
+        doc.fontSize(14).font('Helvetica-Bold').text('Información del Viaje');
+        doc.fontSize(12).font('Helvetica')
+          .text(`Viaje: ${trip.title}`)
+          .text(`Destino: ${trip.destination}`)
+          .text(`Fechas: ${new Date(trip.startDate).toLocaleDateString()} - ${new Date(trip.endDate).toLocaleDateString()}`)
+          .text(`Viajero: ${user.name} (${user.email})`);
+        doc.moveDown();
+
+        doc.fontSize(14).font('Helvetica-Bold').text('Detalles del Equipaje');
+        doc.fontSize(12).font('Helvetica');
+        if (luggage.nickname) doc.text(`Nombre: ${luggage.nickname}`);
+        if (luggage.brand) doc.text(`Marca: ${luggage.brand}`);
+        if (luggage.size) doc.text(`Tamaño: ${sizeMap[luggage.size] || luggage.size}`);
+        if (luggage.type) doc.text(`Tipo: ${luggage.type}`);
+        if (luggage.color) doc.text(`Color: ${luggage.color}`);
+        if (luggage.isSealed) doc.text(`Estado: Sellada`);
+        if (luggage.isLocked) doc.text(`Seguridad: Con Candado`);
+        doc.moveDown();
+
+        doc.fontSize(14).font('Helvetica-Bold').text('Resumen del Contenido');
+        doc.fontSize(12).font('Helvetica')
+          .text(`Total de artículos: ${itemCount}`)
+          .text(`Valor total estimado: $${totalValue.toLocaleString()}`);
+        doc.moveDown();
+
+        if (luggage.openPhotoUrl || luggage.closedPhotoUrl) {
+          doc.addPage();
+          doc.fontSize(18).font('Helvetica-Bold').text('Fotografías del Equipaje', { align: 'center' });
+          doc.moveDown(2);
+
+          if (luggage.openPhotoUrl) {
+            try {
+              doc.fontSize(14).font('Helvetica-Bold').text('Maleta Abierta:', { align: 'center' });
+              doc.moveDown(0.5);
+
+              let photoBuffer: Buffer;
+              if (luggage.openPhotoUrl.startsWith('data:')) {
+                const base64Data = luggage.openPhotoUrl.split(',')[1];
+                photoBuffer = Buffer.from(base64Data, 'base64');
+              } else {
+                const response = await fetch(luggage.openPhotoUrl);
+                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+                const arrayBuffer = await response.arrayBuffer();
+                photoBuffer = Buffer.from(arrayBuffer);
+              }
+
+              doc.image(photoBuffer, {
+                fit: [400, 300],
+                align: 'center',
+                valign: 'center'
+              });
+              doc.moveDown(2);
+            } catch (error: any) {
+              console.error('❌ Error adding open photo:', error.message);
+              doc.fontSize(10).font('Helvetica').fillColor('red')
+                .text('(Error: No se pudo cargar la foto de maleta abierta)', { align: 'center' })
+                .fillColor('black');
+              doc.moveDown();
+            }
+          }
+
+          if (luggage.closedPhotoUrl) {
+            try {
+              doc.fontSize(14).font('Helvetica-Bold').text('Maleta Cerrada:', { align: 'center' });
+              doc.moveDown(0.5);
+
+              let photoBuffer: Buffer;
+              if (luggage.closedPhotoUrl.startsWith('data:')) {
+                const base64Data = luggage.closedPhotoUrl.split(',')[1];
+                photoBuffer = Buffer.from(base64Data, 'base64');
+              } else {
+                const response = await fetch(luggage.closedPhotoUrl);
+                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+                const arrayBuffer = await response.arrayBuffer();
+                photoBuffer = Buffer.from(arrayBuffer);
+              }
+
+              doc.image(photoBuffer, {
+                fit: [400, 300],
+                align: 'center',
+                valign: 'center'
+              });
+              doc.moveDown(2);
+            } catch (error: any) {
+              console.error('❌ Error adding closed photo:', error.message);
+              doc.fontSize(10).font('Helvetica').fillColor('red')
+                .text('(Error: No se pudo cargar la foto de maleta cerrada)', { align: 'center' })
+                .fillColor('black');
+              doc.moveDown();
+            }
+          }
+
+          doc.addPage();
+        }
+
+        doc.fontSize(14).font('Helvetica-Bold').text('Lista de Artículos');
+        doc.moveDown(0.5);
+
+        items.forEach((item: any, index: number) => {
+          doc.fontSize(12).font('Helvetica-Bold').text(`${index + 1}. ${item.name}`);
+          doc.fontSize(10).font('Helvetica')
+            .text(`   Categoría: ${item.category}`)
+            .text(`   Cantidad: ${item.quantity}`)
+            .text(`   Valor estimado: $${(item.value || item.estimatedValue || 0).toLocaleString()}`);
+
+          if (item.brand) {
+            doc.text(`   Marca: ${item.brand}`);
+          }
+          if (item.serialNumber) {
+            doc.text(`   Número de serie: ${item.serialNumber}`);
+          }
+
+          doc.moveDown(0.5);
+        });
+
+        doc.moveDown();
+        doc.addPage();
+
+        doc.fontSize(14).font('Helvetica-Bold').text('Certificación', { align: 'center' });
+        doc.moveDown();
+        doc.fontSize(10).font('Helvetica')
+          .text('Este equipaje ha sido certificado mediante hash SHA-256:', { align: 'center' })
+          .moveDown(0.5);
+
+        doc.fontSize(8).font('Helvetica')
+          .text(hash, { align: 'center' })
+          .moveDown(2);
+
+        doc.fontSize(10).font('Helvetica-Bold').text('Escanea para verificar:', { align: 'center' });
+        doc.moveDown(1);
+
+        try {
+          const qrBuffer = await QRCode.toBuffer(
+            `${process.env.REPLIT_DEV_DOMAIN || 'http://localhost:5000'}/verify?hash=${hash}`,
+            {
+              width: 200,
+              margin: 2,
+              errorCorrectionLevel: 'M'
+            }
+          );
+
+          const qrSize = 150;
+          const pageWidth = doc.page.width;
+          const xPosition = (pageWidth - qrSize) / 2;
+          const qrStartY = doc.y;
+
+          doc.image(qrBuffer, xPosition, qrStartY, {
+            width: qrSize,
+            height: qrSize
+          });
+
+          doc.y = qrStartY + qrSize + 25;
+          doc.moveDown(1);
+
+        } catch (error: any) {
+          console.error('❌ Error generating QR code:', error);
+          doc.fontSize(8).text('(Error al generar código QR)', { align: 'center' });
+          doc.moveDown();
+        }
+
+        doc.fontSize(9).font('Helvetica').text(`Generado el ${new Date().toLocaleString()}`, { align: 'center' });
+
+        doc.end();
+      });
+
+      const pdfBuffer = Buffer.concat(chunks);
+
+      res.json({
+        pdf: pdfBuffer.toString('base64'),
+        certificate: {
+          luggageId: luggage.id,
+          tripId: trip.id,
+          hash,
+          manifestData,
+          itemCount,
+          totalValue,
+          verified: true,
+        }
+      });
+
+      console.log('✅ Luggage certificate generated successfully');
+    } catch (error: any) {
+      console.error('❌ Luggage PDF generation error:', error);
       res.status(500).json({ error: error.message });
     }
   });

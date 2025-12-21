@@ -65,10 +65,16 @@ export const luggage = pgTable("luggage", {
   brand: text("brand"),
   size: text("size"), // 'small', 'medium', 'large', 'xlarge'
   type: text("type"), // 'cabin', 'checked', 'backpack', 'handbag'
+  color: text("color"), // NEW: color de la maleta
+  nickname: text("nickname"), // NEW: nombre/alias de la maleta (ej: "Maleta principal")
   isSealed: boolean("is_sealed").default(false),
   isLocked: boolean("is_locked").default(false),
   openPhotoUrl: text("open_photo_url"),
   closedPhotoUrl: text("closed_photo_url"),
+  // NEW: Campos para certificado por maleta
+  certificateHash: text("certificate_hash"),
+  certificatePdfUrl: text("certificate_pdf_url"),
+  isPremium: boolean("is_premium").default(false), // Para paywall (3ra maleta+)
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
@@ -82,7 +88,8 @@ export type Luggage = typeof luggage.$inferSelect;
 
 export const manifestCertificates = pgTable("manifest_certificates", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  tripId: varchar("trip_id").notNull(),
+  tripId: varchar("trip_id"), // Mantener para compatibilidad, ahora opcional
+  luggageId: varchar("luggage_id"), // NEW: Certificado vinculado a maleta específica
   hash: text("hash").notNull().unique(),
   manifestData: text("manifest_data").notNull(),
   itemCount: integer("item_count").notNull(),
@@ -214,12 +221,18 @@ export const manifestItems = pgTable("manifest_items", {
   luggageId: varchar("luggage_id").notNull(),
   name: text("name").notNull(),
   category: text("category").notNull(),
-  brand: text("brand"), // ← AGREGA ESTA LÍNEA
+  brand: text("brand"), // Marca del artículo
   quantity: integer("quantity").notNull().default(1),
-  value: real("value"),
+  value: real("value"), // Mantener nombre original para compatibilidad
+  serialNumber: text("serial_number"), // Para electrónicos (opcional)
   photoUrl: text("photo_url"),
   notes: text("notes"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const insertManifestItemSchema = createInsertSchema(manifestItems).omit({
+  id: true,
+  createdAt: true,
 });
 
 export type InsertManifestItem = z.infer<typeof insertManifestItemSchema>;
