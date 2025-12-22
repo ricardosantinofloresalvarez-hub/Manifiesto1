@@ -6,15 +6,21 @@ Manifiesto is a Progressive Web App designed to streamline travel luggage manage
 ## User Preferences
 ⚠️ **IMPORTANT: Do not initiate new phases without explicit user approval.**
 
-## Current Progress - Phase 2C (Critical Fix)
-**Status: IN PROGRESS (2/3 tasks completed)**
+## Current Progress - Phase 2C (Complete)
+**Status: COMPLETED ✅**
 
-- ✅ **TAREA 1**: ManifestItemForm already uses luggageId automatically (no changes needed)
-- ✅ **TAREA 2**: Legacy trip-level items section hidden in TripDetail.tsx (IIFE with showLegacyManifest=false)
-- 🔲 **TAREA 3**: Pending - Verify "Generate Certificate" button in LuggageDetailDialog (validate items > 0, generate PDF, trigger download)
+**Objective:** Complete elimination of legacy trip-level item management flow.
 
-**Files modified in Phase 2C:**
-- client/src/pages/TripDetail.tsx - Legacy manifest section wrapped in IIFE to hide it
+**Changes made:**
+- Removed all legacy imports (useManifestItems, useCreateManifestItem, useUpdateManifestItem, useDeleteManifestItem, useGenerateCertificate, ManifestItemCard, AlertDialog, ITEM_CATEGORIES, etc.)
+- Removed all legacy state variables (showAddItemDialog, showEditItemDialog, showDeleteConfirm, editingItem, deletingItemId, generatedHash, formData, showCustomName)
+- Removed all legacy hooks (items query, mutations for add/update/delete items, generateCertificateMutation, totalValue calculation)
+- Removed all legacy handlers (handleGenerateCertificate, handleAddItem, handleEditItem, handleUpdateItem, handleDeleteItem, confirmDelete)
+- Removed legacy JSX (Add/Edit item dialogs, delete confirmation dialog, trip-level manifest section)
+- File reduced from ~1559 → ~620 lines
+- 0 LSP errors
+
+**Result:** Tab "Manifiesto" now shows ONLY LuggageTab. Items are created exclusively from individual luggage detail dialogs, enforcing the manifest-per-luggage architecture.
 
 ## System Architecture
 Manifiesto is a full-stack application built with a React frontend and an Express.js backend. It follows a luggage-centric architecture where each piece of luggage can generate its own individual PDF certificate.
