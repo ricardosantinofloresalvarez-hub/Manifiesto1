@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -69,6 +69,8 @@ export default function ManifestItemForm({
   const updateMutation = useUpdateManifestItem();
 
   const isEditing = !!item;
+  const [showCustomName, setShowCustomName] = useState(false);
+  const [showCustomBrand, setShowCustomBrand] = useState(false);
 
   const form = useForm<ManifestItemFormValues>({
     resolver: zodResolver(manifestItemFormSchema),
@@ -83,17 +85,26 @@ export default function ManifestItemForm({
     },
   });
 
+  const selectedCategory = form.watch('category') as ItemCategory;
+
   useEffect(() => {
     if (item) {
+      const categoryData = ITEM_CATEGORIES[item.category as ItemCategory];
+      const isNameInSuggestions = categoryData?.suggestions.includes(item.name);
+      const isBrandInList = categoryData?.brands.includes(item.brand || '');
+
       form.reset({
-        name: item.name,
+        name: isNameInSuggestions ? item.name : '',
         category: item.category,
-        brand: item.brand || '',
+        brand: isBrandInList ? item.brand || '' : '',
         quantity: String(item.quantity),
         value: item.value ? String(item.value) : '',
         serialNumber: item.serialNumber || '',
         notes: item.notes || '',
       });
+
+      setShowCustomName(!isNameInSuggestions);
+      setShowCustomBrand(!isBrandInList && !!item.brand);
     } else {
       form.reset({
         name: '',
@@ -104,6 +115,8 @@ export default function ManifestItemForm({
         serialNumber: '',
         notes: '',
       });
+      setShowCustomName(false);
+      setShowCustomBrand(false);
     }
   }, [item, form]);
 
@@ -152,12 +165,12 @@ export default function ManifestItemForm({
   };
 
   const isPending = createMutation.isPending || updateMutation.isPending;
-
   const categoryKeys = Object.keys(ITEM_CATEGORIES) as ItemCategory[];
+  const currentCategoryData = selectedCategory ? ITEM_CATEGORIES[selectedCategory] : null;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md">
+      <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>
             {isEditing ? 'Editar Artículo' : 'Agregar Artículo'}
@@ -171,42 +184,37 @@ export default function ManifestItemForm({
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
-            <FormField
-              control={form.control}
-              name="name"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Nombre *</FormLabel>
-                  <FormControl>
-                    <Input
-                      placeholder="Ej: Laptop, Cámara, Camisas..."
-                      {...field}
-                      data-testid="input-item-name"
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
+            {/* CATEGORÍA */}
             <FormField
               control={form.control}
               name="category"
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Categoría *</FormLabel>
-                  <Select onValueChange={field.onChange} value={field.value}>
+                  <Select 
+                    onValueChange={(value) => {
+                      field.onChange(value);
+                      form.setValue('name', '');
+                      form.setValue('brand', '');
+                      setShowCustomName(false);
+                      setShowCustomBrand(false);
+                    }} 
+                    value={field.value}
+                  >
                     <FormControl>
                       <SelectTrigger data-testid="select-item-category">
                         <SelectValue placeholder="Selecciona una categoría" />
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      {categoryKeys.map((key) => (
-                        <SelectItem key={key} value={key}>
-                          {ITEM_CATEGORIES[key].label}
-                        </SelectItem>
-                      ))}
+                      {categoryKeys.map((key) => {
+                        const cat = ITEM_CATEGORIES[key];
+                        return (
+                          <SelectItem key={key} value={key}>
+                            {cat.icon} {cat.label}
+                          </SelectItem>
+                        );
+                      })}
                     </SelectContent>
                   </Select>
                   <FormMessage />
@@ -214,6 +222,132 @@ export default function ManifestItemForm({
               )}
             />
 
+            {/* NOMBRE DEL ARTÍCULO (con sugerencias) */}
+            {selectedCategory && (
+              <>
+                <FormField
+                  control={form.control}
+                  name="name"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Nombre del artículo *</FormLabel>
+                      {!showCustomName ? (
+                        <Select 
+                          onValueChange={(value) => {
+                            if (value === 'custom') {
+                              setShowCustomName(true);
+                              field.onChange('');
+                            } else {
+                              field.onChange(value);
+                            }
+                          }} 
+                          value={field.value}
+                        >
+                          <FormControl>
+                            <SelectTrigger data-testid="select-item-name">
+                              <SelectValue placeholder="Selecciona un artículo" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            {currentCategoryData?.suggestions.map((suggestion) => (
+                              <SelectItem key={suggestion} value={suggestion}>
+                                {suggestion}
+                              </SelectItem>
+                            ))}
+                            <SelectItem value="custom">✏️ Otro (escribir)</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      ) : (
+                        <div className="space-y-2">
+                          <FormControl>
+                            <Input
+                              placeholder="Escribe el nombre del artículo"
+                              {...field}
+                              data-testid="input-item-name-custom"
+                            />
+                          </FormControl>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => {
+                              setShowCustomName(false);
+                              field.onChange('');
+                            }}
+                          >
+                            ← Volver a sugerencias
+                          </Button>
+                        </div>
+                      )}
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                {/* MARCA DEL ARTÍCULO (según categoría) */}
+                {currentCategoryData && currentCategoryData.brands.length > 0 && (
+                  <FormField
+                    control={form.control}
+                    name="brand"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Marca del artículo</FormLabel>
+                        {!showCustomBrand ? (
+                          <Select 
+                            onValueChange={(value) => {
+                              if (value === 'custom') {
+                                setShowCustomBrand(true);
+                                field.onChange('');
+                              } else {
+                                field.onChange(value);
+                              }
+                            }} 
+                            value={field.value}
+                          >
+                            <FormControl>
+                              <SelectTrigger data-testid="select-item-brand">
+                                <SelectValue placeholder="Seleccionar marca" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              {currentCategoryData.brands.map((brand) => (
+                                <SelectItem key={brand} value={brand}>
+                                  {brand}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        ) : (
+                          <div className="space-y-2">
+                            <FormControl>
+                              <Input
+                                placeholder="Escribe la marca"
+                                {...field}
+                                data-testid="input-item-brand-custom"
+                              />
+                            </FormControl>
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => {
+                                setShowCustomBrand(false);
+                                field.onChange('');
+                              }}
+                            >
+                              ← Volver a marcas
+                            </Button>
+                          </div>
+                        )}
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                )}
+              </>
+            )}
+
+            {/* CANTIDAD Y VALOR */}
             <div className="grid grid-cols-2 gap-4">
               <FormField
                 control={form.control}
@@ -257,42 +391,28 @@ export default function ManifestItemForm({
               />
             </div>
 
-            <FormField
-              control={form.control}
-              name="brand"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Marca</FormLabel>
-                  <FormControl>
-                    <Input
-                      placeholder="Ej: Apple, Samsung, Nike..."
-                      {...field}
-                      data-testid="input-item-brand"
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+            {/* NÚMERO DE SERIE (solo para electrónicos) */}
+            {selectedCategory === 'electronics' && (
+              <FormField
+                control={form.control}
+                name="serialNumber"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Número de serie</FormLabel>
+                    <FormControl>
+                      <Input
+                        placeholder="Para electrónicos..."
+                        {...field}
+                        data-testid="input-item-serial"
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            )}
 
-            <FormField
-              control={form.control}
-              name="serialNumber"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Número de serie (opcional)</FormLabel>
-                  <FormControl>
-                    <Input
-                      placeholder="Para electrónicos..."
-                      {...field}
-                      data-testid="input-item-serial"
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
+            {/* NOTAS */}
             <FormField
               control={form.control}
               name="notes"

@@ -4,6 +4,9 @@ import { createHash } from "crypto";
 import PDFDocument from "pdfkit";
 import QRCode from "qrcode";
 import multer from "multer";
+import { db } from "./db";  // ← AGREGAR ESTA LÍNEA
+import { manifestItems, luggage } from "@shared/schema";  // ← AGREGAR ESTA LÍNEA
+import { eq } from "drizzle-orm";  // ← AGREGAR ESTA LÍNEA
 
 const upload = multer({
   storage: multer.memoryStorage(),
@@ -568,6 +571,152 @@ export async function registerRoutes(app: Express): Promise<Server> {
     });
   });
 
+  // ========================================
+    // MANIFEST ITEMS ROUTES
+    // ========================================
+
+    // GET /api/manifestItems?luggageId=xxx - Get items by luggage ID
+    app.get("/api/manifestItems", async (req, res) => {
+      try {
+        const { luggageId } = req.query;
+
+        if (!luggageId || typeof luggageId !== "string") {
+          return res.status(400).send("luggageId is required");
+        }
+
+        const items = await db
+          .select()
+          .from(manifestItems)
+          .where(eq(manifestItems.luggageId, luggageId));
+
+        res.json(items);
+      } catch (error) {
+        console.error("Error fetching manifest items:", error);
+        res.status(500).send("Error fetching manifest items");
+      }
+    });
+
+    // GET /api/manifestItems/trip/:tripId - Get ALL items for a trip
+    app.get("/api/manifestItems/trip/:tripId", async (req, res) => {
+      try {
+        const { tripId } = req.params;
+
+        const luggageList = await db
+          .select()
+          .from(luggage)
+          .where(eq(luggage.tripId, tripId));
+
+        if (luggageList.length === 0) {
+          return res.json([]);
+        }
+
+        const luggageIds = luggageList.map((l) => l.id);
+        const allItems = [];
+
+        for (const luggageId of luggageIds) {
+          const items = await db
+            .select()
+            .from(manifestItems)
+            .where(eq(manifestItems.luggageId, luggageId));
+          allItems.push(...items);
+        }
+
+        res.json(allItems);
+      } catch (error) {
+        console.error("Error fetching trip items:", error);
+        res.status(500).send("Error fetching trip items");
+      }
+    });
+
+    // POST /api/manifestItems - Create new item
+    app.post("/api/manifestItems", async (req, res) => {
+      try {
+        const data = req.body;
+
+        if (!data.luggageId || !data.name || !data.category) {
+          return res.status(400).send("luggageId, name, and category are required");
+        }
+
+        const [newItem] = await db
+          .insert(manifestItems)
+          .values({
+            luggageId: data.luggageId,
+            name: data.name,
+            category: data.category,
+            brand: data.brand || null,
+            quantity: data.quantity || 1,
+            value: data.value || null,
+            serialNumber: data.serialNumber || null,
+            photoUrl: data.photoUrl || null,
+            notes: data.notes || null,
+          })
+          .returning();
+
+        res.json(newItem);
+      } catch (error) {
+        console.error("Error creating manifest item:", error);
+        res.status(500).send("Error creating manifest item");
+      }
+    });
+
+    // PUT /api/manifestItems/:id - Update item
+    app.put("/api/manifestItems/:id", async (req, res) => {
+      try {
+        const { id } = req.params;
+        const data = req.body;
+
+        const [updatedItem] = await db
+          .update(manifestItems)
+          .set({
+            name: data.name,
+            category: data.category,
+            brand: data.brand || null,
+            quantity: data.quantity,
+            value: data.value || null,
+            serialNumber: data.serialNumber || null,
+            photoUrl: data.photoUrl || null,
+            notes: data.notes || null,
+          })
+          .where(eq(manifestItems.id, id))
+          .returning();
+
+        if (!updatedItem) {
+          return res.status(404).send("Item not found");
+        }
+
+        res.json(updatedItem);
+      } catch (error) {
+        console.error("Error updating manifest item:", error);
+        res.status(500).send("Error updating manifest item");
+      }
+    });
+
+    // DELETE /api/manifestItems/:id - Delete item
+    app.delete("/api/manifestItems/:id", async (req, res) => {
+      try {
+        const { id } = req.params;
+
+        const [deletedItem] = await db
+          .delete(manifestItems)
+          .where(eq(manifestItems.id, id))
+          .returning();
+
+        if (!deletedItem) {
+          return res.status(404).send("Item not found");
+        }
+
+        res.json({ success: true, id });
+      } catch (error) {
+        console.error("Error deleting manifest item:", error);
+        res.status(500).send("Error deleting manifest item");
+      }
+    });
+
+    // ========================================
+    // END MANIFEST ITEMS ROUTES
+    // ========================================
+
+   
   const httpServer = createServer(app);
   return httpServer;
 }
