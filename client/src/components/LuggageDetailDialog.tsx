@@ -1,14 +1,14 @@
-import { useState } from 'react';
+import { useState } from "react";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
-} from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { Skeleton } from '@/components/ui/skeleton';
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   Plus,
   FileText,
@@ -19,17 +19,17 @@ import {
   Loader2,
   CheckCircle,
   Download,
-} from 'lucide-react';
-import { useManifestItems, useDeleteManifestItem } from '@/hooks/useManifestItems';
-import { useGenerateLuggageCertificate } from '@/hooks/useCertificates';
-import { useToast } from '@/hooks/use-toast';
-import ManifestItemCard from '@/components/ManifestItemCard';
-import ManifestItemForm from '@/components/ManifestItemForm';
-import type { Luggage, ManifestItem, Trip } from '@shared/schema';
+} from "lucide-react";
 import {
-  LUGGAGE_SIZES,
-  LUGGAGE_TYPE_OPTIONS,
-} from '@/constants/manifestItems';
+  useManifestItems,
+  useDeleteManifestItem,
+} from "@/hooks/useManifestItems";
+import { useGenerateLuggageCertificate } from "@/hooks/useCertificates";
+import { useToast } from "@/hooks/use-toast";
+import ManifestItemCard from "@/components/ManifestItemCard";
+import ManifestItemForm from "@/components/ManifestItemForm";
+import type { Luggage, ManifestItem, Trip } from "@shared/schema";
+import { LUGGAGE_SIZES, LUGGAGE_TYPE_OPTIONS } from "@/constants/manifestItems";
 
 interface LuggageDetailDialogProps {
   luggage: Luggage | null;
@@ -47,7 +47,16 @@ export default function LuggageDetailDialog({
   onOpenChange,
 }: LuggageDetailDialogProps) {
   const { toast } = useToast();
-  const { data: items, isLoading, error } = useManifestItems(luggage?.id ?? null);
+  const luggageId = luggage?.id;
+
+  const {
+    data: items,
+    isLoading,
+    error,
+  } = useManifestItems(luggageId, {
+    enabled: !!luggageId,
+  });
+
   const generateCertificate = useGenerateLuggageCertificate();
   const deleteItemMutation = useDeleteManifestItem();
 
@@ -57,10 +66,20 @@ export default function LuggageDetailDialog({
   const handleDeleteItem = async (item: ManifestItem) => {
     if (!luggage) return;
     try {
-      await deleteItemMutation.mutateAsync({ id: item.id, luggageId: luggage.id });
-      toast({ title: 'Artículo eliminado', description: 'El artículo ha sido eliminado.' });
+      await deleteItemMutation.mutateAsync({
+        id: item.id,
+        luggageId: luggage.id,
+      });
+      toast({
+        title: "Artículo eliminado",
+        description: "El artículo ha sido eliminado.",
+      });
     } catch (err) {
-      toast({ title: 'Error', description: 'No se pudo eliminar el artículo.', variant: 'destructive' });
+      toast({
+        title: "Error",
+        description: "No se pudo eliminar el artículo.",
+        variant: "destructive",
+      });
     }
   };
 
@@ -89,18 +108,20 @@ export default function LuggageDetailDialog({
   const handleGenerateCertificate = async () => {
     if (!luggage || !trip || !user) {
       toast({
-        title: 'Error',
-        description: 'Faltan datos del viaje o usuario para generar el certificado.',
-        variant: 'destructive',
+        title: "Error",
+        description:
+          "Faltan datos del viaje o usuario para generar el certificado.",
+        variant: "destructive",
       });
       return;
     }
 
     if (!items || items.length === 0) {
       toast({
-        title: 'Sin artículos',
-        description: 'Agrega al menos un artículo antes de generar el certificado.',
-        variant: 'destructive',
+        title: "Sin artículos",
+        description:
+          "Agrega al menos un artículo antes de generar el certificado.",
+        variant: "destructive",
       });
       return;
     }
@@ -118,42 +139,27 @@ export default function LuggageDetailDialog({
         },
         user,
       });
+      console.log("CERTIFICATE RESULT:", result);
 
       toast({
-        title: 'Certificado generado',
+        title: "Certificado generado",
         description: `El certificado ha sido generado con el hash: ${result.hash.substring(0, 12)}...`,
       });
 
       if (result.pdf) {
-        const link = document.createElement('a');
-        link.href = result.pdf;
-        link.download = `manifiesto-${luggage.nickname || luggage.brand || 'maleta'}-${result.hash.substring(0, 8)}.pdf`;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
+        window.open(result.pdf, "_blank");
       }
     } catch (err) {
       toast({
-        title: 'Error',
-        description: 'No se pudo generar el certificado. Intenta de nuevo.',
-        variant: 'destructive',
+        title: "Error",
+        description: "No se pudo generar el certificado. Intenta de nuevo.",
+        variant: "destructive",
       });
     }
   };
 
-  const handleDownloadPdf = () => {
-    const pdfUrl = luggage?.certificatePdfUrl;
-    if (pdfUrl) {
-      const link = document.createElement('a');
-      link.href = pdfUrl;
-      link.download = `manifiesto-${luggage?.nickname || luggage?.brand || 'maleta'}.pdf`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-    }
-  };
-
-  const totalValue = items?.reduce((sum, item) => sum + (item.value || 0), 0) || 0;
+  const totalValue =
+    items?.reduce((sum, item) => sum + (item.value || 0), 0) || 0;
   const itemCount = items?.length || 0;
   const hasCertificate = !!luggage?.certificateHash;
 
@@ -165,7 +171,7 @@ export default function LuggageDetailDialog({
         <DialogHeader className="flex-shrink-0">
           <DialogTitle className="flex items-center gap-2">
             <Package className="h-5 w-5" />
-            {luggage.nickname || luggage.brand || 'Maleta'}
+            {luggage.nickname || luggage.brand || "Maleta"}
           </DialogTitle>
           <div className="flex flex-wrap items-center gap-2 mt-2">
             {luggage.brand && (
@@ -189,19 +195,31 @@ export default function LuggageDetailDialog({
               </Badge>
             )}
             {luggage.isSealed && (
-              <Badge variant="secondary" className="gap-1" data-testid="badge-sealed">
+              <Badge
+                variant="secondary"
+                className="gap-1"
+                data-testid="badge-sealed"
+              >
                 <ShieldCheck className="h-3 w-3" />
                 Sellada
               </Badge>
             )}
             {luggage.isLocked && (
-              <Badge variant="secondary" className="gap-1" data-testid="badge-locked">
+              <Badge
+                variant="secondary"
+                className="gap-1"
+                data-testid="badge-locked"
+              >
                 <Lock className="h-3 w-3" />
                 Con Candado
               </Badge>
             )}
             {hasCertificate && (
-              <Badge variant="default" className="gap-1 bg-green-600" data-testid="badge-certified">
+              <Badge
+                variant="default"
+                className="gap-1 bg-green-600"
+                data-testid="badge-certified"
+              >
                 <CheckCircle className="h-3 w-3" />
                 Certificada
               </Badge>
@@ -211,7 +229,9 @@ export default function LuggageDetailDialog({
 
         <div className="flex items-center justify-between py-3 border-b flex-shrink-0">
           <div className="flex items-center gap-4 text-sm text-muted-foreground">
-            <span data-testid="text-item-count">{itemCount} artículo{itemCount !== 1 ? 's' : ''}</span>
+            <span data-testid="text-item-count">
+              {itemCount} artículo{itemCount !== 1 ? "s" : ""}
+            </span>
             {totalValue > 0 && (
               <span data-testid="text-total-value">
                 Valor total: ${totalValue.toLocaleString()}
@@ -222,7 +242,10 @@ export default function LuggageDetailDialog({
             <Button
               variant="outline"
               size="sm"
-              onClick={() => { setEditingItem(null); setShowItemForm(true); }}
+              onClick={() => {
+                setEditingItem(null);
+                setShowItemForm(true);
+              }}
               data-testid="button-add-item"
             >
               <Plus className="h-4 w-4 mr-1" />
@@ -232,17 +255,72 @@ export default function LuggageDetailDialog({
               <Button
                 variant="outline"
                 size="sm"
-                onClick={handleDownloadPdf}
+                onClick={handleGenerateCertificate}
                 data-testid="button-download-certificate"
               >
                 <Download className="h-4 w-4 mr-1" />
                 Descargar PDF
               </Button>
             ) : null}
+            <label className="cursor-pointer">
+              <input
+                type="file"
+                accept="image/*"
+                hidden
+                onChange={async (e) => {
+                  if (!e.target.files || !luggage) return;
+
+                  const formData = new FormData();
+                  formData.append("image", e.target.files[0]);
+                  formData.append("type", "open");
+
+                  await fetch(`/api/luggage/${luggage.id}/photo`, {
+                    method: "POST",
+                    body: formData,
+                  });
+
+                  toast({ title: "Foto de maleta abierta subida" });
+                }}
+              />
+              <Button variant="outline" size="sm">
+                📷 Maleta Abierta
+              </Button>
+            </label>
+
+            <label className="cursor-pointer">
+              <input
+                type="file"
+                accept="image/*"
+                hidden
+                onChange={async (e) => {
+                  if (!e.target.files || !luggage) return;
+
+                  const formData = new FormData();
+                  formData.append("image", e.target.files[0]);
+                  formData.append("type", "closed");
+
+                  await fetch(`/api/luggage/${luggage.id}/photo`, {
+                    method: "POST",
+                    body: formData,
+                  });
+
+                  toast({ title: "Foto de maleta cerrada subida" });
+                }}
+              />
+              <Button variant="outline" size="sm">
+                📷 Maleta Cerrada
+              </Button>
+            </label>
+
             <Button
               size="sm"
               onClick={handleGenerateCertificate}
-              disabled={itemCount === 0 || generateCertificate.isPending || !trip || !user}
+              disabled={
+                itemCount === 0 ||
+                generateCertificate.isPending ||
+                !trip ||
+                !user
+              }
               data-testid="button-generate-certificate"
             >
               {generateCertificate.isPending ? (
@@ -250,7 +328,7 @@ export default function LuggageDetailDialog({
               ) : (
                 <FileText className="h-4 w-4 mr-1" />
               )}
-              {hasCertificate ? 'Regenerar' : 'Generar'} Certificado
+              {hasCertificate ? "Regenerar" : "Generar"} Certificado
             </Button>
           </div>
         </div>
@@ -279,14 +357,24 @@ export default function LuggageDetailDialog({
                 <p className="text-sm text-muted-foreground mb-4">
                   Esta maleta aún no tiene artículos registrados.
                 </p>
-                <Button variant="outline" onClick={() => { setEditingItem(null); setShowItemForm(true); }} data-testid="button-add-first-item">
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setEditingItem(null);
+                    setShowItemForm(true);
+                  }}
+                  data-testid="button-add-first-item"
+                >
                   <Plus className="h-4 w-4 mr-1" />
                   Agregar primer artículo
                 </Button>
               </div>
             )}
 
-            {!isLoading && !error && items && items.length > 0 && (
+            {!isLoading &&
+              !error &&
+              items &&
+              items.length > 0 &&
               items.map((item) => (
                 <ManifestItemCard
                   key={item.id}
@@ -297,11 +385,13 @@ export default function LuggageDetailDialog({
                   estimatedValue={item.value ?? undefined}
                   serialNumber={item.serialNumber ?? undefined}
                   imageUrl={item.photoUrl ?? undefined}
-                  onEdit={() => { setEditingItem(item); setShowItemForm(true); }}
+                  onEdit={() => {
+                    setEditingItem(item);
+                    setShowItemForm(true);
+                  }}
                   onDelete={() => handleDeleteItem(item)}
                 />
-              ))
-            )}
+              ))}
           </div>
         </ScrollArea>
       </DialogContent>

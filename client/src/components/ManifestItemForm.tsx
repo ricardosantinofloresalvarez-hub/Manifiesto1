@@ -41,11 +41,13 @@ const manifestItemFormSchema = z.object({
   name: z.string().min(1, 'El nombre es requerido'),
   category: z.string().min(1, 'La categoría es requerida'),
   brand: z.string().optional(),
-  quantity: z.string().min(1, 'La cantidad es requerida'),
-  value: z.string().optional(),
+  quantity: z.coerce.number().min(1, 'La cantidad es requerida'),
+  value: z.coerce.number().optional(),
   serialNumber: z.string().optional(),
   notes: z.string().optional(),
 });
+
+
 
 type ManifestItemFormValues = z.infer<typeof manifestItemFormSchema>;
 
@@ -78,11 +80,13 @@ export default function ManifestItemForm({
       name: '',
       category: '',
       brand: '',
-      quantity: '1',
-      value: '',
+      quantity: 1,
+      value: undefined,
       serialNumber: '',
       notes: '',
     },
+
+
   });
 
   const selectedCategory = form.watch('category') as ItemCategory;
@@ -127,11 +131,12 @@ export default function ManifestItemForm({
         name: values.name,
         category: values.category,
         brand: values.brand || undefined,
-        quantity: parseInt(values.quantity, 10) || 1,
-        value: values.value ? parseFloat(values.value) : undefined,
+        quantity: values.quantity,
+        value: values.value,
         serialNumber: values.serialNumber || undefined,
         notes: values.notes || undefined,
       };
+
 
       if (isEditing && item) {
         await updateMutation.mutateAsync({
@@ -154,14 +159,16 @@ export default function ManifestItemForm({
       onOpenChange(false);
       onSuccess?.();
     } catch (error) {
+      console.error("CREATE MANIFEST ITEM ERROR:", error);
+
       toast({
         title: 'Error',
-        description: isEditing
-          ? 'No se pudo actualizar el artículo.'
-          : 'No se pudo agregar el artículo.',
+        description:
+          error instanceof Error ? error.message : 'Error desconocido',
         variant: 'destructive',
       });
     }
+
   };
 
   const isPending = createMutation.isPending || updateMutation.isPending;
