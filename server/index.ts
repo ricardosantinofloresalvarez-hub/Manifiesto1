@@ -1,21 +1,13 @@
 import express from "express";
 import cors from "cors";
-
-import manifestItemsRoutes from "./manifestItems";
-import luggageRoutes from "./luggageRoutes";
+import { registerRoutes } from "./routes";
+import { setupVite, serveStatic } from "./vite";
 
 const app = express();
 
-app.get("/", (_req, res) => {
-  res.send("OK");
-});
-
-/* BODY PARSER */
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-//app.use("/uploads", express.static("uploads"));
 
-/* CORS */
 app.use(
   cors({
     origin: true,
@@ -23,12 +15,15 @@ app.use(
   }),
 );
 
-/* RUTAS */
-app.use("/api/manifestItems", manifestItemsRoutes);
-app.use("/api/luggage", luggageRoutes);
+const server = await registerRoutes(app);
 
-/* SERVER */
+if (process.env.NODE_ENV === "development") {
+  await setupVite(app, server);
+} else {
+  serveStatic(app);
+}
+
 const PORT = 5000;
-app.listen(PORT, () => {
+server.listen(PORT, "0.0.0.0", () => {
   console.log(`🚀 Server running on port ${PORT}`);
 });

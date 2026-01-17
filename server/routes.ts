@@ -55,6 +55,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   const luggageRoutes = (await import("./luggageRoutes")).default;
   app.use("/api/luggage", luggageRoutes);
 
+  console.log("✅ Rutas de equipaje montadas en /api/luggage");
+
   /* ───── SUBIR FOTO MALETA ───── */
   app.post(
     "/api/luggage/:luggageId/photo",
