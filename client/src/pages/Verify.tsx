@@ -17,11 +17,13 @@ export default function Verify() {
   const { toast } = useToast();
   const [hash, setHash] = useState('');
   const [shouldVerify, setShouldVerify] = useState(false);
-
+  
+  // Use Firestore hook for certificate verification
   const { data: certificate, isLoading: isVerifying, error } = useCertificateByHash(
     shouldVerify && hash ? hash : null
   );
 
+  // Extract hash from URL params on mount
   useEffect(() => {
     const params = new URLSearchParams(location.split('?')[1]);
     const hashParam = params.get('hash');
@@ -31,30 +33,40 @@ export default function Verify() {
     }
   }, [location]);
 
+  // Show toast notifications based on verification status
   useEffect(() => {
     if (error) {
       toast({
         title: 'Error',
-        description: 'No se pudo verificar el manifiesto.',
+        description: 'No se pudo verificar el manifiesto. Intenta de nuevo.',
         variant: 'destructive',
       });
+      // Reset to allow retry
       setShouldVerify(false);
-    } 
-    // CAMBIO AQUÍ: Si hay certificado, lo damos por válido si el servidor respondió bien
-    else if (shouldVerify && !isVerifying && certificate) {
-      toast({
-        title: 'Verificación exitosa',
-        description: 'El manifiesto es válido y oficial.',
-      });
-    } 
-    // Si terminó de cargar y no hay nada
-    else if (shouldVerify && !isVerifying && certificate === null) {
+    } else if (shouldVerify && !isVerifying && certificate === null) {
+      // Hash not found in database
       toast({
         title: 'Verificación fallida',
-        description: 'El hash no corresponde a ningún manifiesto.',
+        description: 'El hash proporcionado no corresponde a ningún manifiesto válido',
         variant: 'destructive',
       });
+      // Reset to allow retry
       setShouldVerify(false);
+    } else if (shouldVerify && certificate && !certificate.verified) {
+      // Certificate found but not verified
+      toast({
+        title: 'Verificación fallida',
+        description: 'El manifiesto no pudo ser verificado',
+        variant: 'destructive',
+      });
+      // Reset to allow retry
+      setShouldVerify(false);
+    } else if (shouldVerify && certificate?.verified) {
+      // Successful verification
+      toast({
+        title: 'Verificación exitosa',
+        description: 'El manifiesto es válido y ha sido verificado correctamente',
+      });
     }
   }, [error, certificate, shouldVerify, isVerifying, toast]);
 
@@ -74,11 +86,38 @@ export default function Verify() {
       <TopAppBar title={t('verifyManifest')} />
 
       <div className="p-4 max-w-2xl mx-auto">
-        {/* Mostramos el resultado si tenemos datos del certificado */}
-        {shouldVerify && certificate ? (
+        {!shouldVerify || !certificate ? (
+          <Card className="p-6">
+            <h2 className="text-xl font-semibold mb-4">Verificar Manifiesto</h2>
+            <p className="text-muted-foreground mb-6">
+              Ingresa el hash de verificación del manifiesto para validar su autenticidad
+            </p>
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="hash">{t('enterHash')}</Label>
+                <Input
+                  id="hash"
+                  value={hash}
+                  onChange={(e) => setHash(e.target.value)}
+                  placeholder="a3f5d8e2b1c4f6a9..."
+                  className="font-mono"
+                  data-testid="input-hash"
+                />
+              </div>
+              <Button
+                onClick={handleVerify}
+                className="w-full"
+                disabled={!hash || isVerifying}
+                data-testid="button-verify"
+              >
+                {isVerifying ? 'Verificando...' : 'Verificar'}
+              </Button>
+            </div>
+          </Card>
+        ) : (
           <>
             <VerificationResult 
-              valid={true} // Forzamos true porque si llegó aquí, el hash existe en DB
+              valid={certificate.verified || false}
               certificate={certificate}
               trip={certificate.trip}
               items={certificate.items}
@@ -88,36 +127,11 @@ export default function Verify() {
               variant="outline"
               onClick={handleReset}
               className="w-full mt-6"
+              data-testid="button-verify-another"
             >
               Verificar Otro Manifiesto
             </Button>
           </>
-        ) : (
-          <Card className="p-6">
-            <h2 className="text-xl font-semibold mb-4">Verificar Manifiesto</h2>
-            <p className="text-muted-foreground mb-6">
-              Ingresa el hash de verificación para validar su autenticidad
-            </p>
-            <div className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="hash">{t('enterHash')}</Label>
-                <Input
-                  id="hash"
-                  value={hash}
-                  onChange={(e) => setHash(e.target.value)}
-                  placeholder="Introduce el hash aquí..."
-                  className="font-mono"
-                />
-              </div>
-              <Button
-                onClick={handleVerify}
-                className="w-full"
-                disabled={!hash || isVerifying}
-              >
-                {isVerifying ? 'Verificando...' : 'Verificar'}
-              </Button>
-            </div>
-          </Card>
         )}
       </div>
 
