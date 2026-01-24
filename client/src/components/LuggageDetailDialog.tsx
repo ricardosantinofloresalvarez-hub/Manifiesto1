@@ -1,413 +1,144 @@
-import { useState } from "react";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { useRoute, useLocation } from "wouter";
+import { useTrip } from "@/hooks/useTrips";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { ScrollArea } from "@/components/ui/scroll-area";
+import { Card, CardContent } from "@/components/ui/card";
+import { ArrowLeft, Plus, Luggage as LuggageIcon, Trash2, ShieldCheck } from "lucide-react";
+import LuggageDetailDialog from "@/components/LuggageDetailDialog";
+import { useState } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
-import {
-  Plus,
-  FileText,
-  Lock,
-  ShieldCheck,
-  Package,
-  AlertCircle,
-  Loader2,
-  CheckCircle,
-  Download,
-} from "lucide-react";
-import {
-  useManifestItems,
-  useDeleteManifestItem,
-} from "@/hooks/useManifestItems";
-import { useGenerateLuggageCertificate } from "@/hooks/useCertificates";
-import { useToast } from "@/hooks/use-toast";
-import ManifestItemCard from "@/components/ManifestItemCard";
-import ManifestItemForm from "@/components/ManifestItemForm";
-import type { Luggage, ManifestItem, Trip } from "@shared/schema";
-import { LUGGAGE_SIZES, LUGGAGE_TYPE_OPTIONS } from "@/constants/manifestItems";
 
-interface LuggageDetailDialogProps {
-  luggage: Luggage | null;
-  trip: Trip | null;
-  user: { name: string; email: string } | null;
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-}
+export default function TripDetail() {
+  const [, params] = useRoute("/trip/:id");
+  const [, setLocation] = useLocation();
+  const [selectedLuggage, setSelectedLuggage] = useState<any>(null);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
 
-export default function LuggageDetailDialog({
-  luggage,
-  trip,
-  user,
-  open,
-  onOpenChange,
-}: LuggageDetailDialogProps) {
-  const { toast } = useToast();
-  const luggageId = luggage?.id;
+  // Usamos el hook de Firebase que me pasaste
+  const { data: trip, isLoading: loadingTrip } = useTrip(params?.id || null);
 
-  const {
-    data: items,
-    isLoading,
-    error,
-  } = useManifestItems(luggageId, {
-    enabled: !!luggageId,
-  });
+  if (loadingTrip) {
+    return (
+      <div className="min-h-screen bg-[#0a0a0a] p-8">
+        <Skeleton className="h-64 w-full rounded-[32px] bg-white/5" />
+      </div>
+    );
+  }
 
-  const generateCertificate = useGenerateLuggageCertificate();
-  const deleteItemMutation = useDeleteManifestItem();
-
-  const [showItemForm, setShowItemForm] = useState(false);
-  const [editingItem, setEditingItem] = useState<ManifestItem | null>(null);
-
-  const handleDeleteItem = async (item: ManifestItem) => {
-    if (!luggage) return;
-    try {
-      await deleteItemMutation.mutateAsync({
-        id: item.id,
-        luggageId: luggage.id,
-      });
-      toast({
-        title: "Artículo eliminado",
-        description: "El artículo ha sido eliminado.",
-      });
-    } catch (err) {
-      toast({
-        title: "Error",
-        description: "No se pudo eliminar el artículo.",
-        variant: "destructive",
-      });
-    }
-  };
-
-  const handleItemFormSuccess = () => {
-    setShowItemForm(false);
-    setEditingItem(null);
-  };
-
-  const getSizeLabel = (size: string | null | undefined) => {
-    if (!size) return null;
-    const found = LUGGAGE_SIZES.find((s) => s.value === size);
-    return found?.label || size;
-  };
-
-  const getTypeLabel = (type: string | null | undefined) => {
-    if (!type) return null;
-    const found = LUGGAGE_TYPE_OPTIONS.find((t) => t.value === type);
-    return found?.label || type;
-  };
-
-  const getColorLabel = (color: string | null | undefined) => {
-    if (!color) return null;
-    return color;
-  };
-
-  const handleGenerateCertificate = async () => {
-    if (!luggage || !trip || !user) {
-      toast({
-        title: "Error",
-        description:
-          "Faltan datos del viaje o usuario para generar el certificado.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    if (!items || items.length === 0) {
-      toast({
-        title: "Sin artículos",
-        description:
-          "Agrega al menos un artículo antes de generar el certificado.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    try {
-      const result = await generateCertificate.mutateAsync({
-        luggage,
-        items,
-        trip: {
-          id: trip.id,
-          title: trip.title,
-          destination: trip.destination,
-          startDate: trip.startDate,
-          endDate: trip.endDate,
-        },
-        user,
-      });
-      console.log("CERTIFICATE RESULT:", result);
-
-      toast({
-        title: "Certificado generado",
-        description: `El certificado ha sido generado con el hash: ${result.hash.substring(0, 12)}...`,
-      });
-
-      if (result.pdf) {
-        window.open(result.pdf, "_blank");
-      }
-    } catch (err) {
-      toast({
-        title: "Error",
-        description: "No se pudo generar el certificado. Intenta de nuevo.",
-        variant: "destructive",
-      });
-    }
-  };
-
-  const totalValue =
-    items?.reduce((sum, item) => sum + (item.value || 0), 0) || 0;
-  const itemCount = items?.length || 0;
-  const hasCertificate = !!luggage?.certificateHash;
-
-  if (!luggage) return null;
+  if (!trip) return null;
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[90vh] flex flex-col">
-        <DialogHeader className="flex-shrink-0">
-          <DialogTitle className="flex items-center gap-2">
-            <Package className="h-5 w-5" />
-            {luggage.nickname || luggage.brand || "Maleta"}
-          </DialogTitle>
-          <div className="flex flex-wrap items-center gap-2 mt-2">
-            {luggage.brand && (
-              <Badge variant="outline" data-testid="badge-luggage-brand">
-                {luggage.brand}
-              </Badge>
-            )}
-            {luggage.type && (
-              <Badge variant="outline" data-testid="badge-luggage-type">
-                {getTypeLabel(luggage.type)}
-              </Badge>
-            )}
-            {luggage.size && (
-              <Badge variant="outline" data-testid="badge-luggage-size">
-                {getSizeLabel(luggage.size)}
-              </Badge>
-            )}
-            {luggage.color && (
-              <Badge variant="outline" data-testid="badge-luggage-color">
-                {getColorLabel(luggage.color)}
-              </Badge>
-            )}
-            {luggage.isSealed && (
-              <Badge
-                variant="secondary"
-                className="gap-1"
-                data-testid="badge-sealed"
-              >
-                <ShieldCheck className="h-3 w-3" />
-                Sellada
-              </Badge>
-            )}
-            {luggage.isLocked && (
-              <Badge
-                variant="secondary"
-                className="gap-1"
-                data-testid="badge-locked"
-              >
-                <Lock className="h-3 w-3" />
-                Con Candado
-              </Badge>
-            )}
-            {hasCertificate && (
-              <Badge
-                variant="default"
-                className="gap-1 bg-green-600"
-                data-testid="badge-certified"
-              >
-                <CheckCircle className="h-3 w-3" />
-                Certificada
-              </Badge>
-            )}
-          </div>
-        </DialogHeader>
+    <div className="min-h-screen bg-[#0a0a0a] text-white pb-20">
+      {/* Header Premium: ONTARIO CANADA */}
+      <div className="relative h-[45vh] w-full overflow-hidden">
+        <img 
+          src={trip.imageUrl} 
+          alt={trip.destination}
+          className="w-full h-full object-cover opacity-50 scale-110"
+        />
+        <div className="absolute inset-0 bg-gradient-to-t from-[#0a0a0a] via-transparent to-transparent" />
 
-        <div className="flex items-center justify-between py-3 border-b flex-shrink-0">
-          <div className="flex items-center gap-4 text-sm text-muted-foreground">
-            <span data-testid="text-item-count">
-              {itemCount} artículo{itemCount !== 1 ? "s" : ""}
-            </span>
-            {totalValue > 0 && (
-              <span data-testid="text-total-value">
-                Valor total: ${totalValue.toLocaleString()}
-              </span>
-            )}
-          </div>
-          <div className="flex items-center gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => {
-                setEditingItem(null);
-                setShowItemForm(true);
-              }}
-              data-testid="button-add-item"
-            >
-              <Plus className="h-4 w-4 mr-1" />
-              Agregar Artículo
-            </Button>
-            {hasCertificate ? (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleGenerateCertificate}
-                data-testid="button-download-certificate"
-              >
-                <Download className="h-4 w-4 mr-1" />
-                Descargar PDF
-              </Button>
-            ) : null}
-            <label className="cursor-pointer">
-              <input
-                type="file"
-                accept="image/*"
-                hidden
-                onChange={async (e) => {
-                  if (!e.target.files || !luggage) return;
-
-                  const formData = new FormData();
-                  formData.append("image", e.target.files[0]);
-                  formData.append("type", "open");
-
-                  await fetch(`/api/luggage/${luggage.id}/photo`, {
-                    method: "POST",
-                    body: formData,
-                  });
-
-                  toast({ title: "Foto de maleta abierta subida" });
-                }}
-              />
-              <Button variant="outline" size="sm">
-                📷 Maleta Abierta
-              </Button>
-            </label>
-
-            <label className="cursor-pointer">
-              <input
-                type="file"
-                accept="image/*"
-                hidden
-                onChange={async (e) => {
-                  if (!e.target.files || !luggage) return;
-
-                  const formData = new FormData();
-                  formData.append("image", e.target.files[0]);
-                  formData.append("type", "closed");
-
-                  await fetch(`/api/luggage/${luggage.id}/photo`, {
-                    method: "POST",
-                    body: formData,
-                  });
-
-                  toast({ title: "Foto de maleta cerrada subida" });
-                }}
-              />
-              <Button variant="outline" size="sm">
-                📷 Maleta Cerrada
-              </Button>
-            </label>
-
-            <Button
-              size="sm"
-              onClick={handleGenerateCertificate}
-              disabled={
-                itemCount === 0 ||
-                generateCertificate.isPending ||
-                !trip ||
-                !user
-              }
-              data-testid="button-generate-certificate"
-            >
-              {generateCertificate.isPending ? (
-                <Loader2 className="h-4 w-4 mr-1 animate-spin" />
-              ) : (
-                <FileText className="h-4 w-4 mr-1" />
-              )}
-              {hasCertificate ? "Regenerar" : "Generar"} Certificado
-            </Button>
-          </div>
+        <div className="absolute top-8 left-8">
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            onClick={() => setLocation("/")}
+            className="bg-black/40 backdrop-blur-xl text-white hover:bg-white/10 rounded-full border border-white/10"
+          >
+            <ArrowLeft className="h-5 w-5" />
+          </Button>
         </div>
 
-        <ScrollArea className="flex-1 min-h-0">
-          <div className="space-y-3 pr-4 py-3">
-            {isLoading && (
-              <>
-                <Skeleton className="h-24 w-full" />
-                <Skeleton className="h-24 w-full" />
-                <Skeleton className="h-24 w-full" />
-              </>
-            )}
+        <div className="absolute bottom-12 left-10">
+          <p className="text-blue-500 font-black tracking-[0.3em] text-[10px] uppercase mb-3 drop-shadow-lg">
+            Travel Documentation System
+          </p>
+          <h1 className="text-6xl md:text-8xl font-black uppercase tracking-tighter italic leading-[0.8]">
+            {trip.destination}
+          </h1>
+        </div>
+      </div>
 
-            {error && (
-              <div className="flex items-center gap-2 p-4 text-destructive bg-destructive/10 rounded-md">
-                <AlertCircle className="h-4 w-4" />
-                <span>Error al cargar artículos</span>
-              </div>
-            )}
-
-            {!isLoading && !error && items && items.length === 0 && (
-              <div className="flex flex-col items-center justify-center py-12 text-center">
-                <Package className="h-12 w-12 text-muted-foreground/50 mb-4" />
-                <h3 className="font-medium text-lg mb-1">Sin artículos</h3>
-                <p className="text-sm text-muted-foreground mb-4">
-                  Esta maleta aún no tiene artículos registrados.
-                </p>
-                <Button
-                  variant="outline"
-                  onClick={() => {
-                    setEditingItem(null);
-                    setShowItemForm(true);
-                  }}
-                  data-testid="button-add-first-item"
-                >
-                  <Plus className="h-4 w-4 mr-1" />
-                  Agregar primer artículo
-                </Button>
-              </div>
-            )}
-
-            {!isLoading &&
-              !error &&
-              items &&
-              items.length > 0 &&
-              items.map((item) => (
-                <ManifestItemCard
-                  key={item.id}
-                  id={item.id}
-                  name={item.name}
-                  category={item.category}
-                  quantity={item.quantity}
-                  estimatedValue={item.value ?? undefined}
-                  serialNumber={item.serialNumber ?? undefined}
-                  imageUrl={item.photoUrl ?? undefined}
-                  onEdit={() => {
-                    setEditingItem(item);
-                    setShowItemForm(true);
-                  }}
-                  onDelete={() => handleDeleteItem(item)}
-                />
-              ))}
+      {/* Contenido de Maletas */}
+      <div className="px-10 -mt-10 relative z-10 space-y-8">
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="text-3xl font-bold italic uppercase tracking-tight">Equipaje</h2>
+            <p className="text-white/40 text-xs font-medium uppercase tracking-widest mt-1">Gestión de inventario y precintos</p>
           </div>
-        </ScrollArea>
-      </DialogContent>
+          <Button className="bg-blue-600 hover:bg-blue-500 text-white rounded-full px-8 h-12 font-bold text-xs uppercase tracking-widest transition-all hover:scale-105 active:scale-95 shadow-[0_0_20px_rgba(37,99,235,0.4)]">
+            <Plus className="h-5 w-5 mr-2" /> Registrar Maleta
+          </Button>
+        </div>
 
-      {showItemForm && luggage && (
-        <ManifestItemForm
-          luggageId={luggage.id}
-          item={editingItem}
-          open={showItemForm}
-          onOpenChange={(open) => {
-            setShowItemForm(open);
-            if (!open) setEditingItem(null);
-          }}
-          onSuccess={handleItemFormSuccess}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {trip.luggage?.map((item: any) => (
+            <Card 
+              key={item.id}
+              className="bg-[#121417] border-white/5 hover:border-blue-500/30 transition-all cursor-pointer group overflow-hidden rounded-[38px] shadow-2xl"
+              onClick={() => {
+                setSelectedLuggage(item);
+                setIsDialogOpen(true);
+              }}
+            >
+              <CardContent className="p-8">
+                <div className="flex justify-between items-start mb-6">
+                  <div className="p-4 bg-white/5 rounded-2xl group-hover:bg-blue-500/20 transition-colors border border-white/5">
+                    <LuggageIcon className="h-7 w-7 text-white/60 group-hover:text-blue-400" />
+                  </div>
+                  {item.certificateHash && (
+                    <div className="flex items-center gap-1.5 bg-green-500/10 text-green-400 border border-green-500/20 px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest">
+                      <ShieldCheck className="h-4 w-4" /> Certificada
+                    </div>
+                  )}
+                </div>
+
+                <div className="space-y-1">
+                  <h3 className="text-2xl font-black text-white uppercase italic tracking-tighter group-hover:text-blue-400 transition-colors">
+                    {item.nickname || item.brand || "Sin Nombre"}
+                  </h3>
+                  <div className="flex items-center gap-2">
+                    <span className="text-white/30 text-[10px] font-bold uppercase tracking-widest">
+                      {item.type || "Estándar"}
+                    </span>
+                    <span className="w-1 h-1 rounded-full bg-white/10" />
+                    <span className="text-white/30 text-[10px] font-bold uppercase tracking-widest">
+                      Size {item.size || "M"}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="mt-8 pt-6 border-t border-white/5 flex justify-between items-center">
+                   <span className="text-[10px] font-black text-blue-500 uppercase tracking-[0.2em] group-hover:translate-x-1 transition-transform">
+                     Detalles del Manifiesto →
+                   </span>
+                   <Button 
+                    variant="ghost" 
+                    size="icon" 
+                    className="h-8 w-8 rounded-full hover:bg-red-500/10 hover:text-red-500 text-white/10"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      // Aquí iría tu lógica de delete
+                    }}
+                   >
+                     <Trash2 className="h-4 w-4" />
+                   </Button>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      </div>
+
+      {/* Diálogo que recuperamos antes */}
+      {selectedLuggage && (
+        <LuggageDetailDialog 
+          luggage={selectedLuggage}
+          trip={trip}
+          user={{ name: "Ricardo E. Flores", email: "ricardo@example.com" }}
+          open={isDialogOpen}
+          onOpenChange={setIsDialogOpen}
         />
       )}
-    </Dialog>
+    </div>
   );
 }
