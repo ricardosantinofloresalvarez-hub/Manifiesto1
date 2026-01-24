@@ -50,7 +50,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   /* ───── MANIFEST ITEMS (🔥 CLAVE) ───── */
   app.use("/api/manifestItems", manifestItemsRouter);
-  
+
   // 🔥 IMPORTAMOS EL ROUTER DE LUGGAGE (CERTIFICADOS GET)
   const luggageRoutes = (await import("./luggageRoutes")).default;
   app.use("/api/luggage", luggageRoutes);
