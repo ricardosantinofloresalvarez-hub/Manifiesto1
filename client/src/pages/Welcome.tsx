@@ -17,7 +17,10 @@ export default function Welcome() {
           className="w-full h-full object-cover"
         />
         <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-black/50 to-background" />
+
         <div className="absolute inset-0 flex flex-col items-center justify-center text-center px-6 text-white">
+          
+
           <h1 className="text-4xl md:text-5xl font-bold mb-4">{t('welcome')}</h1>
           <p className="text-lg md:text-xl text-white/90 max-w-2xl">
             {t('welcomeSubtitle')}
@@ -38,6 +41,7 @@ export default function Welcome() {
               Planifica itinerarios completos con vuelos, hoteles y actividades
             </p>
           </div>
+
           <div className="text-center">
             <div className="flex justify-center mb-4">
               <div className="p-3 rounded-full bg-primary/10">
@@ -49,6 +53,7 @@ export default function Welcome() {
               Registra cada artículo con fotos, valores y números de serie
             </p>
           </div>
+
           <div className="text-center">
             <div className="flex justify-center mb-4">
               <div className="p-3 rounded-full bg-primary/10">

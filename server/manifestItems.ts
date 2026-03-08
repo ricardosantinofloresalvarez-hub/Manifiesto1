@@ -1,11 +1,11 @@
 import { Router } from "express";
-import { db } from "./db.ts";
+import { db } from "./db";
 import { manifestItems, luggage } from "@shared/schema";
 import { eq } from "drizzle-orm";
 
 const router = Router();
 
-// GET /api/manifestItems?luggageId=xxx - Get items by luggage ID
+// 1. GET /api/manifestItems?luggageId=xxx - Obtener artículos por ID de maleta
 router.get("/", async (req, res) => {
   try {
     const { luggageId } = req.query;
@@ -26,12 +26,11 @@ router.get("/", async (req, res) => {
   }
 });
 
-// GET /api/manifestItems/trip/:tripId - Get ALL items for a trip
+// 2. GET /api/manifestItems/trip/:tripId - Obtener TODOS los artículos de un viaje
 router.get("/trip/:tripId", async (req, res) => {
   try {
     const { tripId } = req.params;
 
-    // First get all luggage for this trip
     const luggageList = await db
       .select()
       .from(luggage)
@@ -43,7 +42,6 @@ router.get("/trip/:tripId", async (req, res) => {
 
     const luggageIds = luggageList.map((l) => l.id);
 
-    // Get all items for those luggage pieces
     const allItems = [];
     for (const luggageId of luggageIds) {
       const items = await db
@@ -60,7 +58,7 @@ router.get("/trip/:tripId", async (req, res) => {
   }
 });
 
-// POST /api/manifestItems - Create new item
+// 3. POST /api/manifestItems - Crear nuevo artículo
 router.post("/", async (req, res) => {
   try {
     const data = req.body;
@@ -91,10 +89,10 @@ router.post("/", async (req, res) => {
   }
 });
 
-// PUT /api/manifestItems/:id - Update item
+// 4. PUT /api/manifestItems/:id - Actualizar artículo
 router.put("/:id", async (req, res) => {
   try {
-    const { id } = req.params;
+    const { id } = req.params; // ID es string (VARCHAR), no número
     const data = req.body;
 
     const [updatedItem] = await db
@@ -123,10 +121,10 @@ router.put("/:id", async (req, res) => {
   }
 });
 
-// DELETE /api/manifestItems/:id - Delete item
+// 5. DELETE /api/manifestItems/:id - Eliminar artículo
 router.delete("/:id", async (req, res) => {
   try {
-    const { id } = req.params;
+    const { id } = req.params; // ID es string (VARCHAR), no número
 
     const [deletedItem] = await db
       .delete(manifestItems)

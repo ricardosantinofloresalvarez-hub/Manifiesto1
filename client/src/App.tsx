@@ -12,6 +12,7 @@ import Welcome from "@/pages/Welcome";
 import Login from "@/pages/Login";
 import Dashboard from "@/pages/Dashboard";
 import TripDetail from "@/pages/TripDetail";
+import Manifests from "@/pages/Manifests";
 import Verify from "@/pages/Verify";
 import Profile from "@/pages/Profile";
 
@@ -22,7 +23,7 @@ function Router() {
       <Route path="/login" component={Login} />
       <Route path="/dashboard" component={Dashboard} />
       <Route path="/trip/:id" component={TripDetail} />
-      <Route path="/manifests" component={Dashboard} />
+      <Route path="/manifests" component={Manifests} />
       <Route path="/verify" component={Verify} />
       <Route path="/profile" component={Profile} />
       <Route component={NotFound} />

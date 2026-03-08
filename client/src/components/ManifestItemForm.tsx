@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -37,19 +38,19 @@ import {
 import { ITEM_CATEGORIES, type ItemCategory } from '@/constants/manifestItems';
 import type { ManifestItem, InsertManifestItem } from '@shared/schema';
 
-const manifestItemFormSchema = z.object({
-  name: z.string().min(1, 'El nombre es requerido'),
-  category: z.string().min(1, 'La categoría es requerida'),
-  brand: z.string().optional(),
-  quantity: z.coerce.number().min(1, 'La cantidad es requerida'),
-  value: z.coerce.number().optional(),
-  serialNumber: z.string().optional(),
-  notes: z.string().optional(),
-});
+// const manifestItemFormSchema = z.object({
+//   name: z.string().min(1, 'El nombre es requerido'),
+//   category: z.string().min(1, 'La categoría es requerida'),
+//   brand: z.string().optional(),
+//   quantity: z.coerce.number().min(1, 'La cantidad es requerida'),
+//   value: z.coerce.number().optional(),
+//   serialNumber: z.string().optional(),
+//   notes: z.string().optional(),
+// });
 
 
 
-type ManifestItemFormValues = z.infer<typeof manifestItemFormSchema>;
+// type ManifestItemFormValues = z.infer<typeof manifestItemFormSchema>;
 
 interface ManifestItemFormProps {
   luggageId: string;
@@ -67,6 +68,17 @@ export default function ManifestItemForm({
   onSuccess,
 }: ManifestItemFormProps) {
   const { toast } = useToast();
+  const { t } = useTranslation();
+
+  const manifestItemFormSchema = z.object({
+    name: z.string().min(1, t('nameRequired')),
+    category: z.string().min(1, t('categoryRequired')),
+    brand: z.string().optional(),
+    quantity: z.coerce.number().min(1, t('quantityRequired')),
+    value: z.coerce.number().optional(),
+    serialNumber: z.string().optional(),
+    notes: z.string().optional(),
+  });
   const createMutation = useCreateManifestItem();
   const updateMutation = useUpdateManifestItem();
 
@@ -74,7 +86,7 @@ export default function ManifestItemForm({
   const [showCustomName, setShowCustomName] = useState(false);
   const [showCustomBrand, setShowCustomBrand] = useState(false);
 
-  const form = useForm<ManifestItemFormValues>({
+  const form = useForm<z.infer<typeof manifestItemFormSchema>>({
     resolver: zodResolver(manifestItemFormSchema),
     defaultValues: {
       name: '',
@@ -94,15 +106,15 @@ export default function ManifestItemForm({
   useEffect(() => {
     if (item) {
       const categoryData = ITEM_CATEGORIES[item.category as ItemCategory];
-      const isNameInSuggestions = categoryData?.suggestions.includes(item.name);
+      const isNameInSuggestions = categoryData?.suggestions.includes(item.name || '');
       const isBrandInList = categoryData?.brands.includes(item.brand || '');
 
       form.reset({
         name: isNameInSuggestions ? item.name : '',
         category: item.category,
         brand: isBrandInList ? item.brand || '' : '',
-        quantity: String(item.quantity),
-        value: item.value ? String(item.value) : '',
+        quantity: item.quantity || 1,
+        value: item.value || undefined,
         serialNumber: item.serialNumber || '',
         notes: item.notes || '',
       });
@@ -114,8 +126,8 @@ export default function ManifestItemForm({
         name: '',
         category: '',
         brand: '',
-        quantity: '1',
-        value: '',
+        quantity: 1,
+        value: undefined,
         serialNumber: '',
         notes: '',
       });
@@ -145,14 +157,14 @@ export default function ManifestItemForm({
           luggageId,
         });
         toast({
-          title: 'Artículo actualizado',
-          description: `"${values.name}" ha sido actualizado.`,
+          title: t('itemUpdated'),
+          description: `"${values.name}" ${t('itemUpdatedDescription')}.`,
         });
       } else {
         await createMutation.mutateAsync(data);
         toast({
-          title: 'Artículo agregado',
-          description: `"${values.name}" ha sido agregado a la maleta.`,
+          title: t('itemAdded'),
+          description: `"${values.name}" ${t('itemAddedToLuggage')}.`,
         });
       }
 
@@ -180,12 +192,12 @@ export default function ManifestItemForm({
       <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>
-            {isEditing ? 'Editar Artículo' : 'Agregar Artículo'}
+            {isEditing ? t('edit') + ' ' + t('item') : t('addItem')}
           </DialogTitle>
           <DialogDescription>
             {isEditing
-              ? 'Modifica los detalles del artículo.'
-              : 'Ingresa los detalles del artículo para agregarlo a la maleta.'}
+              ? t('editItemDescription')
+              : t('addItemDescription')}
           </DialogDescription>
         </DialogHeader>
 
@@ -197,7 +209,7 @@ export default function ManifestItemForm({
               name="category"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Categoría *</FormLabel>
+                  <FormLabel>{t('categoryRequired')}</FormLabel>
                   <Select 
                     onValueChange={(value) => {
                       field.onChange(value);
@@ -210,7 +222,7 @@ export default function ManifestItemForm({
                   >
                     <FormControl>
                       <SelectTrigger data-testid="select-item-category">
-                        <SelectValue placeholder="Selecciona una categoría" />
+                        <SelectValue placeholder={t('selectCategory')} />
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
@@ -237,7 +249,7 @@ export default function ManifestItemForm({
                   name="name"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Nombre del artículo *</FormLabel>
+                      <FormLabel>{t('itemNameRequired')}</FormLabel>
                       {!showCustomName ? (
                         <Select 
                           onValueChange={(value) => {
@@ -298,7 +310,7 @@ export default function ManifestItemForm({
                     name="brand"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Marca del artículo</FormLabel>
+                        <FormLabel>{t('itemBrandLabel')}</FormLabel>
                         {!showCustomBrand ? (
                           <Select 
                             onValueChange={(value) => {
@@ -361,7 +373,7 @@ export default function ManifestItemForm({
                 name="quantity"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Cantidad *</FormLabel>
+                    <FormLabel>{t('quantityRequired')}</FormLabel>
                     <FormControl>
                       <Input
                         type="number"
@@ -381,7 +393,7 @@ export default function ManifestItemForm({
                 name="value"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Valor estimado ($)</FormLabel>
+                    <FormLabel>{t('estimatedValueLabel')}</FormLabel>
                     <FormControl>
                       <Input
                         type="number"
@@ -405,7 +417,7 @@ export default function ManifestItemForm({
                 name="serialNumber"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Número de serie</FormLabel>
+                    <FormLabel>{t('serialNumber')}</FormLabel>
                     <FormControl>
                       <Input
                         placeholder="Para electrónicos..."
@@ -425,7 +437,7 @@ export default function ManifestItemForm({
               name="notes"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Notas</FormLabel>
+                  <FormLabel>{t('notes')}</FormLabel>
                   <FormControl>
                     <Textarea
                       placeholder="Detalles adicionales..."
@@ -448,11 +460,11 @@ export default function ManifestItemForm({
                 disabled={isPending}
                 data-testid="button-cancel-item"
               >
-                Cancelar
+                {t('cancel')}
               </Button>
               <Button type="submit" disabled={isPending} data-testid="button-save-item">
                 {isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-                {isEditing ? 'Guardar cambios' : 'Agregar'}
+                {isEditing ? t('saveChanges') : t('add')}
               </Button>
             </DialogFooter>
           </form>

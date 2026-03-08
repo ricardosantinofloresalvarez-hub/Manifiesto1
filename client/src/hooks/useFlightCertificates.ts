@@ -1,6 +1,7 @@
 import { useState } from 'react';
-import { ref, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage';
-import { storage } from '@/lib/firebase';
+
+const CLOUDINARY_CLOUD_NAME = "drjrozqs8";
+const CLOUDINARY_UPLOAD_PRESET = "luggage_photos";
 
 export function useFlightCertificates() {
   const [uploading, setUploading] = useState(false);
@@ -14,20 +15,27 @@ export function useFlightCertificates() {
       setUploading(true);
       setUploadProgress(0);
 
-      // Crear referencia única para la foto
-      const timestamp = Date.now();
-      const fileName = `${timestamp}-${file.name}`;
-      const storageRef = ref(storage, `flight-certificates/${flightId}/${fileName}`);
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('upload_preset', CLOUDINARY_UPLOAD_PRESET);
+      formData.append('folder', 'flight-certificates');
 
-      // Subir el archivo
-      const snapshot = await uploadBytes(storageRef, file);
+      const response = await fetch(
+        `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/image/upload`,
+        {
+          method: 'POST',
+          body: formData,
+        }
+      );
 
+      if (!response.ok) {
+        throw new Error('Upload failed');
+      }
+
+      const data = await response.json();
       setUploadProgress(100);
 
-      // Obtener la URL de descarga
-      const downloadURL = await getDownloadURL(snapshot.ref);
-
-      return downloadURL;
+      return data.secure_url;
     } catch (error) {
       console.error('Error uploading certificate:', error);
       throw error;
@@ -39,12 +47,9 @@ export function useFlightCertificates() {
 
   const deleteCertificate = async (certificateUrl: string): Promise<void> => {
     try {
-      // Extraer el path de la URL
-      const url = new URL(certificateUrl);
-      const path = decodeURIComponent(url.pathname.split('/o/')[1].split('?')[0]);
-      const storageRef = ref(storage, path);
-
-      await deleteObject(storageRef);
+      // Cloudinary deletion would require API key/secret (backend only)
+      // For now, just log - images stay in Cloudinary but are not referenced
+      console.log('Certificate URL no longer referenced:', certificateUrl);
     } catch (error) {
       console.error('Error deleting certificate:', error);
       throw error;

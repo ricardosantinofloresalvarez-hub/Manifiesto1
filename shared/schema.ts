@@ -7,6 +7,7 @@ export const users = pgTable("users", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   email: text("email").notNull().unique(),
   name: text("name").notNull(),
+  photoUrl: text("photo_url"),
 });
 
 export const insertUserSchema = createInsertSchema(users).omit({
@@ -110,7 +111,7 @@ export type ManifestCertificate = typeof manifestCertificates.$inferSelect;
 export const flights = pgTable("flights", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   tripId: varchar("trip_id").notNull(),
-  userId: varchar("user_id").notNull(),
+  userId: varchar("user_id"),
   airline: text("airline").notNull(),
   flightNumber: text("flight_number").notNull(),
   departureAirport: text("departure_airport").notNull(),
@@ -134,7 +135,7 @@ export type Flight = typeof flights.$inferSelect;
 export const hotels = pgTable("hotels", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   tripId: varchar("trip_id").notNull(),
-  userId: varchar("user_id").notNull(),
+  userId: varchar("user_id"),
   name: text("name").notNull(),
   address: text("address").notNull(),
   checkInDate: text("check_in_date").notNull(),
@@ -156,7 +157,7 @@ export type Hotel = typeof hotels.$inferSelect;
 export const transport = pgTable("transport", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   tripId: varchar("trip_id").notNull(),
-  userId: varchar("user_id").notNull(),
+  userId: varchar("user_id"),
   type: text("type").notNull(), // train, bus, ferry
   company: text("company").notNull(),
   route: text("route").notNull(),
@@ -179,7 +180,7 @@ export type Transport = typeof transport.$inferSelect;
 export const restaurants = pgTable("restaurants", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   tripId: varchar("trip_id").notNull(),
-  userId: varchar("user_id").notNull(),
+  userId: varchar("user_id"),
   name: text("name").notNull(),
   address: text("address").notNull(),
   reservationDateTime: text("reservation_date_time").notNull(),
@@ -200,7 +201,7 @@ export type Restaurant = typeof restaurants.$inferSelect;
 export const activities = pgTable("activities", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   tripId: varchar("trip_id").notNull(),
-  userId: varchar("user_id").notNull(),
+  userId: varchar("user_id"),
   name: text("name").notNull(),
   location: text("location").notNull(),
   activityDateTime: text("activity_date_time").notNull(),

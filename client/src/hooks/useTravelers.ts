@@ -1,15 +1,4 @@
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { 
-  collection, 
-  query, 
-  where, 
-  getDocs, 
-  addDoc, 
-  deleteDoc, 
-  doc,
-  Timestamp 
-} from "firebase/firestore";
-import { db } from "@/lib/firebase";
 import { queryClient } from "@/lib/queryClient";
 import type { Traveler, InsertTraveler } from "@shared/schema";
 
@@ -19,17 +8,12 @@ export function useTravelers(tripId: string | null) {
     queryFn: async () => {
       if (!tripId) return [];
 
-      const travelersRef = collection(db, "travelers");
-      const q = query(travelersRef, where("tripId", "==", tripId));
-      const snapshot = await getDocs(q);
+      const response = await fetch(`/api/travelers?tripId=${tripId}`);
+      if (!response.ok) {
+        throw new Error("Failed to fetch travelers");
+      }
 
-      const travelers = snapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data(),
-        createdAt: doc.data().createdAt?.toDate?.()?.toISOString() || new Date().toISOString(),
-      })) as Traveler[];
-
-      return travelers;
+      return response.json() as Promise<Traveler[]>;
     },
     enabled: !!tripId,
   });
@@ -38,17 +22,17 @@ export function useTravelers(tripId: string | null) {
 export function useCreateTraveler() {
   return useMutation({
     mutationFn: async (data: InsertTraveler) => {
-      const travelersRef = collection(db, "travelers");
-      const docRef = await addDoc(travelersRef, {
-        ...data,
-        createdAt: Timestamp.now(),
+      const response = await fetch("/api/travelers", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
       });
 
-      return {
-        id: docRef.id,
-        ...data,
-        createdAt: new Date().toISOString(),
-      };
+      if (!response.ok) {
+        throw new Error("Failed to create traveler");
+      }
+
+      return response.json() as Promise<Traveler>;
     },
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ["/api/travelers", variables.tripId] });
@@ -59,7 +43,14 @@ export function useCreateTraveler() {
 export function useDeleteTraveler() {
   return useMutation({
     mutationFn: async ({ id, tripId }: { id: string; tripId: string }) => {
-      await deleteDoc(doc(db, "travelers", id));
+      const response = await fetch(`/api/travelers/${id}`, {
+        method: "DELETE",
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to delete traveler");
+      }
+
       return { id, tripId };
     },
     onSuccess: (variables) => {

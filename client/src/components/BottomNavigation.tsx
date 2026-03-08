@@ -19,6 +19,7 @@ export default function BottomNavigation() {
         {navItems.map((item) => {
           const Icon = item.icon;
           const isActive = location === item.path;
+
           return (
             <button
               key={item.path}

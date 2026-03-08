@@ -1,7 +1,4 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { signInAnonymously, onAuthStateChanged, signOut } from 'firebase/auth';
-import { doc, getDoc, setDoc } from 'firebase/firestore';
-import { auth, db } from './firebase';
 import type { User } from '@shared/schema';
 
 interface AuthContextType {
@@ -18,75 +15,51 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // Listen to Firebase Auth state changes
-    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
-      if (firebaseUser) {
-        // User is signed in, fetch user data from Firestore
-        try {
-          const userDocRef = doc(db, 'users', firebaseUser.uid);
-          const userDoc = await getDoc(userDocRef);
-          
-          if (userDoc.exists()) {
-            const userData = { id: userDoc.id, ...userDoc.data() } as User;
-            setUser(userData);
-            localStorage.setItem('user', JSON.stringify(userData));
-          }
-        } catch (error) {
-          console.error('Error fetching user from Firestore:', error);
-        }
-      } else {
-        // User is signed out
-        setUser(null);
+    // Cargar usuario desde localStorage al inicio
+    const storedUser = localStorage.getItem('user');
+    if (storedUser) {
+      try {
+        setUser(JSON.parse(storedUser));
+      } catch (error) {
+        console.error('Error parsing stored user:', error);
         localStorage.removeItem('user');
       }
-      setIsLoading(false);
-    });
-
-    return () => unsubscribe();
+    }
+    setIsLoading(false);
   }, []);
 
   const login = async (email: string, name: string) => {
     try {
       console.log('🔐 Starting login process...');
-      
-      // Sign in anonymously with Firebase
-      console.log('📱 Attempting anonymous sign-in...');
-      const userCredential = await signInAnonymously(auth);
-      const firebaseUser = userCredential.user;
-      console.log('✅ Anonymous sign-in successful, UID:', firebaseUser.uid);
 
-      // Create or update user document in Firestore
-      const userDocRef = doc(db, 'users', firebaseUser.uid);
-      const userData = {
-        email,
-        name,
-      };
+      // Llamar al backend de PostgreSQL
+      const res = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, name }),
+      });
 
-      console.log('💾 Saving user data to Firestore...');
-      await setDoc(userDocRef, userData, { merge: true });
-      console.log('✅ User data saved to Firestore');
+      if (!res.ok) {
+        throw new Error('Error en la autenticación');
+      }
 
-      const user: User = {
-        id: firebaseUser.uid,
-        email,
-        name,
-      };
+      const userData = await res.json();
+      console.log('✅ Login successful, user:', userData);
 
-      setUser(user);
-      localStorage.setItem('user', JSON.stringify(user));
+      setUser(userData);
+      localStorage.setItem('user', JSON.stringify(userData));
       console.log('✅ Login complete, user set in state and localStorage');
     } catch (error) {
       console.error('❌ Login failed:', error);
-      console.error('Error details:', JSON.stringify(error, null, 2));
       throw error;
     }
   };
 
   const logout = async () => {
     try {
-      await signOut(auth);
       setUser(null);
       localStorage.removeItem('user');
+      console.log('✅ Logout successful');
     } catch (error) {
       console.error('Logout failed:', error);
       throw error;

@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useLocation } from 'wouter';
-import { useAuth } from '@/lib/auth';
 import { useTrips, useCreateTrip, useDeleteTrip } from '@/hooks/useTrips';
 import TopAppBar from '@/components/TopAppBar';
 import BottomNavigation from '@/components/BottomNavigation';
@@ -29,7 +28,6 @@ const defaultImages = [beachImg, mountainImg, cityImg];
 export default function Dashboard() {
   const { t } = useTranslation();
   const [, setLocation] = useLocation();
-  const { user, isLoading } = useAuth();
   const { toast } = useToast();
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [formData, setFormData] = useState({
@@ -40,8 +38,66 @@ export default function Dashboard() {
     notes: '',
   });
 
-  const { data: trips = [], isLoading: isTripsLoading } = useTrips(user?.id || null);
+  // Obtener usuario de localStorage directamente
+  const [user, setUser] = useState<any>(null);
+  const [isLoadingUser, setIsLoadingUser] = useState(true);
 
+  useEffect(() => {
+    const storedUser = localStorage.getItem('user');
+    if (storedUser) {
+      setUser(JSON.parse(storedUser));
+    } else {
+      setLocation('/login');
+    }
+    setIsLoadingUser(false);
+  }, [setLocation]);
+
+  const { data: trips = [], isLoading: isTripsLoading } = useTrips(user?.id || null);
+  // Calcular itemCount para cada viaje
+  const [tripsWithCounts, setTripsWithCounts] = useState<any[]>([]);
+
+  useEffect(() => {
+    const calculateItemCounts = async () => {
+      if (!trips || trips.length === 0) {
+        setTripsWithCounts([]);
+        return;
+      }
+
+      const tripsWithItems = await Promise.all(
+        trips.map(async (trip: any) => {
+          try {
+            // Obtener maletas del viaje
+            const luggageRes = await fetch(`/api/luggage?tripId=${trip.id}`);
+            if (!luggageRes.ok) {
+              return { ...trip, itemCount: 0 };
+            }
+            const luggageList = await luggageRes.json();
+
+            // Sumar artículos de todas las maletas
+            let totalItems = 0;
+            for (const lug of luggageList) {
+              const itemsRes = await fetch(`/api/manifestItems?luggageId=${lug.id}`);
+              if (itemsRes.ok) {
+                const items = await itemsRes.json();
+                totalItems += items.reduce((sum: number, item: any) => 
+                  sum + (item.quantity || 1), 0
+                );
+              }
+            }
+
+            return { ...trip, itemCount: totalItems };
+          } catch (error) {
+            console.error(`Error calculating items for trip ${trip.id}:`, error);
+            return { ...trip, itemCount: 0 };
+          }
+        })
+      );
+
+      setTripsWithCounts(tripsWithItems);
+    };
+
+    calculateItemCounts();
+  }, [trips]);
   const createTripMutation = useCreateTrip();
   const deleteTripMutation = useDeleteTrip();
 
@@ -51,14 +107,14 @@ export default function Dashboard() {
       {
         onSuccess: () => {
           toast({
-            title: 'Viaje eliminado',
-            description: 'El viaje se ha eliminado correctamente',
+            title: t('tripDeleted'),
+            description: t('tripDeleted'),
           });
         },
         onError: () => {
           toast({
-            title: 'Error',
-            description: 'No se pudo eliminar el viaje',
+            title: t('error'),
+            description: t('error'),
             variant: 'destructive',
           });
         },
@@ -78,14 +134,14 @@ export default function Dashboard() {
           setShowCreateDialog(false);
           setFormData({ title: '', destination: '', startDate: '', endDate: '', notes: '' });
           toast({
-            title: 'Viaje creado',
-            description: 'Tu viaje se ha creado exitosamente',
+            title: t('tripCreated'),
+            description: t('tripCreated'),
           });
         },
         onError: () => {
           toast({
-            title: 'Error',
-            description: 'No se pudo crear el viaje',
+            title: t('error'),
+            description: t('error'),
             variant: 'destructive',
           });
         },
@@ -96,8 +152,8 @@ export default function Dashboard() {
   const handleCreateTrip = () => {
     if (!formData.title || !formData.destination || !formData.startDate || !formData.endDate) {
       toast({
-        title: 'Error',
-        description: 'Por favor completa todos los campos requeridos',
+        title: t('error'),
+        description: 'Please complete all required fields', // Agregar a i18n
         variant: 'destructive',
       });
       return;
@@ -105,18 +161,12 @@ export default function Dashboard() {
     handleCreateTripMutation();
   };
 
-  useEffect(() => {
-    if (!isLoading && !user) {
-      setLocation('/login');
-    }
-  }, [isLoading, user, setLocation]);
-
-  if (isLoading) {
+  if (isLoadingUser) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-          <p className="text-muted-foreground">Cargando...</p>
+          <p className="text-muted-foreground">{t('loading')}...</p>
         </div>
       </div>
     );
@@ -137,9 +187,9 @@ export default function Dashboard() {
 
       <div className="p-4 max-w-7xl mx-auto">
         <div className="mb-6">
-          <h2 className="text-2xl font-bold mb-2">Bienvenido</h2>
+          <h2 className="text-2xl font-bold mb-2">{t('welcomeBack')}</h2>
           <p className="text-muted-foreground">
-            Tienes {trips.length} {trips.length === 1 ? 'viaje' : 'viajes'} planificados
+            {t('youHave')} {trips.length} {trips.length === 1 ? t('trip') : t('tripsPlanned')}
           </p>
         </div>
 
@@ -152,7 +202,7 @@ export default function Dashboard() {
           />
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {trips.map((trip: any) => (
+            {tripsWithCounts.map((trip: any) => (
               <TripCard
                 key={trip.id}
                 id={trip.id}
@@ -176,7 +226,7 @@ export default function Dashboard() {
           <DialogHeader>
             <DialogTitle>{t('createTrip')}</DialogTitle>
             <DialogDescription>
-              Crea un nuevo viaje para comenzar a organizar tu equipaje
+              {t('createTripDescription')}
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
@@ -186,7 +236,7 @@ export default function Dashboard() {
                 id="title"
                 value={formData.title}
                 onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                placeholder="Ej: Vacaciones en Cancún"
+                placeholder={t('enterTripTitle')}
                 data-testid="input-trip-title"
               />
             </div>
@@ -196,7 +246,7 @@ export default function Dashboard() {
                 id="destination"
                 value={formData.destination}
                 onChange={(e) => setFormData({ ...formData, destination: e.target.value })}
-                placeholder="Ej: Cancún, México"
+                placeholder={t('enterDestination')}
                 data-testid="input-destination"
               />
             </div>
@@ -228,7 +278,7 @@ export default function Dashboard() {
                 id="notes"
                 value={formData.notes}
                 onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-                placeholder="Notas adicionales..."
+                placeholder={t('additionalNotes')}
                 data-testid="input-notes"
               />
             </div>
@@ -242,7 +292,7 @@ export default function Dashboard() {
               disabled={createTripMutation.isPending}
               data-testid="button-save-trip"
             >
-              {createTripMutation.isPending ? 'Guardando...' : t('save')}
+              {createTripMutation.isPending ? t('saving') + '...' : t('save')}
             </Button>
           </DialogFooter>
         </DialogContent>

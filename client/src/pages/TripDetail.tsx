@@ -10,6 +10,7 @@ import TopAppBar from "@/components/TopAppBar";
 import BottomNavigation from "@/components/BottomNavigation";
 import EmptyState from "@/components/EmptyState";
 import ItineraryTab from "@/components/ItineraryTab";
+import WeatherWidget from "@/components/WeatherWidget";
 import LuggageTab from "@/components/LuggageTab";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
@@ -86,13 +87,13 @@ export default function TripDetail() {
       });
       toast({
         title: t("success"),
-        description: "Foto de maleta abierta subida correctamente",
+        description: t("openLuggagePhotoUploaded"),
       });
     } catch (error) {
       console.error("Error uploading open photo:", error);
       toast({
         title: t("error"),
-        description: "Error al subir la foto",
+        description: t("errorUploadingPhoto"),
         variant: "destructive",
       });
     }
@@ -113,13 +114,13 @@ export default function TripDetail() {
       });
       toast({
         title: t("success"),
-        description: "Foto de maleta cerrada subida correctamente",
+        description: t("closedLuggagePhotoUploaded"),
       });
     } catch (error) {
       console.error("Error uploading closed photo:", error);
       toast({
         title: t("error"),
-        description: "Error al subir la foto",
+        description: t("errorUploadingPhoto"),
         variant: "destructive",
       });
     }
@@ -136,13 +137,13 @@ export default function TripDetail() {
       });
       toast({
         title: t("success"),
-        description: "Foto eliminada",
+        description: t("photoDeleted"),
       });
     } catch (error) {
       console.error("Error removing photo:", error);
       toast({
         title: t("error"),
-        description: "Error al eliminar la foto",
+        description: t("errorDeletingPhoto"),
         variant: "destructive",
       });
     }
@@ -159,13 +160,13 @@ export default function TripDetail() {
       });
       toast({
         title: t("success"),
-        description: "Foto eliminada",
+        description: t("photoDeleted"),
       });
     } catch (error) {
       console.error("Error removing photo:", error);
       toast({
         title: t("error"),
-        description: "Error al eliminar la foto",
+        description: t("errorDeletingPhoto"),
         variant: "destructive",
       });
     }
@@ -175,7 +176,7 @@ export default function TripDetail() {
     if (!travelerFormData.name.trim() || !tripId) {
       toast({
         title: t('error'),
-        description: 'El nombre es requerido',
+        description: t('nameRequired'),
         variant: 'destructive',
       });
       return;
@@ -199,7 +200,7 @@ export default function TripDetail() {
       onSuccess: () => {
         toast({
           title: t('success'),
-          description: 'Pasajero agregado correctamente',
+          description: t('travelerAdded'),
         });
         setShowAddTravelerDialog(false);
         setTravelerFormData({
@@ -229,7 +230,7 @@ export default function TripDetail() {
         onSuccess: () => {
           toast({
             title: t('success'),
-            description: 'Pasajero eliminado',
+            description: t('travelerDeleted'),
           });
         },
         onError: (error: Error) => {
@@ -346,31 +347,39 @@ export default function TripDetail() {
 
           <TabsContent value="settings" className="space-y-4">
                       <Card className="p-6">
-                        <h3 className="font-semibold mb-4">Detalles del Viaje</h3>
+                        <h3 className="font-semibold mb-4">{t('tripDetails')}</h3>
                         <div className="space-y-4">
                           <div>
-                            <Label>Título</Label>
+                            <Label>{t('title')}</Label>
                             <p className="text-sm text-muted-foreground mt-1">{trip.title}</p>
                           </div>
                           <div>
-                            <Label>Destino</Label>
+                            <Label>{t('destination')}</Label>
                             <p className="text-sm text-muted-foreground mt-1">{trip.destination}</p>
                           </div>
+                          
+
+                            {/* Widget de Clima */}
+                            <div>
+                              <WeatherWidget destination={trip.destination} />
+                            </div>
+
+                            
                           <div>
-                            <Label>Notas</Label>
-                            <p className="text-sm text-muted-foreground mt-1">{trip.notes || 'Sin notas'}</p>
+                            <Label>{t('notes')}</Label>
+                            <p className="text-sm text-muted-foreground mt-1">{trip.notes || t('noNotes')}</p>
                           </div>
                         </div>
                       </Card>
 
                       <Card className="p-6">
                         <div className="flex items-center justify-between mb-4">
-                          <h3 className="font-semibold">👥 Pasajeros</h3>
+                          <h3 className="font-semibold">👥 {t('travelersSection')}</h3>
                           <Button 
                             onClick={() => setShowAddTravelerDialog(true)}
                             size="sm"
                           >
-                            Agregar Pasajero
+                            {t('addTraveler')}
                           </Button>
                         </div>
 
@@ -390,8 +399,8 @@ export default function TripDetail() {
                                     {traveler.type === 'adult' ? '👤' : '👶'} {traveler.name}
                                   </p>
                                   <div className="flex gap-2 text-xs text-muted-foreground mt-1">
-                                    <span>{traveler.type === 'adult' ? 'Adulto' : 'Niño'}</span>
-                                    {traveler.age && <span>• {traveler.age} años</span>}
+                                    <span>{traveler.type === 'adult' ? t('adult') : t('child')}</span>
+                                    {traveler.age && <span>• {traveler.age} {t('years')}</span>}
                                     {traveler.relation && <span>• {traveler.relation}</span>}
                                   </div>
                                 </div>
@@ -401,7 +410,7 @@ export default function TripDetail() {
                                   onClick={() => handleDeleteTraveler(traveler.id)}
                                   disabled={deleteTravelerMutation.isPending}
                                 >
-                                  Eliminar
+                                  {t('delete')}
                                 </Button>
                               </div>
                             ))}
@@ -417,14 +426,14 @@ export default function TripDetail() {
             <Dialog open={showLuggagePhotosDialog} onOpenChange={setShowLuggagePhotosDialog}>
               <DialogContent>
                 <DialogHeader>
-                  <DialogTitle>📸 Fotos de Maleta</DialogTitle>
+                  <DialogTitle>📸 {t('luggagePhotos')}</DialogTitle>
                   <DialogDescription>
                     Agrega fotos de tu maleta abierta y cerrada para el certificado
                   </DialogDescription>
                 </DialogHeader>
                 <div className="space-y-4 py-4">
                   <div className="space-y-2">
-                    <Label htmlFor="openPhoto">Foto de Maleta Abierta</Label>
+                    <Label htmlFor="openPhoto">{t('openLuggagePhotoLabel')}</Label>
                     {luggagePhotos.openPhotoUrl ? (
                       <div className="relative">
                         <img
@@ -462,7 +471,7 @@ export default function TripDetail() {
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="closedPhoto">Foto de Maleta Cerrada</Label>
+                    <Label htmlFor="closedPhoto">{t('closedLuggagePhotoLabel')}</Label>
                     {luggagePhotos.closedPhotoUrl ? (
                       <div className="relative">
                         <img
@@ -528,14 +537,14 @@ export default function TripDetail() {
             <Dialog open={showAddTravelerDialog} onOpenChange={setShowAddTravelerDialog}>
               <DialogContent>
                 <DialogHeader>
-                  <DialogTitle>Agregar Pasajero</DialogTitle>
+                  <DialogTitle>{t('addTraveler')}</DialogTitle>
                   <DialogDescription>
-                    Agrega un adulto o niño que viajará en este viaje
+                    {t('addTravelerDescription')}
                   </DialogDescription>
                 </DialogHeader>
                 <div className="space-y-4 py-4">
                   <div className="space-y-2">
-                    <Label htmlFor="travelerType">Tipo de Pasajero</Label>
+                    <Label htmlFor="travelerType">{t('travelerType')}</Label>
                     <Select 
                       value={travelerFormData.type}
                       onValueChange={(value: 'adult' | 'child') => 
@@ -546,17 +555,17 @@ export default function TripDetail() {
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="adult">👤 Adulto</SelectItem>
-                        <SelectItem value="child">👶 Niño/a</SelectItem>
+                        <SelectItem value="adult">👤 {t('adult')}</SelectItem>
+                        <SelectItem value="child">👶 {t('child')}</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="travelerName">Nombre Completo</Label>
+                    <Label htmlFor="travelerName">{t('fullName')}</Label>
                     <Input 
                       id="travelerName" 
-                      placeholder="Ej: Juan Pérez" 
+                      placeholder={t('enterTravelerName')}
                       value={travelerFormData.name}
                       onChange={(e) => setTravelerFormData({ ...travelerFormData, name: e.target.value })}
                     />
@@ -565,21 +574,21 @@ export default function TripDetail() {
                   {travelerFormData.type === 'child' && (
                     <>
                       <div className="space-y-2">
-                        <Label htmlFor="travelerAge">Edad</Label>
+                        <Label htmlFor="travelerAge">{t('age')}</Label>
                         <Input 
                           id="travelerAge" 
                           type="number" 
-                          placeholder="Ej: 8" 
+                          placeholder={t('enterAge')}
                           value={travelerFormData.age}
                           onChange={(e) => setTravelerFormData({ ...travelerFormData, age: e.target.value })}
                         />
                       </div>
 
                       <div className="space-y-2">
-                        <Label htmlFor="travelerRelation">Relación</Label>
+                        <Label htmlFor="travelerRelation">{t('relation')}</Label>
                         <Input 
                           id="travelerRelation" 
-                          placeholder="Ej: Hijo, Hija, Sobrino" 
+                          placeholder={t('enterRelation')}
                           value={travelerFormData.relation}
                           onChange={(e) => setTravelerFormData({ ...travelerFormData, relation: e.target.value })}
                         />
@@ -588,10 +597,10 @@ export default function TripDetail() {
                   )}
 
                   <div className="space-y-2">
-                    <Label htmlFor="travelerDocument">Documento (Opcional)</Label>
+                    <Label htmlFor="travelerDocument">{t('documentOptional')}</Label>
                     <Input 
                       id="travelerDocument" 
-                      placeholder="Pasaporte o DNI" 
+                      placeholder={t('enterDocument')}
                       value={travelerFormData.document}
                       onChange={(e) => setTravelerFormData({ ...travelerFormData, document: e.target.value })}
                     />
@@ -603,13 +612,13 @@ export default function TripDetail() {
                     onClick={() => setShowAddTravelerDialog(false)}
                     disabled={createTravelerMutation.isPending}
                   >
-                    Cancelar
+                    {t('cancel')}
                   </Button>
                   <Button 
                     onClick={handleAddTraveler}
                     disabled={createTravelerMutation.isPending}
                   >
-                    {createTravelerMutation.isPending ? 'Agregando...' : 'Agregar'}
+                    {createTravelerMutation.isPending ? t('adding') + '...' : t('add')}
                   </Button>
                 </DialogFooter>
               </DialogContent>

@@ -255,19 +255,27 @@ export default function ItineraryTab({ tripId }: ItineraryTabProps) {
                     <div>
                       <Label className="flex items-center gap-2">
                         <Camera className="h-4 w-4" />
-                        Certificado de vuelo (foto)
+                        {t('flightCertificate')}
                       </Label>
-                      <Input
-                        type="file"
-                        accept="image/*"
-                        onChange={(e) => setSelectedFile(e.target.files?.[0] || null)}
-                        data-testid="input-flight-certificate"
-                      />
-                      {selectedFile && (
-                        <p className="text-sm text-muted-foreground mt-1">
-                          📎 {selectedFile.name}
-                        </p>
-                      )}
+                      <div>
+                        <input
+                          ref={(el) => {
+                            if (el) el.setAttribute('data-testid', 'input-flight-certificate');
+                          }}
+                          type="file"
+                          accept="image/*"
+                          onChange={(e) => setSelectedFile(e.target.files?.[0] || null)}
+                          className="hidden"
+                          id="flight-certificate-input"
+                        />
+                        <label
+                          htmlFor="flight-certificate-input"
+                          className="flex items-center justify-center gap-2 px-4 py-2 border border-input bg-background hover:bg-accent hover:text-accent-foreground rounded-md cursor-pointer transition-colors"
+                        >
+                          <Camera className="h-4 w-4" />
+                          {selectedFile ? selectedFile.name : t('uploadPhoto')}
+                        </label>
+                      </div>
                     </div>
                     <Button
                       onClick={async () => {
@@ -284,7 +292,7 @@ export default function ItineraryTab({ tripId }: ItineraryTabProps) {
                                 setFlightForm({ airline: '', flightNumber: '', departureAirport: '', arrivalAirport: '', departureDateTime: '', arrivalDateTime: '', notes: '' });
                                 setSelectedFile(null);
                                 setIsFlightDialogOpen(false);
-                                toast({ title: t('success'), description: t('flightAdded') || 'Vuelo agregado' });
+                                toast({ title: t('success'), description: t('flightAdded') });
                               },
                             }
                           );

@@ -1,176 +1,80 @@
-import { useQuery, useMutation } from "@tanstack/react-query";
-import { 
-  collection, 
-  query, 
-  where, 
-  getDocs, 
-  addDoc,
-  doc,
-  updateDoc,
-  Timestamp 
-} from "firebase/firestore";
-import { db } from "@/lib/firebase";
+import { useMutation, useQuery } from "@tanstack/react-query";
+import { useToast } from "@/hooks/use-toast";
 import { queryClient } from "@/lib/queryClient";
-import type { ManifestCertificate, Luggage, ManifestItem } from "@shared/schema";
+import { useTranslation } from 'react-i18next';
+/* ==============================================
+   1. GENERAR CERTIFICADO (DESCARGA REAL)
+   ============================================== */
+export function useGenerateLuggageCertificate() {
+  const { toast } = useToast();
+  const { i18n } = useTranslation(); // ← AGREGAR
 
-export function useCertificatesByTrip(tripId: string | null) {
-  return useQuery({
-    queryKey: ["/api/trips", tripId, "certificates"],
-    queryFn: async () => {
-      if (!tripId) return [];
-      
-      const certsRef = collection(db, "certificates");
-      const q = query(
-        certsRef, 
-        where("tripId", "==", tripId)
-      );
-      
-      const snapshot = await getDocs(q);
-      return snapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data(),
-        createdAt: doc.data().createdAt?.toDate?.()?.toISOString() || new Date().toISOString(),
-      })) as ManifestCertificate[];
+  return useMutation({
+    mutationFn: async ({ luggage, user }: any) => {
+      try {
+        const cleanId = String(luggage.id).trim();
+        const userName = user?.name || 'Usuario';
+
+        // Usar i18n directamente
+        const lang = i18n.language.startsWith('en') ? 'en' : 'es';
+        // Detectar idioma actual
+        
+
+        const link = document.createElement('a');
+        link.href = `/api/luggage/${cleanId}/certificate?userName=${encodeURIComponent(userName)}&lang=${lang}&t=${Date.now()}`;
+        link.setAttribute('download', `Certificate_${cleanId}.pdf`);
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+
+        queryClient.invalidateQueries({ queryKey: ["/api/luggage"] });
+        return true;
+      } catch (error) {
+        toast({
+          title: "Error",
+          description: "No se pudo descargar el certificado.",
+          variant: "destructive",
+        });
+        throw error;
+      }
     },
-    enabled: !!tripId,
   });
 }
-
-export function useCertificatesByLuggage(luggageId: string | null) {
-  return useQuery({
-    queryKey: ["/api/luggage", luggageId, "certificates"],
-    queryFn: async () => {
-      if (!luggageId) return [];
-      
-      const certsRef = collection(db, "certificates");
-      const q = query(
-        certsRef, 
-        where("luggageId", "==", luggageId)
-      );
-      
-      const snapshot = await getDocs(q);
-      return snapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data(),
-        createdAt: doc.data().createdAt?.toDate?.()?.toISOString() || new Date().toISOString(),
-      })) as ManifestCertificate[];
-    },
-    enabled: !!luggageId,
-  });
-}
-
+/* ==============================================
+   2. VERIFICAR CERTIFICADO POR HASH
+   ============================================== */
 export function useCertificateByHash(hash: string | null) {
   return useQuery({
-    queryKey: ["/api/verify", hash],
+    queryKey: ["verify-certificate", hash],
+    enabled: Boolean(hash && hash.trim().length > 0),
     queryFn: async () => {
-      if (!hash) return null;
-      
-      const certsRef = collection(db, "certificates");
-      const q = query(certsRef, where("hash", "==", hash));
-      
-      const snapshot = await getDocs(q);
-      if (snapshot.empty) return null;
-      
-      const certDoc = snapshot.docs[0];
-      return {
-        id: certDoc.id,
-        ...certDoc.data(),
-        createdAt: certDoc.data().createdAt?.toDate?.()?.toISOString() || new Date().toISOString(),
-      } as ManifestCertificate;
+      const cleanHash = hash?.trim();
+      const res = await fetch(`/api/luggage/verify/${cleanHash}`);
+      if (res.status === 404) {
+        return { valid: false, message: "Certificado no encontrado" };
+      }
+      if (!res.ok) {
+        throw new Error("Error en el servidor");
+      }
+      return res.json();
     },
-    enabled: !!hash,
+    staleTime: 0,
+    gcTime: 0,
   });
 }
 
-export function useGenerateCertificate() {
-  return useMutation({
-    mutationFn: async ({ trip, items, user }: { trip: any; items: any[]; user: any }) => {
-      const response = await fetch(`/api/trips/${trip.id}/certificate`, {
-        method: "POST",
-        body: JSON.stringify({ trip, items, user }),
-        headers: {
-          "Content-Type": "application/json",
-        },
-      });
-
-      if (!response.ok) {
-        throw new Error("Failed to generate certificate");
-      }
-
-      const { pdf, certificate } = await response.json();
-
-      const certsRef = collection(db, "certificates");
-      const docRef = await addDoc(certsRef, {
-        ...certificate,
-        createdAt: Timestamp.now(),
-      });
-
-      return {
-        certificateId: docRef.id,
-        pdf,
-        hash: certificate.hash,
-      };
+/* ==============================================
+   3. LISTAR CERTIFICADOS (SIMPLIFICADO)
+   ============================================== */
+export function useCertificatesByLuggage(luggageId: string | null) {
+  return useQuery({
+    queryKey: ["luggage-certificates", luggageId],
+    queryFn: async () => {
+      if (!luggageId) return [];
+      const res = await fetch(`/api/luggage/${luggageId}/certificate`);
+      if (!res.ok) return [];
+      return res.json();
     },
-    onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({ queryKey: ["/api/trips", variables.trip.id, "certificates"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/trips", variables.trip.userId] });
-    },
-  });
-}
-
-interface GenerateLuggageCertificateParams {
-  luggage: Luggage;
-  items: ManifestItem[];
-  trip: { id: string; title: string; destination: string; startDate: string; endDate: string };
-  user: { name: string; email: string };
-}
-
-export function useGenerateLuggageCertificate() {
-  return useMutation({
-    mutationFn: async ({ luggage, items, trip, user }: GenerateLuggageCertificateParams) => {
-      const response = await fetch(`/api/luggage/${luggage.id}/certificate`, {
-        method: "POST",
-        body: JSON.stringify({ luggage, items, trip, user }),
-        headers: {
-          "Content-Type": "application/json",
-        },
-      });
-
-      if (!response.ok) {
-        throw new Error("Failed to generate luggage certificate");
-      }
-
-      const { pdf, certificate } = await response.json();
-
-      const certsRef = collection(db, "certificates");
-      const docRef = await addDoc(certsRef, {
-        ...certificate,
-        luggageId: luggage.id,
-        tripId: trip.id,
-        createdAt: Timestamp.now(),
-      });
-
-      try {
-        const luggageRef = doc(db, "luggage", luggage.id);
-        await updateDoc(luggageRef, {
-          certificateHash: certificate.hash,
-          certificatePdfUrl: pdf,
-        });
-      } catch (updateError) {
-        console.warn("Could not update luggage document (may not exist yet):", updateError);
-      }
-
-      return {
-        certificateId: docRef.id,
-        pdf,
-        hash: certificate.hash,
-      };
-    },
-    onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({ queryKey: ["/api/luggage", variables.luggage.id, "certificates"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/luggage", variables.luggage.tripId] });
-      queryClient.invalidateQueries({ queryKey: ["/api/trips", variables.trip.id, "certificates"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/luggage"] });
-    },
+    enabled: !!luggageId,
   });
 }

@@ -4,16 +4,42 @@ import AuthForm from '@/components/AuthForm';
 import { Button } from '@/components/ui/button';
 import { Globe } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import { useToast } from '@/hooks/use-toast';
 
 export default function Auth() {
   const [mode, setMode] = useState<'login' | 'register'>('login');
   const [, setLocation] = useLocation();
   const { i18n, t } = useTranslation();
+  const { toast } = useToast();
 
-  const handleSubmit = (data: { email: string; password: string; name?: string }) => {
-    console.log('Auth submitted:', data);
-    // TODO: Implement Firebase authentication
-    setLocation('/dashboard');
+  const handleSubmit = async (data: { email: string; password: string; name?: string }) => {
+    try {
+      // Llamar al backend para guardar/actualizar usuario
+      const res = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: data.email, name: data.name || 'Usuario' }),
+      });
+
+      if (!res.ok) {
+        throw new Error('Error en la autenticación');
+      }
+
+      const user = await res.json();
+
+      // Guardar en localStorage
+      localStorage.setItem('user', JSON.stringify(user));
+
+      // Redirigir al dashboard
+      setLocation('/dashboard');
+    } catch (error) {
+      console.error('Error:', error);
+      toast({
+        title: 'Error',
+        description: 'No se pudo iniciar sesión. Intenta de nuevo.',
+        variant: 'destructive',
+      });
+    }
   };
 
   const toggleLanguage = () => {

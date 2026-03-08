@@ -1,17 +1,4 @@
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { 
-  collection, 
-  query, 
-  where, 
-  getDocs, 
-  addDoc, 
-  updateDoc, 
-  deleteDoc, 
-  doc,
-  orderBy,
-  Timestamp 
-} from "firebase/firestore";
-import { db } from "@/lib/firebase";
 import { queryClient } from "@/lib/queryClient";
 import type { 
   Flight, Hotel, Transport, Restaurant, Activity,
@@ -22,17 +9,6 @@ type ItineraryType = "flights" | "hotels" | "transport" | "restaurants" | "activ
 type ItineraryItem = Flight | Hotel | Transport | Restaurant | Activity;
 type InsertItineraryItem = InsertFlight | InsertHotel | InsertTransport | InsertRestaurant | InsertActivity;
 
-// Helper function to remove undefined values and convert empty strings to null
-function cleanDataForFirebase<T extends Record<string, any>>(data: T): T {
-  const cleaned: any = {};
-  for (const [key, value] of Object.entries(data)) {
-    if (value !== undefined) {
-      cleaned[key] = value === '' ? null : value;
-    }
-  }
-  return cleaned as T;
-}
-
 export function useItineraryItems<T extends ItineraryItem>(
   tripId: string | null, 
   type: ItineraryType
@@ -42,31 +18,14 @@ export function useItineraryItems<T extends ItineraryItem>(
     queryFn: async () => {
       if (!tripId) return [];
 
-      console.log(`🔍 Fetching ${type} for tripId:`, tripId);
+      const response = await fetch(`/api/${type}?tripId=${tripId}`);
+      if (!response.ok) {
+        throw new Error(`Failed to fetch ${type}`);
+      }
 
-      const itemsRef = collection(db, type);
-      const q = query(
-        itemsRef, 
-        where("tripId", "==", tripId),
-        orderBy("createdAt", "desc")
-      );
-
-      const snapshot = await getDocs(q);
-      const items = snapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data(),
-        createdAt: doc.data().createdAt?.toDate?.()?.toISOString() || new Date().toISOString(),
-      })) as T[];
-
-      console.log(`✅ Found ${items.length} ${type}`);
-
-      return items;
+      return response.json() as Promise<T[]>;
     },
     enabled: !!tripId,
-    staleTime: 0,
-    cacheTime: 0,
-    refetchOnMount: 'always',
-    refetchOnWindowFocus: true,
   });
 }
 
@@ -93,20 +52,17 @@ export function useActivities(tripId: string | null) {
 export function useCreateItineraryItem(type: ItineraryType) {
   return useMutation({
     mutationFn: async (data: InsertItineraryItem) => {
-      const itemsRef = collection(db, type);
-
-      const cleanedData = cleanDataForFirebase({
-        ...data,
-        createdAt: Timestamp.now(),
+      const response = await fetch(`/api/${type}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
       });
 
-      const docRef = await addDoc(itemsRef, cleanedData);
+      if (!response.ok) {
+        throw new Error(`Failed to create ${type}`);
+      }
 
-      return {
-        id: docRef.id,
-        ...data,
-        createdAt: new Date().toISOString(),
-      } as unknown as ItineraryItem;
+      return response.json() as Promise<ItineraryItem>;
     },
     onSuccess: (item: any) => {
       queryClient.invalidateQueries({ queryKey: ["/api/trips", item.tripId, type] });
@@ -117,22 +73,17 @@ export function useCreateItineraryItem(type: ItineraryType) {
 export function useUpdateItineraryItem(type: ItineraryType) {
   return useMutation({
     mutationFn: async ({ id, data }: { id: string; data: Partial<InsertItineraryItem> }) => {
-      const itemRef = doc(db, type, id);
+      const response = await fetch(`/api/${type}/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      });
 
-      const cleanedData = cleanDataForFirebase(data);
-      await updateDoc(itemRef, cleanedData);
+      if (!response.ok) {
+        throw new Error(`Failed to update ${type}`);
+      }
 
-      const snapshot = await getDocs(
-        query(collection(db, type), where("__name__", "==", id))
-      );
-      const updated = snapshot.docs[0];
-      const itemData = updated.data();
-
-      return {
-        id: updated.id,
-        ...itemData,
-        createdAt: itemData.createdAt?.toDate?.() || new Date(),
-      } as unknown as ItineraryItem;
+      return response.json() as Promise<ItineraryItem>;
     },
     onSuccess: (item: any) => {
       queryClient.invalidateQueries({ queryKey: ["/api/trips", item.tripId, type] });
@@ -143,7 +94,14 @@ export function useUpdateItineraryItem(type: ItineraryType) {
 export function useDeleteItineraryItem(type: ItineraryType) {
   return useMutation({
     mutationFn: async ({ id, tripId }: { id: string; tripId: string }) => {
-      await deleteDoc(doc(db, type, id));
+      const response = await fetch(`/api/${type}/${id}`, {
+        method: "DELETE",
+      });
+
+      if (!response.ok) {
+        throw new Error(`Failed to delete ${type}`);
+      }
+
       return { id, tripId };
     },
     onSuccess: (variables) => {

@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -77,6 +78,22 @@ interface LuggageTabProps {
 
 export default function LuggageTab({ tripId, trip, user }: LuggageTabProps) {
   const { toast } = useToast();
+  const { t } = useTranslation();
+
+  // Traducir opciones dinámicamente
+  const translatedTypeOptions = LUGGAGE_TYPE_OPTIONS.map(opt => ({
+    value: opt.value,
+    label: t(opt.value) // cabin, checked, backpack, handbag
+  }));
+
+  const translatedSizeOptions = LUGGAGE_SIZES.map(opt => ({
+    value: opt.value,
+    label: t(opt.value) // small, medium, large, xlarge
+  }));
+  const translatedColors = LUGGAGE_COLORS.map(color => {
+    const colorKey = color.toLowerCase().replace(/\//g, '').replace(/ /g, '');
+    return t(`color_${colorKey}`, color); // fallback al original si no existe
+  });
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [editingLuggage, setEditingLuggage] = useState<Luggage | null>(null);
   const [deletingLuggage, setDeletingLuggage] = useState<Luggage | null>(null);
@@ -128,11 +145,11 @@ export default function LuggageTab({ tripId, trip, user }: LuggageTabProps) {
       };
 
       await createMutation.mutateAsync(data);
-      toast({ title: 'Equipaje agregado', description: 'La maleta se ha creado correctamente.' });
+      toast({ title: t('luggageAdded'), description: t('luggageAddedSuccess') });
       setIsCreateOpen(false);
       createForm.reset();
     } catch (err) {
-      toast({ title: 'Error', description: 'No se pudo crear el equipaje.', variant: 'destructive' });
+      toast({ title: t('error'), description: t('errorCreatingLuggage'), variant: 'destructive' });
     }
   };
 
@@ -152,10 +169,10 @@ export default function LuggageTab({ tripId, trip, user }: LuggageTabProps) {
           isLocked: values.isLocked,
         },
       });
-      toast({ title: 'Equipaje actualizado', description: 'Los cambios se han guardado.' });
+      toast({ title: t('luggageUpdated'), description: t('luggageUpdatedSuccess') });
       setEditingLuggage(null);
     } catch (err) {
-      toast({ title: 'Error', description: 'No se pudo actualizar el equipaje.', variant: 'destructive' });
+      toast({ title: t('error'), description: t('errorUpdatingLuggage'), variant: 'destructive' });
     }
   };
 
@@ -164,10 +181,10 @@ export default function LuggageTab({ tripId, trip, user }: LuggageTabProps) {
 
     try {
       await deleteMutation.mutateAsync({ id: deletingLuggage.id, tripId });
-      toast({ title: 'Equipaje eliminado', description: 'La maleta y sus artículos han sido eliminados.' });
+      toast({ title: t('luggageDeleted'), description: t('luggageDeletedSuccess') });
       setDeletingLuggage(null);
     } catch (err) {
-      toast({ title: 'Error', description: 'No se pudo eliminar el equipaje.', variant: 'destructive' });
+      toast({ title: t('error'), description: t('errorDeletingLuggage'), variant: 'destructive' });
     }
   };
 
@@ -204,7 +221,7 @@ export default function LuggageTab({ tripId, trip, user }: LuggageTabProps) {
       <div className="flex items-center justify-between gap-2">
         <h3 className="font-semibold text-lg flex items-center gap-2">
           <Briefcase className="h-5 w-5" />
-          Equipaje
+          {t('luggage')}
         </h3>
         <Button
           size="sm"
@@ -212,7 +229,7 @@ export default function LuggageTab({ tripId, trip, user }: LuggageTabProps) {
           data-testid="button-add-luggage"
         >
           <Plus className="h-4 w-4 mr-1" />
-          Agregar
+          {t('add')}
         </Button>
       </div>
 
@@ -256,9 +273,9 @@ export default function LuggageTab({ tripId, trip, user }: LuggageTabProps) {
       <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
         <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle>Agregar equipaje</DialogTitle>
+            <DialogTitle>{t('addLuggageTitle')}</DialogTitle>
             <DialogDescription>
-              Registra una maleta o bolso para tu viaje
+              {t('addLuggageDescription')}
             </DialogDescription>
           </DialogHeader>
           <Form {...createForm}>
@@ -268,10 +285,10 @@ export default function LuggageTab({ tripId, trip, user }: LuggageTabProps) {
                 name="nickname"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Nombre/Alias (opcional)</FormLabel>
+                    <FormLabel>{t('luggageNicknameLabel')}</FormLabel>
                     <FormControl>
                       <Input
-                        placeholder="Ej: Maleta principal"
+                        placeholder={t('enterLuggageNickname')}
                         {...field}
                         data-testid="input-luggage-nickname"
                       />
@@ -287,15 +304,15 @@ export default function LuggageTab({ tripId, trip, user }: LuggageTabProps) {
                   name="type"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Tipo</FormLabel>
+                      <FormLabel>{t('type')}</FormLabel>
                       <Select onValueChange={field.onChange} value={field.value}>
                         <FormControl>
                           <SelectTrigger data-testid="select-luggage-type">
-                            <SelectValue placeholder="Seleccionar" />
+                            <SelectValue placeholder={t('selectOption')} />
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          {LUGGAGE_TYPE_OPTIONS.map(opt => (
+                          {translatedTypeOptions.map(opt => (
                             <SelectItem key={opt.value} value={opt.value}>
                               {opt.label}
                             </SelectItem>
@@ -312,15 +329,15 @@ export default function LuggageTab({ tripId, trip, user }: LuggageTabProps) {
                   name="size"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Tamaño</FormLabel>
+                      <FormLabel>{t('size')}</FormLabel>
                       <Select onValueChange={field.onChange} value={field.value}>
                         <FormControl>
                           <SelectTrigger data-testid="select-luggage-size">
-                            <SelectValue placeholder="Seleccionar" />
+                            <SelectValue placeholder={t('selectOption')} />
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          {LUGGAGE_SIZES.map(opt => (
+                          {translatedSizeOptions.map(opt => (
                             <SelectItem key={opt.value} value={opt.value}>
                               {opt.label}
                             </SelectItem>
@@ -339,11 +356,11 @@ export default function LuggageTab({ tripId, trip, user }: LuggageTabProps) {
                   name="brand"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Marca</FormLabel>
+                      <FormLabel>{t('brand')}</FormLabel>
                       <Select onValueChange={field.onChange} value={field.value}>
                         <FormControl>
                           <SelectTrigger data-testid="select-luggage-brand">
-                            <SelectValue placeholder="Seleccionar" />
+                            <SelectValue placeholder={t('selectOption')} />
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
@@ -364,17 +381,17 @@ export default function LuggageTab({ tripId, trip, user }: LuggageTabProps) {
                   name="color"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Color</FormLabel>
+                      <FormLabel>{t('color')}</FormLabel>
                       <Select onValueChange={field.onChange} value={field.value}>
                         <FormControl>
                           <SelectTrigger data-testid="select-luggage-color">
-                            <SelectValue placeholder="Seleccionar" />
+                            <SelectValue placeholder={t('selectOption')} />
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          {LUGGAGE_COLORS.map(color => (
+                          {LUGGAGE_COLORS.map((color, index) => (
                             <SelectItem key={color} value={color}>
-                              {color}
+                              {translatedColors[index]}
                             </SelectItem>
                           ))}
                         </SelectContent>
@@ -398,7 +415,7 @@ export default function LuggageTab({ tripId, trip, user }: LuggageTabProps) {
                           data-testid="switch-luggage-sealed"
                         />
                       </FormControl>
-                      <FormLabel className="!mt-0 cursor-pointer">Sellada</FormLabel>
+                      <FormLabel className="!mt-0 cursor-pointer">{t('isSealed')}</FormLabel>
                     </FormItem>
                   )}
                 />
@@ -415,7 +432,7 @@ export default function LuggageTab({ tripId, trip, user }: LuggageTabProps) {
                           data-testid="switch-luggage-locked"
                         />
                       </FormControl>
-                      <FormLabel className="!mt-0 cursor-pointer">Con candado</FormLabel>
+                      <FormLabel className="!mt-0 cursor-pointer">{t('isLocked')}</FormLabel>
                     </FormItem>
                   )}
                 />
@@ -428,14 +445,14 @@ export default function LuggageTab({ tripId, trip, user }: LuggageTabProps) {
                   onClick={() => setIsCreateOpen(false)}
                   data-testid="button-cancel-luggage"
                 >
-                  Cancelar
+                  {t('cancel')}
                 </Button>
                 <Button
                   type="submit"
                   disabled={createMutation.isPending}
                   data-testid="button-submit-luggage"
                 >
-                  {createMutation.isPending ? 'Guardando...' : 'Guardar'}
+                  {createMutation.isPending ? t('saving') + '...' : t('save')}
                 </Button>
               </DialogFooter>
             </form>
@@ -446,9 +463,9 @@ export default function LuggageTab({ tripId, trip, user }: LuggageTabProps) {
       <Dialog open={!!editingLuggage} onOpenChange={(open) => !open && setEditingLuggage(null)}>
         <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle>Editar equipaje</DialogTitle>
+            <DialogTitle>{t('editLuggageTitle')}</DialogTitle>
             <DialogDescription>
-              Modifica los datos de esta maleta
+              {t('editLuggageDescription')}
             </DialogDescription>
           </DialogHeader>
           <Form {...editForm}>
@@ -458,10 +475,10 @@ export default function LuggageTab({ tripId, trip, user }: LuggageTabProps) {
                 name="nickname"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Nombre/Alias (opcional)</FormLabel>
+                    <FormLabel>{t('luggageNicknameLabel')}</FormLabel>
                     <FormControl>
                       <Input
-                        placeholder="Ej: Maleta principal"
+                        placeholder={t('enterLuggageNickname')}
                         {...field}
                         data-testid="input-edit-luggage-nickname"
                       />
@@ -477,15 +494,15 @@ export default function LuggageTab({ tripId, trip, user }: LuggageTabProps) {
                   name="type"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Tipo</FormLabel>
+                      <FormLabel>{t('type')}</FormLabel>
                       <Select onValueChange={field.onChange} value={field.value}>
                         <FormControl>
                           <SelectTrigger data-testid="select-edit-luggage-type">
-                            <SelectValue placeholder="Seleccionar" />
+                            <SelectValue placeholder={t('selectOption')} />
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          {LUGGAGE_TYPE_OPTIONS.map(opt => (
+                          {translatedTypeOptions.map(opt => (
                             <SelectItem key={opt.value} value={opt.value}>
                               {opt.label}
                             </SelectItem>
@@ -502,15 +519,15 @@ export default function LuggageTab({ tripId, trip, user }: LuggageTabProps) {
                   name="size"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Tamaño</FormLabel>
+                      <FormLabel>{t('size')}</FormLabel>
                       <Select onValueChange={field.onChange} value={field.value}>
                         <FormControl>
                           <SelectTrigger data-testid="select-edit-luggage-size">
-                            <SelectValue placeholder="Seleccionar" />
+                            <SelectValue placeholder={t('selectOption')} />
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          {LUGGAGE_SIZES.map(opt => (
+                          {translatedSizeOptions.map(opt => (
                             <SelectItem key={opt.value} value={opt.value}>
                               {opt.label}
                             </SelectItem>
@@ -529,11 +546,11 @@ export default function LuggageTab({ tripId, trip, user }: LuggageTabProps) {
                   name="brand"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Marca</FormLabel>
+                      <FormLabel>{t('brand')}</FormLabel>
                       <Select onValueChange={field.onChange} value={field.value}>
                         <FormControl>
                           <SelectTrigger data-testid="select-edit-luggage-brand">
-                            <SelectValue placeholder="Seleccionar" />
+                            <SelectValue placeholder={t('selectOption')} />
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
@@ -554,17 +571,17 @@ export default function LuggageTab({ tripId, trip, user }: LuggageTabProps) {
                   name="color"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Color</FormLabel>
+                      <FormLabel>{t('color')}</FormLabel>
                       <Select onValueChange={field.onChange} value={field.value}>
                         <FormControl>
                           <SelectTrigger data-testid="select-edit-luggage-color">
-                            <SelectValue placeholder="Seleccionar" />
+                            <SelectValue placeholder={t('selectOption')} />
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          {LUGGAGE_COLORS.map(color => (
+                          {LUGGAGE_COLORS.map((color, index) => (
                             <SelectItem key={color} value={color}>
-                              {color}
+                              {translatedColors[index]}
                             </SelectItem>
                           ))}
                         </SelectContent>
@@ -588,7 +605,7 @@ export default function LuggageTab({ tripId, trip, user }: LuggageTabProps) {
                           data-testid="switch-edit-luggage-sealed"
                         />
                       </FormControl>
-                      <FormLabel className="!mt-0 cursor-pointer">Sellada</FormLabel>
+                      <FormLabel className="!mt-0 cursor-pointer">{t('isSealed')}</FormLabel>
                     </FormItem>
                   )}
                 />
@@ -605,7 +622,7 @@ export default function LuggageTab({ tripId, trip, user }: LuggageTabProps) {
                           data-testid="switch-edit-luggage-locked"
                         />
                       </FormControl>
-                      <FormLabel className="!mt-0 cursor-pointer">Con candado</FormLabel>
+                      <FormLabel className="!mt-0 cursor-pointer">{t('isLocked')}</FormLabel>
                     </FormItem>
                   )}
                 />
@@ -618,14 +635,14 @@ export default function LuggageTab({ tripId, trip, user }: LuggageTabProps) {
                   onClick={() => setEditingLuggage(null)}
                   data-testid="button-cancel-edit-luggage"
                 >
-                  Cancelar
+                  {t('cancel')}
                 </Button>
                 <Button
                   type="submit"
                   disabled={updateMutation.isPending}
                   data-testid="button-update-luggage"
                 >
-                  {updateMutation.isPending ? 'Guardando...' : 'Guardar cambios'}
+                  {updateMutation.isPending ? t('savingChanges') + '...' : t('saveChanges')}
                 </Button>
               </DialogFooter>
             </form>
@@ -638,12 +655,12 @@ export default function LuggageTab({ tripId, trip, user }: LuggageTabProps) {
           <AlertDialogHeader>
             <AlertDialogTitle>¿Eliminar equipaje?</AlertDialogTitle>
             <AlertDialogDescription>
-              ¿Estás seguro de que quieres eliminar "{deletingLuggage?.nickname || 'esta maleta'}"?
-              Esta acción no se puede deshacer. Se eliminarán también todos los artículos asociados.
+              {t('deleteLuggageConfirmation')} "{deletingLuggage?.nickname || t('thisLuggage')}"?
+                {t('actionCannotBeUndone')}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel data-testid="button-cancel-delete-luggage">Cancelar</AlertDialogCancel>
+            <AlertDialogCancel data-testid="button-cancel-delete-luggage">{t('cancel')}</AlertDialogCancel>
             <AlertDialogAction
               onClick={handleDelete}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
