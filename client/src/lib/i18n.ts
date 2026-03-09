@@ -322,6 +322,13 @@ const resources = {
                                              nameRequired: 'El nombre es requerido',
                                              categoryIsRequired: 'La categoría es requerida',
                                              quantityIsRequired: 'La cantidad es requerida',
+                                               beauty: 'Belleza e Higiene',
+                                               medicine: 'Medicamentos',
+                                                 selectBrand: 'Seleccionar marca',
+                                                 additionalDetails: 'Detalles adicionales...',
+                                                   selectAnItem: 'Selecciona un artículo',
+                                                     otherWrite: 'Otro (escribir)',
+                                                     writeItemName: 'Escribe el nombre del artículo',
         },
       },
   en: {
@@ -641,7 +648,13 @@ const resources = {
                                               nameRequired: 'Name is required',
                                               categoryIsRequired: 'Category is required',
                                               quantityIsRequired: 'Quantity is required',
-        },
+                                                beauty: 'Beauty & Hygiene',
+                                                medicine: 'Medicine',
+                                                  selectBrand: 'Select brand',
+                                                  additionalDetails: 'Additional details...',
+                                                    selectAnItem: 'Select an item',
+                                                      otherWrite: 'Other (write)',
+                                                      writeItemName: 'Write the item name',
       },
 };
 

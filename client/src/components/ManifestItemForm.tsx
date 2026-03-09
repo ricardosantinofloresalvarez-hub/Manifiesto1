@@ -230,7 +230,7 @@ export default function ManifestItemForm({
                         const cat = ITEM_CATEGORIES[key];
                         return (
                           <SelectItem key={key} value={key}>
-                            {cat.icon} {cat.label}
+                            {cat.icon} {t(key)}
                           </SelectItem>
                         );
                       })}
@@ -264,7 +264,7 @@ export default function ManifestItemForm({
                         >
                           <FormControl>
                             <SelectTrigger data-testid="select-item-name">
-                              <SelectValue placeholder="Selecciona un artículo" />
+                              <SelectValue placeholder={t('selectAnItem')} />
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
@@ -325,7 +325,7 @@ export default function ManifestItemForm({
                           >
                             <FormControl>
                               <SelectTrigger data-testid="select-item-brand">
-                                <SelectValue placeholder="Seleccionar marca" />
+                                <SelectValue placeholder={t('selectBrand')} />
                               </SelectTrigger>
                             </FormControl>
                             <SelectContent>
@@ -440,7 +440,7 @@ export default function ManifestItemForm({
                   <FormLabel>{t('notes')}</FormLabel>
                   <FormControl>
                     <Textarea
-                      placeholder="Detalles adicionales..."
+                      placeholder={t('additionalDetails')}
                       className="resize-none"
                       rows={2}
                       {...field}
