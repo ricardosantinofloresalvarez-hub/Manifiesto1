@@ -16,11 +16,10 @@ import itineraryRoutes from "./itineraryRoutes";
 
 const app = express();
 
+app.use(express.static('dist/public'));
 app.get("/", (_req, res) => {
-  res.send("OK");
+  res.sendFile('index.html', { root: 'dist/public' });
 });
-// Servir archivos estáticos de public
-app.use(express.static('public'));
 
 /* SESSION */
 app.use(session({
