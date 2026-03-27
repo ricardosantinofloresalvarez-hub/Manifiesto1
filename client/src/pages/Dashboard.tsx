@@ -127,7 +127,7 @@ export default function Dashboard() {
       {
         ...formData,
         userId: user!.id,
-        imageUrl: defaultImages[Math.floor(Math.random() * defaultImages.length)],
+        imageUrl: null,
       },
       {
         onSuccess: () => {
@@ -187,7 +187,7 @@ export default function Dashboard() {
 
       <div className="p-4 max-w-7xl mx-auto">
         <div className="mb-6">
-          <h2 className="text-2xl font-bold mb-2">{t('welcomeBack')}</h2>
+          <h2 className="text-2xl font-bold mb-2">{t('welcomeBack', { name: user?.name?.split(' ')[0] })}</h2>
           <p className="text-muted-foreground">
             {t('youHave')} {trips.length} {trips.length === 1 ? t('trip') : t('tripsPlanned')}
           </p>
@@ -219,9 +219,40 @@ export default function Dashboard() {
             ))}
           </div>
         )}
-      </div>
 
-      <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
+          {/* Estadísticas */}
+          <div className="mt-8 grid grid-cols-3 gap-4 mb-6">
+            <div className="bg-muted/30 rounded-lg p-4 text-center">
+              <p className="text-2xl font-bold text-primary">{trips.length}</p>
+              <p className="text-xs text-muted-foreground mt-1">{t('tripsPlanned')}</p>
+            </div>
+            <div className="bg-muted/30 rounded-lg p-4 text-center">
+              <p className="text-2xl font-bold text-primary">
+                {tripsWithCounts.reduce((acc: number, trip: any) => acc + (trip.itemCount || 0), 0)}
+              </p>
+              <p className="text-xs text-muted-foreground mt-1">{t('items')}</p>
+            </div>
+            <div className="bg-muted/30 rounded-lg p-4 text-center">
+              <p className="text-2xl font-bold text-primary">
+                {tripsWithCounts.filter((trip: any) => trip.verified).length}
+              </p>
+              <p className="text-xs text-muted-foreground mt-1">{t('certified')}</p>
+            </div>
+          </div>
+
+          <div className="bg-primary/5 border border-primary/20 rounded-lg p-6 text-center">
+            <p className="font-semibold mb-1">✈️ {t('nextTripQuestion')}</p>
+            <p className="text-sm text-muted-foreground mb-4">{t('nextTripDescription')}</p>
+            <button
+              onClick={() => setShowCreateDialog(true)}
+              className="bg-primary text-primary-foreground px-4 py-2 rounded-md text-sm font-medium hover:bg-primary/90"
+            >
+              + {t('createTrip')}
+            </button>
+          </div>
+
+        </div>
+        <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>{t('createTrip')}</DialogTitle>

@@ -1,4 +1,5 @@
 import { Card } from '@/components/ui/card';
+import { useTranslation } from 'react-i18next';
 import { Badge } from '@/components/ui/badge';
 import { CheckCircle2, XCircle, Calendar, User, Package, DollarSign, Lock, ShieldCheck, MapPin } from 'lucide-react';
 import { format } from 'date-fns';
@@ -43,6 +44,7 @@ export default function VerificationResult({
   timestamp,
   hash,
 }: VerificationResultProps) {
+   const { t } = useTranslation();
   const getSizeLabel = (size: string) => {
     const sizeMap: Record<string, string> = {
       small: 'Pequeña',
@@ -58,17 +60,17 @@ export default function VerificationResult({
         {valid ? (
           <>
             <CheckCircle2 className="h-20 w-20 text-primary mb-4" />
-            <h2 className="text-2xl font-bold mb-2">Manifiesto Verificado</h2>
+            <h2 className="text-2xl font-bold mb-2">{t('manifestVerified')}</h2>
             <Badge variant="default" className="text-base px-4 py-1">
-              Válido
+              {t('validStatus')}
             </Badge>
           </>
         ) : (
           <>
             <XCircle className="h-20 w-20 text-destructive mb-4" />
-            <h2 className="text-2xl font-bold mb-2">Manifiesto Inválido</h2>
+            <h2 className="text-2xl font-bold mb-2">{t('manifestInvalid')}</h2>
             <Badge variant="destructive" className="text-base px-4 py-1">
-              No Verificado
+              {t('notVerified')}
             </Badge>
           </>
         )}
@@ -77,13 +79,13 @@ export default function VerificationResult({
       {valid && manifestId && (
         <>
           <Card className="p-6 mb-6">
-            <h3 className="font-semibold text-lg mb-4">Detalles del Manifiesto</h3>
+            <h3 className="font-semibold text-lg mb-4">{t('manifestDetails')}</h3>
             <div className="space-y-3">
               {tripTitle && (
                 <div className="flex items-start gap-3">
                   <Package className="h-5 w-5 text-muted-foreground mt-0.5" />
                   <div>
-                    <p className="text-sm text-muted-foreground">Viaje</p>
+                    <p className="text-sm text-muted-foreground">{t('trip')}</p>
                     <p className="font-medium">{tripTitle}</p>
                     {destination && <p className="text-sm text-muted-foreground">{destination}</p>}
                   </div>
@@ -93,7 +95,7 @@ export default function VerificationResult({
                 <div className="flex items-start gap-3">
                   <User className="h-5 w-5 text-muted-foreground mt-0.5" />
                   <div>
-                    <p className="text-sm text-muted-foreground">Usuario</p>
+                    <p className="text-sm text-muted-foreground">{t('user')}</p>
                     <p className="font-medium">{userName}</p>
                   </div>
                 </div>
@@ -102,8 +104,8 @@ export default function VerificationResult({
                 <div className="flex items-start gap-3">
                   <Package className="h-5 w-5 text-muted-foreground mt-0.5" />
                   <div>
-                    <p className="text-sm text-muted-foreground">Artículos</p>
-                    <p className="font-medium">{itemCount} artículos</p>
+                    <p className="text-sm text-muted-foreground">{t('itemsCount')}</p>
+                    <p className="font-medium">{itemCount} {t('items')}</p>
                   </div>
                 </div>
               )}
@@ -111,7 +113,7 @@ export default function VerificationResult({
                 <div className="flex items-start gap-3">
                   <DollarSign className="h-5 w-5 text-muted-foreground mt-0.5" />
                   <div>
-                    <p className="text-sm text-muted-foreground">Valor Total</p>
+                    <p className="text-sm text-muted-foreground">{t('totalValueLabel')}</p>
                     <p className="font-medium">${totalValue.toLocaleString()}</p>
                   </div>
                 </div>
@@ -132,7 +134,7 @@ export default function VerificationResult({
 
           {items && items.length > 0 && (
             <Card className="p-6 mb-6">
-              <h3 className="font-semibold text-lg mb-4">Artículos del Manifiesto</h3>
+              <h3 className="font-semibold text-lg mb-4">{t('manifestItemsList')}</h3>
               <div className="space-y-3">
                 {items.map((item, index) => (
                   <div key={index} className="border-b pb-3 last:border-b-0 last:pb-0">
@@ -141,13 +143,13 @@ export default function VerificationResult({
                         <h4 className="font-medium">{item.name}</h4>
                         <div className="flex flex-wrap items-center gap-2 mt-1">
                           <CategoryBadge category={item.category} />
-                          <span className="text-sm text-muted-foreground">Cantidad: {item.quantity}</span>
+                          <span className="text-sm text-muted-foreground">{t('quantityLabel')}: {item.quantity}</span>
                         </div>
                       </div>
                     </div>
                     {(item.estimatedValue || item.serialNumber || item.luggageBrand) && (
                       <div className="text-sm text-muted-foreground space-y-1 mt-2">
-                        {item.estimatedValue && <div>Valor: ${item.estimatedValue.toLocaleString()}</div>}
+                        {item.estimatedValue && <div>{t('valueLabel')}: ${item.estimatedValue.toLocaleString()}</div>}
                         {item.serialNumber && <div>S/N: {item.serialNumber}</div>}
                         {item.luggageBrand && (
                           <div className="flex items-center gap-1">
@@ -182,10 +184,10 @@ export default function VerificationResult({
 
           {hash && (
             <Card className="p-6">
-              <h3 className="font-semibold text-lg mb-4 text-center">Código QR</h3>
+              <h3 className="font-semibold text-lg mb-4 text-center">{t('qrCode')}</h3>
               <div className="flex justify-center">
                 <div className="bg-white p-4 rounded-lg">
-                  <QRCodeSVG value={hash} size={200} />
+                  <QRCodeSVG value={`${window.location.origin}/verify?hash=${hash}`} size={200} />
                 </div>
               </div>
               <p className="text-xs text-muted-foreground text-center mt-4 font-mono break-all">

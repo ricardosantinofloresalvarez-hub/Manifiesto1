@@ -1,26 +1,43 @@
 import { Badge } from '@/components/ui/badge';
-import { Laptop, Shirt, FileText, Watch, Package } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
+import { Laptop, Shirt, FileText, Watch, Package, Footprints, Sparkles, Pill, Box } from 'lucide-react';
 
 interface CategoryBadgeProps {
   category: string;
 }
 
-const categoryConfig = {
-  electronics: { icon: Laptop, label: 'Electrónicos', variant: 'default' as const },
-  clothing: { icon: Shirt, label: 'Ropa', variant: 'secondary' as const },
-  documents: { icon: FileText, label: 'Documentos', variant: 'outline' as const },
-  accessories: { icon: Watch, label: 'Accesorios', variant: 'secondary' as const },
-  other: { icon: Package, label: 'Otro', variant: 'outline' as const },
+const categoryIcons = {
+  electronics: Laptop,
+  clothing: Shirt,
+  footwear: Footprints,
+  beauty: Sparkles,
+  documents: FileText,
+  accessories: Watch,
+  medicine: Pill,
+  other: Box,
+};
+
+const categoryVariants = {
+  electronics: 'default' as const,
+  clothing: 'secondary' as const,
+  footwear: 'secondary' as const,
+  beauty: 'secondary' as const,
+  documents: 'outline' as const,
+  accessories: 'secondary' as const,
+  medicine: 'outline' as const,
+  other: 'outline' as const,
 };
 
 export default function CategoryBadge({ category }: CategoryBadgeProps) {
-  const config = categoryConfig[category as keyof typeof categoryConfig] || categoryConfig.other;
-  const Icon = config.icon;
+  const { t } = useTranslation();
+
+  const Icon = categoryIcons[category as keyof typeof categoryIcons] || categoryIcons.other;
+  const variant = categoryVariants[category as keyof typeof categoryVariants] || categoryVariants.other;
 
   return (
-    <Badge variant={config.variant} className="gap-1">
+    <Badge variant={variant} className="gap-1">
       <Icon className="h-3 w-3" />
-      <span>{config.label}</span>
+      <span>{t(category)}</span>
     </Badge>
   );
 }

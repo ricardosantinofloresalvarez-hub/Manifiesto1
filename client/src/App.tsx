@@ -1,4 +1,5 @@
 import { Switch, Route } from "wouter";
+import AuthCallback from "@/pages/AuthCallback";
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
@@ -25,6 +26,7 @@ function Router() {
       <Route path="/trip/:id" component={TripDetail} />
       <Route path="/manifests" component={Manifests} />
       <Route path="/verify" component={Verify} />
+      <Route path="/auth/callback" component={AuthCallback} />
       <Route path="/profile" component={Profile} />
       <Route component={NotFound} />
     </Switch>

@@ -3,6 +3,8 @@ import { db } from "./db";
 import { users } from "@shared/schema";
 import { eq } from "drizzle-orm";
 import crypto from "crypto";
+import passport from "passport";
+import { sendMagicLink, verifyMagicToken } from "./magicLinkService";
 
 const router = Router();
 
@@ -54,4 +56,53 @@ router.post("/update-photo", async (req, res) => {
     res.status(500).send("Error updating photo");
   }
 });
+// MAGIC LINK
+router.post("/magic-link", async (req, res) => {
+  try {
+    const { email } = req.body;
+    if (!email) return res.status(400).json({ error: "Email requerido" });
+    await sendMagicLink(email);
+    res.json({ success: true });
+  } catch (error) {
+    console.error("Error sending magic link:", error);
+    res.status(500).json({ error: "Error enviando el enlace" });
+  }
+});
+
+router.get("/magic", async (req, res) => {
+  try {
+    const { token } = req.query as { token: string };
+    if (!token) return res.redirect("/login?error=invalid");
+    const user = await verifyMagicToken(token);
+    if (!user) return res.redirect("/login?error=expired");
+    const userData = encodeURIComponent(JSON.stringify({
+      id: user.id,
+      email: user.email,
+      name: user.name,
+      photoUrl: user.photoUrl
+    }));
+    res.redirect(`${process.env.BASE_URL || 'https://159cf49c-0920-4684-b3d1-58a353686a03-00-32y8k86zgc8mg.worf.replit.dev'}/auth/callback?user=${userData}`);
+  } catch (error) {
+    console.error("Error verifying magic token:", error);
+    res.redirect("/login?error=invalid");
+  }
+});
+
+// GOOGLE OAuth
+router.get("/google", passport.authenticate("google", { scope: ["profile", "email"] }));
+
+router.get("/google/callback",
+  passport.authenticate("google", { failureRedirect: "/login" }),
+  (req, res) => {
+    const user = req.user as any;
+    const userData = encodeURIComponent(JSON.stringify({
+      id: user.id,
+      email: user.email,
+      name: user.name,
+      photoUrl: user.photoUrl
+    }));
+    res.redirect(`${process.env.BASE_URL || 'https://159cf49c-0920-4684-b3d1-58a353686a03-00-32y8k86zgc8mg.worf.replit.dev'}/auth/callback?user=${userData}`);
+  }
+);
+
 export default router;

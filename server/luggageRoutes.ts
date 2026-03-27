@@ -283,7 +283,7 @@ router.get("/:luggageId/certificate", async (req, res) => {
       doc.fontSize(9).font("Courier").text(hash, { align: "center" });
       doc.moveDown(2);
 
-      const qrData = await QRCode.toDataURL(hash);
+      const qrData = await QRCode.toDataURL(`${process.env.BASE_URL || "https://159cf49c-0920-4684-b3d1-58a353686a03-00-32y8k86zgc8mg.worf.replit.dev"}/verify?hash=${hash}`);
       const qrX = (doc.page.width - 180) / 2;
       const qrY = doc.y + 20;
       doc.image(qrData, qrX, qrY, { width: 180 });
@@ -304,13 +304,34 @@ router.get("/:luggageId/certificate", async (req, res) => {
       }
       });
 
-      // VERIFICAR
-      router.get("/verify/:hash", async (req, res) => {
-      const hash = req.params.hash.trim();
-      const [lug] = await db.select().from(luggage).where(eq(luggage.certificateHash, hash));
-      if (!lug) return res.status(404).json({ valid: false });
-      res.json({ valid: true, luggageId: lug.id, nickname: lug.nickname });
-      });
+      
+     // VERIFICAR
+     router.get("/verify", async (req, res) => {
+        const hash = (req.query.hash as string)?.trim();
+        const [lug] = await db.select().from(luggage).where(eq(luggage.certificateHash, hash));
+        if (!lug) return res.status(404).json({ valid: false });
+        const items = await db.select().from(manifestItems).where(eq(manifestItems.luggageId, lug.id));
+        res.json({
+          valid: true,
+          luggageId: lug.id,
+          nickname: lug.nickname,
+          brand: lug.brand,
+          size: lug.size,
+          type: lug.type,
+          color: lug.color,
+          isSealed: lug.isSealed,
+          isLocked: lug.isLocked,
+          createdAt: lug.createdAt,
+          items: items.map(i => ({
+            name: i.name,
+            category: i.category,
+            brand: i.brand,
+            quantity: i.quantity,
+            value: i.value,
+            serialNumber: i.serialNumber,
+          }))
+        });
+         });
 
       // ELIMINAR MALETA
       router.delete("/:id", async (req, res) => {

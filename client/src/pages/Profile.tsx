@@ -221,7 +221,7 @@ export default function Profile() {
               {user.createdAt && (
                 <div className="flex items-center gap-2 text-xs text-muted-foreground mt-1">
                   <Calendar className="h-3 w-3" />
-                  <span>Miembro desde {new Date(user.createdAt).toLocaleDateString('es-ES', { month: 'long', year: 'numeric' })}</span>
+                  <span>{t('memberSince')} {new Date(user.createdAt).toLocaleDateString(i18n.language === 'en' ? 'en-US' : 'es-ES', { month: 'long', year: 'numeric' })}</span>
                 </div>
               )}
             </div>
@@ -231,7 +231,7 @@ export default function Profile() {
         <Card className="p-6">
           <h3 className="font-semibold mb-4 flex items-center gap-2">
             <Package className="h-5 w-5 text-primary" />
-            Tu actividad
+            {t('yourActivitySection')}
           </h3>
           <div className="grid grid-cols-2 gap-4">
             <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/50">
@@ -240,7 +240,7 @@ export default function Profile() {
               </div>
               <div>
                 <p className="text-2xl font-bold">{stats.totalTrips}</p>
-                <p className="text-xs text-muted-foreground">Viajes</p>
+                <p className="text-xs text-muted-foreground">{t('tripsLabel')}</p>
               </div>
             </div>
 
@@ -250,7 +250,7 @@ export default function Profile() {
               </div>
               <div>
                 <p className="text-2xl font-bold">{stats.totalLuggage}</p>
-                <p className="text-xs text-muted-foreground">Maletas</p>
+                <p className="text-xs text-muted-foreground">{t('luggageLabel')}</p>
               </div>
             </div>
 
@@ -260,7 +260,7 @@ export default function Profile() {
               </div>
               <div>
                 <p className="text-2xl font-bold">{stats.totalItems}</p>
-                <p className="text-xs text-muted-foreground">Artículos</p>
+                <p className="text-xs text-muted-foreground">{t('itemsLabel')}</p>
               </div>
             </div>
 
@@ -270,21 +270,21 @@ export default function Profile() {
               </div>
               <div>
                 <p className="text-2xl font-bold">${stats.totalValue.toLocaleString()}</p>
-                <p className="text-xs text-muted-foreground">Valor total</p>
+                <p className="text-xs text-muted-foreground">{t('totalValueStat')}</p>
               </div>
             </div>
           </div>
         </Card>
 
         <Card className="p-6">
-          <h3 className="font-semibold mb-4">Preferencias</h3>
+          <h3 className="font-semibold mb-4">{t('preferencesSection')}</h3>
           <div className="space-y-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
                 {theme === 'dark' ? <Moon className="h-5 w-5" /> : <Sun className="h-5 w-5" />}
                 <div>
-                  <Label>Modo Oscuro</Label>
-                  <p className="text-xs text-muted-foreground">Tema de la aplicación</p>
+                  <Label>{t('darkModeLabel')}</Label>
+                  <p className="text-xs text-muted-foreground">{t('appTheme')}</p>
                 </div>
               </div>
               <Switch
@@ -298,8 +298,8 @@ export default function Profile() {
               <div className="flex items-center gap-3">
                 <Globe className="h-5 w-5" />
                 <div>
-                  <Label>Idioma</Label>
-                  <p className="text-xs text-muted-foreground">Idioma de la interfaz</p>
+                  <Label>{t('languageLabel')}</Label>
+                  <p className="text-xs text-muted-foreground">{t('interfaceLanguage')}</p>
                 </div>
               </div>
               <Select value={i18n.language} onValueChange={(value) => i18n.changeLanguage(value)}>
@@ -316,7 +316,7 @@ export default function Profile() {
         </Card>
 
         <Card className="p-6">
-          <h3 className="font-semibold mb-4">Información</h3>
+          <h3 className="font-semibold mb-4">{t('informationSection')}</h3>
           <div className="space-y-2">
             <Button
               variant="ghost"
@@ -324,7 +324,7 @@ export default function Profile() {
               onClick={() => window.open('/privacy-policy.html', '_blank')}
             >
               <Shield className="h-4 w-4" />
-              Política de Privacidad
+              {t('privacyPolicy')}
             </Button>
 
             <Button
@@ -333,7 +333,7 @@ export default function Profile() {
               onClick={() => window.open('/terms-of-service.html', '_blank')}
             >
               <FileText className="h-4 w-4" />
-              Términos de Uso
+              {t('termsOfUse')}
             </Button>
 
             <Button
@@ -342,13 +342,13 @@ export default function Profile() {
               onClick={() => window.open('/about.html', '_blank')}
             >
               <Info className="h-4 w-4" />
-              Acerca de Manifiesto
+              {t('aboutManifiesto')}
             </Button>
           </div>
         </Card>
 
         <Card className="p-6">
-          <h3 className="font-semibold mb-4">Cuenta</h3>
+          <h3 className="font-semibold mb-4">{t('accountSection')}</h3>
           <div className="space-y-3">
             <Button
               variant="outline"
@@ -357,7 +357,7 @@ export default function Profile() {
               data-testid="button-logout"
             >
               <LogOut className="h-4 w-4" />
-              Cerrar Sesión
+              {t('logout')}
             </Button>
           </div>
         </Card>

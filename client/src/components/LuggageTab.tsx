@@ -389,11 +389,14 @@ export default function LuggageTab({ tripId, trip, user }: LuggageTabProps) {
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          {LUGGAGE_COLORS.map((color, index) => (
-                            <SelectItem key={color} value={color}>
-                              {translatedColors[index]}
-                            </SelectItem>
-                          ))}
+                          {LUGGAGE_COLORS.map((color, index) => {
+                            const translatedColor = translatedColors[index];
+                            return (
+                              <SelectItem key={color} value={translatedColor}>
+                                {translatedColor}
+                              </SelectItem>
+                            );
+                          })}
                         </SelectContent>
                       </Select>
                       <FormMessage />
@@ -579,11 +582,14 @@ export default function LuggageTab({ tripId, trip, user }: LuggageTabProps) {
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          {LUGGAGE_COLORS.map((color, index) => (
-                            <SelectItem key={color} value={color}>
-                              {translatedColors[index]}
-                            </SelectItem>
-                          ))}
+                          {LUGGAGE_COLORS.map((color, index) => {
+                            const translatedColor = translatedColors[index];
+                            return (
+                              <SelectItem key={color} value={translatedColor}>
+                                {translatedColor}
+                              </SelectItem>
+                            );
+                          })}
                         </SelectContent>
                       </Select>
                       <FormMessage />

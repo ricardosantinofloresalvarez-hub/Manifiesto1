@@ -268,19 +268,22 @@ export default function ManifestItemForm({
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
-                            {currentCategoryData?.suggestions.map((suggestion) => (
-                              <SelectItem key={suggestion} value={suggestion}>
-                                {suggestion}
-                              </SelectItem>
-                            ))}
-                            <SelectItem value="custom">✏️ Otro (escribir)</SelectItem>
+                            {currentCategoryData?.suggestions.map((suggestion) => {
+                              const translatedName = t(suggestion, suggestion);
+                              return (
+                                <SelectItem key={suggestion} value={translatedName}>
+                                  {translatedName}
+                                </SelectItem>
+                              );
+                            })}
+                          <SelectItem value="custom">✏️ {t('otherWrite')}</SelectItem>
                           </SelectContent>
                         </Select>
                       ) : (
                         <div className="space-y-2">
                           <FormControl>
                             <Input
-                              placeholder="Escribe el nombre del artículo"
+                              placeholder={t('writeItemName')}
                               {...field}
                               data-testid="input-item-name-custom"
                             />
@@ -294,7 +297,7 @@ export default function ManifestItemForm({
                               field.onChange('');
                             }}
                           >
-                            ← Volver a sugerencias
+                            {t('backToSuggestions')}
                           </Button>
                         </div>
                       )}
@@ -331,7 +334,7 @@ export default function ManifestItemForm({
                             <SelectContent>
                               {currentCategoryData.brands.map((brand) => (
                                 <SelectItem key={brand} value={brand}>
-                                  {brand}
+                                  {t(brand, brand)}
                                 </SelectItem>
                               ))}
                             </SelectContent>

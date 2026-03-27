@@ -20,7 +20,7 @@ export default function Verify() {
 
   // Extract hash from URL params on mount
   useEffect(() => {
-    const params = new URLSearchParams(location.split('?')[1]);
+    const params = new URLSearchParams(window.location.search);
     const hashParam = params.get('hash');
     if (hashParam) {
       setHash(hashParam);
@@ -31,16 +31,15 @@ export default function Verify() {
   const handleVerifyHash = async (hashToVerify: string) => {
     setIsVerifying(true);
     setVerificationResult(null);
-
     try {
-      const res = await fetch(`/api/luggage/verify/${hashToVerify.trim()}`);
+      const res = await fetch(`/api/luggage/verify?hash=${hashToVerify.trim()}`);
       const data = await res.json();
 
       if (res.ok && data.valid) {
         setVerificationResult(data);
         toast({
           title: 'Verificación exitosa',
-          description: 'El manifiesto es válido y ha sido verificado correctamente',
+          description: t('manifestIsValid'),
         });
       } else {
         setVerificationResult({ valid: false });
@@ -81,13 +80,13 @@ export default function Verify() {
       <div className="p-4 max-w-2xl mx-auto">
         {!verificationResult ? (
           <Card className="p-6">
-            <h2 className="text-xl font-semibold mb-4">Verificar Manifiesto</h2>
+            <h2 className="text-xl font-semibold mb-4">{t('verifyManifest')}</h2>
             <p className="text-muted-foreground mb-6">
-              Ingresa el hash de verificación del manifiesto para validar su autenticidad
+              {t('enterHashDescription')}
             </p>
             <div className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="hash">Ingresar hash de verificación</Label>
+                <Label htmlFor="hash">{t('enterVerificationHash')}</Label>
                 <Input
                   id="hash"
                   value={hash}
@@ -103,7 +102,7 @@ export default function Verify() {
                 disabled={!hash || isVerifying}
                 data-testid="button-verify"
               >
-                {isVerifying ? 'Verificando...' : 'Verificar'}
+                {isVerifying ? t('verifying') + '...' : t('verify')}
               </Button>
             </div>
           </Card>
@@ -114,6 +113,8 @@ export default function Verify() {
               manifestId={verificationResult.luggageId}
               userName={verificationResult.nickname}
               hash={hash}
+              items={verificationResult.items}
+              timestamp={verificationResult.createdAt}
             />
             <Button
               variant="outline"
@@ -121,7 +122,7 @@ export default function Verify() {
               className="w-full mt-6"
               data-testid="button-verify-another"
             >
-              Verificar Otro Manifiesto
+              {t('verifyAnotherManifest')}
             </Button>
           </>
         )}

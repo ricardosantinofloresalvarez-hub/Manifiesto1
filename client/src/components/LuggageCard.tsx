@@ -1,4 +1,5 @@
 import { Card } from '@/components/ui/card';
+import { useTranslation } from 'react-i18next';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { 
@@ -24,8 +25,10 @@ export default function LuggageCard({
   onEdit,
   onDelete,
   onClick,
-}: LuggageCardProps) {
-  const sizeLabel = LUGGAGE_SIZES.find(s => s.value === luggage.size)?.label || luggage.size;
+  }: LuggageCardProps) {
+    const { t } = useTranslation();
+
+    const sizeLabel = LUGGAGE_SIZES.find(s => s.value === luggage.size)?.label || luggage.size;
   const typeLabel = LUGGAGE_TYPE_OPTIONS.find(t => t.value === luggage.type)?.label || luggage.type;
 
   const handleEdit = (e: React.MouseEvent) => {
@@ -97,19 +100,19 @@ export default function LuggageCard({
           {luggage.isSealed && (
             <Badge variant="outline" className="text-xs gap-1">
               <Shield className="h-3 w-3" />
-              Sellada
+              {t('sealedBadge')}
             </Badge>
           )}
           {luggage.isLocked && (
             <Badge variant="outline" className="text-xs gap-1">
               <Lock className="h-3 w-3" />
-              Candado
+              {t('lockedBadge')}
             </Badge>
           )}
           {hasCertificate && (
             <Badge variant="default" className="text-xs gap-1 bg-primary/90">
               <CheckCircle2 className="h-3 w-3" />
-              Certificada
+              {t('certifiedBadge')}
             </Badge>
           )}
         </div>

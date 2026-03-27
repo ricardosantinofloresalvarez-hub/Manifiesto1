@@ -36,7 +36,49 @@ router.get("/:id", async (req, res) => {
 // POST /api/trips
 router.post("/", async (req, res) => {
   try {
-    const [newTrip] = await db.insert(trips).values(req.body).returning();
+    let imageUrl = req.body.imageUrl;
+    if (!imageUrl && req.body.destination) {
+      try {
+        const destination = req.body.destination.trim();
+        const rawCity = destination.split(',')[0].trim();
+        const cityMap: Record<string, string> = {
+          'tokio': 'Tokyo', 'tokío': 'Tokyo',
+          'japon': 'Japan', 'japón': 'Japan',
+          'paris': 'Paris', 'parís': 'Paris',
+          'nueva york': 'New York',
+          'londres': 'London',
+          'roma': 'Rome',
+          'venecia': 'Venice',
+          'berlin': 'Berlin', 'berlín': 'Berlin',
+          'munich': 'Munich', 'múnich': 'Munich',
+          'moscu': 'Moscow', 'moscú': 'Moscow',
+          'pekin': 'Beijing', 'pekín': 'Beijing',
+          'seul': 'Seoul', 'seúl': 'Seoul',
+          'dubai': 'Dubai',
+          'cairo': 'Cairo', 'el cairo': 'Cairo',
+          'sidney': 'Sydney',
+          'ciudad de mexico': 'Mexico City',
+          'cdmx': 'Mexico City',
+        };
+        const cityLower = rawCity.toLowerCase();
+        const city = cityMap[cityLower] || rawCity;
+        const hasCity = destination.includes(',');
+        const query = hasCity ? `${city} city travel landmark` : `${city} travel landmark`;
+        console.log('🔍 Searching Unsplash for:', query);
+        const response = await fetch(
+          `https://api.unsplash.com/search/photos?query=${encodeURIComponent(query)}&per_page=1&orientation=landscape`,
+          { headers: { Authorization: `Client-ID ${process.env.UNSPLASH_ACCESS_KEY}` } }
+        );
+        const data = await response.json();
+        if (data.results?.[0]?.urls?.regular) {
+          imageUrl = data.results[0].urls.regular;
+          console.log('✅ Unsplash image found:', imageUrl);
+        }
+        } catch (err) {
+        console.error('❌ Error fetching Unsplash image:', err);
+      }
+    }
+    const [newTrip] = await db.insert(trips).values({ ...req.body, imageUrl }).returning();
     res.json(newTrip);
   } catch (error) {
     console.error("Error creating trip:", error);

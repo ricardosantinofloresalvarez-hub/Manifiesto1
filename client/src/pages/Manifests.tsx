@@ -57,22 +57,22 @@ export default function Manifests() {
 
   return (
     <div className="min-h-screen bg-background pb-20">
-      <TopAppBar title="Mis Manifiestos" />
+      <TopAppBar title={t('myManifests')} />
 
       <div className="p-4 max-w-7xl mx-auto">
         <div className="mb-6">
-          <h2 className="text-2xl font-bold mb-2">Todas tus maletas</h2>
+          <h2 className="text-2xl font-bold mb-2">{t('allYourLuggage')}</h2>
           <p className="text-muted-foreground">
-            Tienes {allLuggage.length} {allLuggage.length === 1 ? 'maleta' : 'maletas'} registradas
+            {t('youHaveLuggage')} {allLuggage.length} {allLuggage.length === 1 ? t('luggageSingle') : t('luggagePlural')} {t('registered')}
           </p>
         </div>
 
         {allLuggage.length === 0 ? (
           <EmptyState
             icon={Package}
-            title="No tienes maletas aún"
-            description="Crea un viaje y agrega maletas para empezar"
-            actionLabel="Ir a Viajes"
+            title={t('noLuggageYet')}
+            description={t('createTripAndAddLuggage')}
+            actionLabel={t('goToTrips')}
             onAction={() => setLocation('/dashboard')}
           />
         ) : (

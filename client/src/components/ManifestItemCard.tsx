@@ -1,4 +1,5 @@
 import { Card } from '@/components/ui/card';
+import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import CategoryBadge from './CategoryBadge';
@@ -39,8 +40,9 @@ export default function ManifestItemCard({
   isLocked,
   onEdit,
   onDelete,
-}: ManifestItemCardProps) {
-  const getSizeLabel = (size: string) => {
+  }: ManifestItemCardProps) {
+    const { t } = useTranslation();
+    const getSizeLabel = (size: string) => {
     const sizeMap: Record<string, string> = {
       small: 'Pequeña',
       medium: 'Mediana',
@@ -78,7 +80,7 @@ export default function ManifestItemCard({
               <DropdownMenuContent align="end">
                 <DropdownMenuItem onClick={onEdit} data-testid="button-edit-item">
                   <Pencil className="h-4 w-4 mr-2" />
-                  Editar
+                  {t('editAction')}
                 </DropdownMenuItem>
                 <DropdownMenuItem
                   onClick={onDelete}
@@ -86,22 +88,22 @@ export default function ManifestItemCard({
                   data-testid="button-delete-item"
                 >
                   <Trash2 className="h-4 w-4 mr-2" />
-                  Eliminar
+                  {t('deleteAction')}
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
           <div className="flex flex-wrap items-center gap-2 text-sm">
             <CategoryBadge category={category} />
-            <span className="text-muted-foreground">Cantidad: {quantity}</span>
+            <span className="text-muted-foreground">{t('quantityColon')} {quantity}</span>
           </div>
           {(estimatedValue || serialNumber || luggageBrand || luggageSize) && (
             <div className="mt-2 text-sm text-muted-foreground space-y-1">
-              {estimatedValue && <div>Valor: ${estimatedValue.toLocaleString()}</div>}
+              {estimatedValue && <div>{t('valueColon')} ${estimatedValue.toLocaleString()}</div>}
               {serialNumber && <div>S/N: {serialNumber}</div>}
               {luggageBrand && (
                 <div className="flex items-center gap-1">
-                  <span>Maleta:</span>
+                  <span>{t('luggageColon')}</span>
                   <span className="font-medium">{luggageBrand}</span>
                   {luggageSize && <span>({getSizeLabel(luggageSize)})</span>}
                 </div>
@@ -113,13 +115,13 @@ export default function ManifestItemCard({
               {isSealed && (
                 <Badge variant="secondary" className="text-xs gap-1">
                   <ShieldCheck className="h-3 w-3" />
-                  Sellada
+                  {t('sealedStatus')}
                 </Badge>
               )}
               {isLocked && (
                 <Badge variant="secondary" className="text-xs gap-1">
                   <Lock className="h-3 w-3" />
-                  Con Candado
+                  {t('withLock')}
                 </Badge>
               )}
             </div>

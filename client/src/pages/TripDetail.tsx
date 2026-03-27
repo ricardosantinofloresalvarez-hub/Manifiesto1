@@ -320,6 +320,11 @@ export default function TripDetail() {
       </div>
 
       <div className="p-4 max-w-7xl mx-auto">
+        {trip.destination && (
+          <div className="mb-4">
+            <WeatherWidget destination={trip.destination} />
+          </div>
+        )}
         <Tabs defaultValue="manifest" className="w-full">
           <TabsList className="grid w-full grid-cols-3 mb-6">
             <TabsTrigger value="itinerary" data-testid="tab-itinerary">

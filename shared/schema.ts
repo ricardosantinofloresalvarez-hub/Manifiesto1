@@ -238,3 +238,13 @@ export const insertManifestItemSchema = createInsertSchema(manifestItems).omit({
 
 export type InsertManifestItem = z.infer<typeof insertManifestItemSchema>;
 export type ManifestItem = typeof manifestItems.$inferSelect;
+
+// Magic Link tokens
+export const magicLinkTokens = pgTable("magic_link_tokens", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  email: text("email").notNull(),
+  token: text("token").notNull().unique(),
+  expiresAt: timestamp("expires_at").notNull(),
+  used: boolean("used").default(false),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
