@@ -115,9 +115,7 @@ export default function Plans() {
                     <button onClick={() => handlePurchase(plan.productId!)} disabled={loading === plan.productId} className="w-full py-2 rounded-xl text-sm font-bold text-white flex items-center justify-center gap-2 transition-opacity disabled:opacity-50" style={{ background: "linear-gradient(135deg, #003087, #0070BA)" }}>
                       {loading === `pp-${plan.productId}` ? "Procesando..." : (<><svg width="50" height="14" viewBox="0 0 50 14"><text x="0" y="11" fontFamily="Arial" fontWeight="bold" fontSize="12" fill="white">Pay</text><text x="22" y="11" fontFamily="Arial" fontWeight="bold" fontSize="12" fill="#00B4E6">Pal</text></svg> · {plan.priceDisplay}</>)}
                     </button>
-                    <button onClick={() => handleWompi(plan.productId!)} disabled={loading === `wp-${plan.productId}`} className="w-full py-2 rounded-xl text-sm font-bold text-white flex items-center justify-center gap-2 transition-opacity disabled:opacity-50" style={{ background: "linear-gradient(135deg, #00B4D8, #0077B6)" }}>
-                      {loading === `wp-${plan.productId}` ? "Procesando..." : (<><span className="font-black tracking-tight">Wompi</span> · {plan.priceDisplay}</>)}
-                    </button>
+
                   </div>
                 ) : (
                   <button onClick={() => navigate("/dashboard")} className="w-full py-2.5 rounded-xl text-sm font-bold text-white/70 border border-white/20 hover:border-white/40 transition-colors">{t('startFree')}</button>
