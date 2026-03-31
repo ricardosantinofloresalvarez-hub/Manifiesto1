@@ -16,6 +16,7 @@ import itineraryRoutes from "./itineraryRoutes";
 import paymentsRoutes from "./paymentsRoutes";
 import adminRoutes from "./adminRoutes";
 import paypalRoutes from "./paypalRoutes";
+import wompiRoutes from "./wompiRoutes";
 
 const app = express();
 
@@ -85,6 +86,7 @@ app.use("/api", itineraryRoutes);
 app.use("/api/payments", paymentsRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/paypal", paypalRoutes);
+app.use("/api/wompi", wompiRoutes);
 app.get("*", (_req, res) => {
   res.sendFile("index.html", { root: "dist/public" });
 });
