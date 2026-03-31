@@ -27,8 +27,8 @@ export default function Admin() {
   useEffect(() => {
     if (!user) return;
     Promise.all([
-      fetch("/api/admin/users", { credentials: "include" }).then(r => r.json()),
-      fetch("/api/admin/stats", { credentials: "include" }).then(r => r.json()),
+      fetch(`/api/admin/users?userId=${JSON.parse(localStorage.getItem("user")||"{}" ).id}`).then(r => r.json()),
+      fetch(`/api/admin/stats?userId=${JSON.parse(localStorage.getItem("user")||"{}" ).id}`).then(r => r.json()),
     ]).then(([usersData, statsData]) => {
       setUsers(usersData);
       setStats(statsData);
