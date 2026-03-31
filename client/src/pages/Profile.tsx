@@ -350,6 +350,16 @@ export default function Profile() {
         <Card className="p-6">
           <h3 className="font-semibold mb-4">{t('accountSection')}</h3>
           <div className="space-y-3">
+            {user?.email === "ricardosantino.floresalvarez@gmail.com" && (
+              <Button
+                variant="outline"
+                className="w-full justify-start gap-2 border-purple-500 text-purple-400 hover:bg-purple-500/10"
+                onClick={() => setLocation("/admin")}
+              >
+                <Shield className="h-4 w-4" />
+                Panel Admin
+              </Button>
+            )}
             <Button
               variant="outline"
               className="w-full justify-start gap-2 border-blue-500 text-blue-400 hover:bg-blue-500/10"

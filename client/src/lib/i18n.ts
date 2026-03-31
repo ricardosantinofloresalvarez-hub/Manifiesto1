@@ -201,6 +201,9 @@ const resources = {
       language: 'Idioma',
       logout: 'Cerrar Sesión',
       viewPlans: "Ver planes y paquetes",
+      bannerCredits: "Te quedan {{count}} manifiestos",
+      bannerUpgrade: "Comprar más",
+      bannerUnlimited: "Tienes manifiestos ilimitados 🎉",
       plansTitle: "Empieza gratis.",
       plansSubtitle: "Escala cuando lo necesites.",
       buyNow: "Comprar ahora",
@@ -687,6 +690,9 @@ const resources = {
       filter: 'Filter',
       sort: 'Sort',
 
+      bannerCredits: "You have {{count}} manifests left",
+      bannerUpgrade: "Buy more",
+      bannerUnlimited: "You have unlimited manifests 🎉",
       // Profile
       settings: 'Settings',
       darkMode: 'Dark Mode',

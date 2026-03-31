@@ -187,6 +187,18 @@ export default function Dashboard() {
 
       <div className="p-4 max-w-7xl mx-auto">
         <div className="mb-6">
+        {/* Banner de créditos */}
+        {user?.manifestCredits !== undefined && user.manifestCredits < 10 && (
+          <div className="mb-4 flex items-center justify-between bg-primary/5 border border-primary/20 rounded-lg px-4 py-3">
+            <p className="text-sm text-muted-foreground">🎟️ {t("bannerCredits", { count: user.manifestCredits })}</p>
+            <button
+              onClick={() => setLocation("/planes")}
+              className="text-xs bg-primary text-primary-foreground px-3 py-1 rounded-md hover:bg-primary/90"
+            >
+              {t("bannerUpgrade")}
+            </button>
+          </div>
+        )}
           <h2 className="text-2xl font-bold mb-2">{t('welcomeBack', { name: user?.name?.split(' ')[0] })}</h2>
           <p className="text-muted-foreground">
             {t('youHave')} {trips.length} {trips.length === 1 ? t('trip') : t('tripsPlanned')}
