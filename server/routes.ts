@@ -74,4 +74,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // 4. RUTA DE SALUD (Para verificar que el servidor corre)
-  app.get("/api/health", (_req, res) => {
+  app.get("/api/health", (_req, res) => {    res.json({ status: "ok" });
+  });
+  return createServer(app);
+}

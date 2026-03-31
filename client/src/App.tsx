@@ -16,6 +16,8 @@ import TripDetail from "@/pages/TripDetail";
 import Manifests from "@/pages/Manifests";
 import Verify from "@/pages/Verify";
 import Profile from "@/pages/Profile";
+import Admin from "@/pages/Admin";
+import Plans from "@/pages/Plans";
 
 function Router() {
   return (
@@ -28,6 +30,8 @@ function Router() {
       <Route path="/verify" component={Verify} />
       <Route path="/auth/callback" component={AuthCallback} />
       <Route path="/profile" component={Profile} />
+      <Route path="/admin" component={Admin} />
+      <Route path="/planes" component={Plans} />
       <Route component={NotFound} />
     </Switch>
   );

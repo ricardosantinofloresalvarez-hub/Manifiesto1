@@ -13,6 +13,9 @@ import authRoutes from "./authRoutes"
 import tripRoutes from "./tripRoutes";
 import travelerRoutes from "./travelerRoutes";
 import itineraryRoutes from "./itineraryRoutes";
+import paymentsRoutes from "./paymentsRoutes";
+import adminRoutes from "./adminRoutes";
+import paypalRoutes from "./paypalRoutes";
 
 const app = express();
 
@@ -20,6 +23,7 @@ app.use(express.static('dist/public'));
 app.get("/", (_req, res) => {
   res.sendFile('index.html', { root: 'dist/public' });
 });
+
 
 /* SESSION */
 app.use(session({
@@ -78,6 +82,13 @@ app.use("/api/auth", authRoutes);
 app.use("/api/trips", tripRoutes);
 app.use("/api/travelers", travelerRoutes);
 app.use("/api", itineraryRoutes);
+app.use("/api/payments", paymentsRoutes);
+app.use("/api/admin", adminRoutes);
+app.use("/api/paypal", paypalRoutes);
+app.get("*", (_req, res) => {
+  res.sendFile("index.html", { root: "dist/public" });
+});
+
 /* SERVER */
 const PORT = 5000;
 app.listen(PORT, () => {

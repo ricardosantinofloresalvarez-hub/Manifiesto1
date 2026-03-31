@@ -352,9 +352,16 @@ export default function Profile() {
           <div className="space-y-3">
             <Button
               variant="outline"
+              className="w-full justify-start gap-2 border-blue-500 text-blue-400 hover:bg-blue-500/10"
+              onClick={() => setLocation("/planes")}
+            >
+              <Package className="h-4 w-4" />
+              {t('viewPlans')}
+            </Button>
+            <Button
+              variant="outline"
               className="w-full justify-start gap-2"
               onClick={handleLogout}
-              data-testid="button-logout"
             >
               <LogOut className="h-4 w-4" />
               {t('logout')}

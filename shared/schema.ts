@@ -8,6 +8,9 @@ export const users = pgTable("users", {
   email: text("email").notNull().unique(),
   name: text("name").notNull(),
   photoUrl: text("photo_url"),
+  manifestCredits: integer("manifest_credits").notNull().default(4),
+  planType: text("plan_type").notNull().default("free"),
+  planExpiresAt: timestamp("plan_expires_at"),
 });
 
 export const insertUserSchema = createInsertSchema(users).omit({
@@ -227,6 +230,9 @@ export const manifestItems = pgTable("manifest_items", {
   value: real("value"), // Mantener nombre original para compatibilidad
   serialNumber: text("serial_number"), // Para electrónicos (opcional)
   photoUrl: text("photo_url"),
+  manifestCredits: integer("manifest_credits").notNull().default(4),
+  planType: text("plan_type").notNull().default("free"),
+  planExpiresAt: timestamp("plan_expires_at"),
   notes: text("notes"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
@@ -248,3 +254,16 @@ export const magicLinkTokens = pgTable("magic_link_tokens", {
   used: boolean("used").default(false),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
+// Purchases table
+export const purchases = pgTable("purchases", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull(),
+  orderId: text("order_id").notNull().unique(),
+  productId: text("product_id").notNull(),
+  amount: integer("amount").notNull(),
+  status: text("status").notNull().default("paid"),
+  manifestsAdded: integer("manifests_added").notNull().default(0),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export type Purchase = typeof purchases.$inferSelect;
