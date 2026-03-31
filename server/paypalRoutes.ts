@@ -72,7 +72,6 @@ router.get("/checkout/:productId", async (req, res) => {
     });
 
     const order = await orderRes.json() as any;
-    console.log("PayPal response:", JSON.stringify(order));
     const approvalUrl = order.links?.find((l: any) => l.rel === "approve")?.href;
     if (!approvalUrl) return res.status(500).json({ error: "No se pudo crear el pago" });
 
