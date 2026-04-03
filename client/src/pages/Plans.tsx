@@ -36,6 +36,12 @@ function ManifestCard({ accentColor, icon }: { accentColor: string; icon: string
   );
 }
 
+const LS_URLS: Record<string, string> = {
+  "pack3": "https://manifiesto.lemonsqueezy.com/checkout/buy/87591811-db5e-47e5-9b95-cdbb04029db6",
+  "pack10": "https://manifiesto.lemonsqueezy.com/checkout/buy/88aea0cd-d03c-4f24-acbb-3ec47db32cb9",
+  "annual": "https://manifiesto.lemonsqueezy.com/checkout/buy/10cda8ca-6c2f-4f30-809f-07643e8f940f",
+};
+
 const plans = [
   { id: "free", bg: "from-[#0d1b2e] to-[#0a1628]", accentColor: "#4FC3F7", icon: "📋", nameKey: "GRATIS", priceDisplay: "$0", period: "para siempre", bigNumber: "4", bigLabel: "Manifiestos", badge: null, badgeBg: "", features: ["1 viaje completo", "Hasta 4 manifiestos", "Certificado PDF con QR", "Verificación pública"], productId: null },
   { id: "pack3", bg: "from-[#0d1b2e] to-[#0f2540]", accentColor: "#29B6F6", icon: "✈️", nameKey: "PAQUETE 3", priceDisplay: "$2.99", period: "pago único", bigNumber: "3", bigLabel: "Manifiestos", badge: null, badgeBg: "", features: ["3 manifiestos adicionales", "PDF con QR verificable", "Clima en tiempo real", "Fotos por destino", "Compartir con familia"], productId: "pack3" },
@@ -114,6 +120,9 @@ export default function Plans() {
                   <div className="space-y-2">
                     <button onClick={() => handlePurchase(plan.productId!)} disabled={loading === plan.productId} className="w-full py-2 rounded-xl text-sm font-bold text-white flex items-center justify-center gap-2 transition-opacity disabled:opacity-50" style={{ background: "linear-gradient(135deg, #003087, #0070BA)" }}>
                       {loading === `pp-${plan.productId}` ? "Procesando..." : (<><svg width="50" height="14" viewBox="0 0 50 14"><text x="0" y="11" fontFamily="Arial" fontWeight="bold" fontSize="12" fill="white">Pay</text><text x="22" y="11" fontFamily="Arial" fontWeight="bold" fontSize="12" fill="#00B4E6">Pal</text></svg> · {plan.priceDisplay}</>)}
+                    </button>
+                    <button onClick={() => window.location.href = LS_URLS[plan.productId!]} className="w-full py-2 rounded-xl text-sm font-bold text-white flex items-center justify-center gap-2" style={{ background: "linear-gradient(135deg, #E9A23B, #F5A623)" }}>
+                      🍋 Lemon Squeezy · {plan.priceDisplay}
                     </button>
 
                   </div>

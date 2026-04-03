@@ -19,6 +19,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import OnboardingModal from "@/components/OnboardingModal";
 import beachImg from '@assets/generated_images/Beach_destination_photo_a88a2d29.png';
 import mountainImg from '@assets/generated_images/Mountain_destination_photo_988c16a1.png';
 import cityImg from '@assets/generated_images/City_destination_photo_450e6abe.png';
@@ -178,6 +179,7 @@ export default function Dashboard() {
 
   return (
     <div className="min-h-screen bg-background pb-20">
+      <OnboardingModal />
       <TopAppBar
         title={t('trips')}
         onAction={() => setShowCreateDialog(true)}
