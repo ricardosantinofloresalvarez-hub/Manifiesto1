@@ -46,7 +46,7 @@ passport.deserializeUser(async (id: string, done) => {
 passport.use(new GoogleStrategy({
   clientID: process.env.GOOGLE_CLIENT_ID!,
   clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
-  callbackURL: `${process.env.BASE_URL || 'https://159cf49c-0920-4684-b3d1-58a353686a03-00-32y8k86zgc8mg.worf.replit.dev'}/api/auth/google/callback`
+  callbackURL: `${(process.env.BASE_URL || 'https://proyecto-manifiesto.replit.app').trim()}/api/auth/google/callback`
 }, async (_accessToken, _refreshToken, profile, done) => {
   try {
     const email = profile.emails?.[0].value!;
