@@ -281,7 +281,10 @@ router.get("/:luggageId/certificate", async (req, res) => {
       doc.fontSize(11).font("Helvetica-Bold").fillColor("#000000").text(hashLabel, { align: "center" });
       doc.moveDown(0.3);
       doc.fontSize(9).font("Courier").text(hash, { align: "center" });
-      doc.moveDown(2);
+      doc.moveDown(0.4);
+      const copyHint = lang === 'en' ? 'Select the hash to copy and verify your certificate' : 'Selecciona el hash para copiar y verificar tu certificado';
+      doc.fontSize(8).font("Helvetica").fillColor("#888888").text(copyHint, { align: "center" });
+      doc.fillColor("#000000").moveDown(1.5);
 
       const qrData = await QRCode.toDataURL(`${process.env.BASE_URL || "https://159cf49c-0920-4684-b3d1-58a353686a03-00-32y8k86zgc8mg.worf.replit.dev"}/verify?hash=${hash}`);
       const qrX = (doc.page.width - 180) / 2;
@@ -289,13 +292,16 @@ router.get("/:luggageId/certificate", async (req, res) => {
       doc.image(qrData, qrX, qrY, { width: 180 });
       doc.y = qrY + 200;
 
-      doc.fontSize(9).font("Helvetica").fillColor("#666666");
-      doc.text(t.scanQR, { align: "center" });
-      doc.moveDown(0.5);
-
-      const dateLabel = lang === 'en' ? "Certificate generated on" : "Certificado generado el";
+      // Fecha/hora de emisión — prominente, antes del QR
+      const dateLabel = lang === 'en' ? 'Certificate issued on' : 'Fecha de emisión';
       const dateLocale = lang === 'en' ? 'en-US' : 'es-ES';
-      doc.text(`${dateLabel}: ${new Date().toLocaleString(dateLocale)}`, { align: "center" });
+      const issuedAt = new Date().toLocaleString(dateLocale, { dateStyle: 'full', timeStyle: 'medium' });
+      doc.fontSize(10).font('Helvetica-Bold').fillColor('#000000').text(`${dateLabel}: ${issuedAt}`, { align: 'center' });
+      doc.moveDown(1.5);
+
+      doc.fontSize(9).font('Helvetica').fillColor('#666666');
+      doc.text(t.scanQR, { align: 'center' });
+      doc.moveDown(0.5);
 
       doc.end();
       } catch (err: any) { 
