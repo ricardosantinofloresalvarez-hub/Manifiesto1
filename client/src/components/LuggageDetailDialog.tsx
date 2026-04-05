@@ -222,7 +222,7 @@ export default function LuggageDetailDialog({ luggage, trip, user, open, onOpenC
               ) : (
                 <Camera className="h-4 w-4 mr-2 text-blue-400" />
               )}
-              {t('openPhoto')}
+              {t('openLuggagePhoto')}
             </Button>
 
             <Button 
@@ -238,7 +238,7 @@ export default function LuggageDetailDialog({ luggage, trip, user, open, onOpenC
               ) : (
                 <Camera className="h-4 w-4 mr-2 text-green-400" />
               )}
-              {t('closedPhoto')}
+              {t('closedLuggagePhoto')}
             </Button>
           </div>
 
@@ -253,7 +253,7 @@ export default function LuggageDetailDialog({ luggage, trip, user, open, onOpenC
                     className="w-full h-32 object-cover rounded-lg"
                   />
                   <span className="absolute top-2 left-2 bg-blue-500 text-white text-xs px-2 py-1 rounded">
-                    {t('openPhoto')}
+                    {t('openLuggagePhoto')}
                   </span>
                 </div>
               )}
@@ -265,7 +265,7 @@ export default function LuggageDetailDialog({ luggage, trip, user, open, onOpenC
                     className="w-full h-32 object-cover rounded-lg"
                   />
                   <span className="absolute top-2 left-2 bg-green-500 text-white text-xs px-2 py-1 rounded">
-                    {t('closedPhoto')}
+                    {t('closedLuggagePhoto')}
                   </span>
                 </div>
               )}
