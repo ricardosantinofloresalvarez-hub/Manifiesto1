@@ -175,7 +175,7 @@ export default function LuggageDetailDialog({ luggage, trip, user, open, onOpenC
                 }} 
                 className="border-zinc-700"
               >
-                <Plus className="h-4 w-4 mr-1" /> {t('item')}
+                <Plus className="h-4 w-4 mr-1" /> {t('addItem')}
               </Button>
               <Button 
                 size="sm" 
