@@ -339,6 +339,15 @@ export default function Profile() {
             <Button
               variant="ghost"
               className="w-full justify-start gap-2"
+              onClick={() => window.open('/refund-policy.html', '_blank')}
+            >
+              <FileText className="h-4 w-4" />
+              {t('refundPolicy')}
+            </Button>
+
+            <Button
+              variant="ghost"
+              className="w-full justify-start gap-2"
               onClick={() => window.open('/about.html', '_blank')}
             >
               <Info className="h-4 w-4" />
