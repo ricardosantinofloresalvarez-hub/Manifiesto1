@@ -64,6 +64,20 @@ export default function Plans() {
     finally { setLoading(null); }
   };
 
+  const handlePaddle = async (productId: string) => {
+    if (!user) return navigate("/login");
+    setLoading(`paddle-${productId}`);
+    try {
+      const storedUser = localStorage.getItem("user");
+      const userData = storedUser ? JSON.parse(storedUser) : null;
+      const res = await fetch(`/api/paddle/checkout/${productId}?userId=${userData?.id}`);
+      const data = await res.json();
+      if (data.url) { window.location.href = data.url; }
+      else { toast({ title: "Error", description: "No se pudo iniciar el pago", variant: "destructive" }); }
+    } catch { toast({ title: "Error", description: "Error de conexión", variant: "destructive" }); }
+    finally { setLoading(null); }
+  };
+
   const handlePurchase = async (productId: string) => {
     if (!user) return navigate("/login");
     setLoading(productId);
@@ -114,6 +128,9 @@ export default function Plans() {
                   <div className="space-y-2">
                     <button onClick={() => handlePurchase(plan.productId!)} disabled={loading === plan.productId} className="w-full py-2 rounded-xl text-sm font-bold text-white flex items-center justify-center gap-2 transition-opacity disabled:opacity-50" style={{ background: "linear-gradient(135deg, #003087, #0070BA)" }}>
                       {loading === `pp-${plan.productId}` ? "Procesando..." : (<><svg width="50" height="14" viewBox="0 0 50 14"><text x="0" y="11" fontFamily="Arial" fontWeight="bold" fontSize="12" fill="white">Pay</text><text x="22" y="11" fontFamily="Arial" fontWeight="bold" fontSize="12" fill="#00B4E6">Pal</text></svg> · {plan.priceDisplay}</>)}
+                    </button>
+                    <button onClick={() => handlePaddle(plan.productId!)} disabled={loading === `paddle-${plan.productId}`} className="w-full py-2 rounded-xl text-sm font-bold text-white flex items-center justify-center gap-2 transition-opacity disabled:opacity-50" style={{ background: "linear-gradient(135deg, #0ea5e9, #0284c7)" }}>
+                      {loading === `paddle-${plan.productId}` ? "Procesando..." : `💳 Tarjeta · ${plan.priceDisplay}`}
                     </button>
                   </div>
                 ) : (
