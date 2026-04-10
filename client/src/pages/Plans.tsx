@@ -43,6 +43,12 @@ const plans = [
   { id: "annual", bg: "from-[#1a1020] to-[#140d1c]", accentColor: "#FFB300", icon: "⭐", nameKey: "PLAN ANUAL", priceDisplay: "$12.99", period: "por año · cancela cuando quieras", bigNumber: "∞", bigLabel: "Manifiestos / año", badge: "PLAN ANUAL", badgeBg: "#FFB300", features: ["Manifiestos ilimitados", "PDF con QR verificable", "Clima en tiempo real", "Fotos por destino", "Soporte prioritario"], productId: "annual" },
 ];
 
+// Inicializar Paddle una sola vez
+if (typeof window !== 'undefined' && (window as any).Paddle) {
+  (window as any).Paddle.Environment.set('production');
+  (window as any).Paddle.Initialize({ token: import.meta.env.VITE_PADDLE_CLIENT_TOKEN });
+}
+
 export default function Plans() {
   const { user } = useAuth();
   const [, navigate] = useLocation();
@@ -75,8 +81,6 @@ export default function Plans() {
       if (data.url) {
         const txnToken = new URL(data.url).searchParams.get('_ptxn');
         if (txnToken && (window as any).Paddle) {
-          (window as any).Paddle.Environment.set('production');
-          (window as any).Paddle.Initialize({ token: import.meta.env.VITE_PADDLE_CLIENT_TOKEN });
           (window as any).Paddle.Checkout.open({ transactionId: txnToken });
         } else {
           window.location.href = data.url;
