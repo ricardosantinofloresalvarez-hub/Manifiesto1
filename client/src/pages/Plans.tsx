@@ -72,8 +72,18 @@ export default function Plans() {
       const userData = storedUser ? JSON.parse(storedUser) : null;
       const res = await fetch(`/api/paddle/checkout/${productId}?userId=${userData?.id}`);
       const data = await res.json();
-      if (data.url) { window.location.href = data.url; }
-      else { toast({ title: "Error", description: "No se pudo iniciar el pago", variant: "destructive" }); }
+      if (data.url) {
+        const txnToken = new URL(data.url).searchParams.get('_ptxn');
+        if (txnToken && (window as any).Paddle) {
+          (window as any).Paddle.Environment.set('production');
+          (window as any).Paddle.Initialize({ token: import.meta.env.VITE_PADDLE_CLIENT_TOKEN });
+          (window as any).Paddle.Checkout.open({ transactionId: txnToken });
+        } else {
+          window.location.href = data.url;
+        }
+      } else {
+        toast({ title: "Error", description: "No se pudo iniciar el pago", variant: "destructive" });
+      }
     } catch { toast({ title: "Error", description: "Error de conexión", variant: "destructive" }); }
     finally { setLoading(null); }
   };
