@@ -48,10 +48,10 @@ router.get("/checkout/:productId", async (req, res) => {
       },
       body: JSON.stringify({
         items: [{ price_id: priceId, quantity: 1 }],
-        customer: { email: user.email },
+        customer_id: null,
         custom_data: { userId, productId },
         checkout: {
-          url: `${BASE_URL}/dashboard?payment=success`,
+          url: `${BASE_URL}/planes`,
         },
       }),
     });
@@ -64,7 +64,10 @@ router.get("/checkout/:productId", async (req, res) => {
     }
 
     const checkoutUrl = data.data?.checkout?.url;
-    if (!checkoutUrl) return res.status(500).json({ error: "No se pudo crear el checkout" });
+    if (!checkoutUrl) {
+      console.error("Paddle no checkout URL:", JSON.stringify(data));
+      return res.status(500).json({ error: "No se pudo crear el checkout" });
+    }
 
     res.json({ url: checkoutUrl });
   } catch (error) {
