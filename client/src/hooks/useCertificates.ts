@@ -42,6 +42,18 @@ export function useGenerateLuggageCertificate() {
         window.URL.revokeObjectURL(blobUrl);
 
         queryClient.invalidateQueries({ queryKey: ["/api/luggage"] });
+        
+        // Actualizar créditos en localStorage y notificar
+        const storedUser = localStorage.getItem('user');
+        if (storedUser) {
+          const userData = JSON.parse(storedUser);
+          if (userData.manifestCredits !== undefined && userData.planType !== 'annual') {
+            userData.manifestCredits = Math.max(0, (userData.manifestCredits || 0) - 1);
+            localStorage.setItem('user', JSON.stringify(userData));
+            window.dispatchEvent(new Event('storage'));
+          }
+        }
+        
         return true;
       } catch (error: any) {
         if (error.message !== 'No credits') {

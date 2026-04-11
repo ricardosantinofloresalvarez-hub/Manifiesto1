@@ -15,6 +15,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
+    // Escuchar cambios en localStorage (ej: créditos)
+    const handleStorageChange = () => {
+      const updated = localStorage.getItem('user');
+      if (updated) {
+        try { setUser(JSON.parse(updated)); } catch {}
+      }
+    };
+    window.addEventListener('storage', handleStorageChange);
+
     // Cargar usuario desde localStorage al inicio
     const storedUser = localStorage.getItem('user');
     if (storedUser) {
@@ -26,6 +35,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     }
     setIsLoading(false);
+    return () => window.removeEventListener('storage', handleStorageChange);
   }, []);
 
   const login = async (email: string, name: string) => {
