@@ -38,6 +38,27 @@ router.get("/:luggageId/certificate", async (req, res) => {
     }
 
     const items = await db.select().from(manifestItems).where(eq(manifestItems.luggageId, luggageId));
+
+    // Verificar y descontar créditos
+    if (trip) {
+      const [currentUser] = await db.select().from(users).where(eq(users.id, trip.userId));
+      if (currentUser) {
+        const isAnnual = currentUser.planType === 'annual' && currentUser.planExpiresAt && new Date(currentUser.planExpiresAt) > new Date();
+        const hasCredits = (currentUser.manifestCredits || 0) > 0;
+        if (!isAnnual && !hasCredits) {
+          const msg = lang === 'en' 
+            ? 'You have no manifests available. Please purchase a plan to continue.'
+            : 'No tienes manifiestos disponibles. Adquiere un plan para continuar.';
+          return res.status(403).json({ error: msg });
+        }
+        if (!isAnnual) {
+          await db.update(users).set({
+            manifestCredits: Math.max(0, (currentUser.manifestCredits || 0) - 1)
+          }).where(eq(users.id, trip.userId));
+        }
+      }
+    }
+
     const hash = crypto.createHash("sha256").update(`${luggageId}-${Date.now()}`).digest("hex").substring(0, 32);
     await db.update(luggage).set({ certificateHash: hash }).where(eq(luggage.id, luggageId));
 

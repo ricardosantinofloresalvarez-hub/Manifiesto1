@@ -14,27 +14,43 @@ export function useGenerateLuggageCertificate() {
       try {
         const cleanId = String(luggage.id).trim();
         const userName = user?.name || 'Usuario';
-
-        // Usar i18n directamente
         const lang = i18n.language.startsWith('en') ? 'en' : 'es';
-        // Detectar idioma actual
-        
 
+        const url = `/api/luggage/${cleanId}/certificate?userName=${encodeURIComponent(userName)}&lang=${lang}&t=${Date.now()}`;
+        const res = await fetch(url);
+
+        if (res.status === 403) {
+          const data = await res.json();
+          toast({
+            title: lang === 'en' ? 'No credits available' : 'Sin créditos disponibles',
+            description: data.error || (lang === 'en' ? 'Purchase a plan to continue.' : 'Adquiere un plan para continuar.'),
+            variant: "destructive",
+          });
+          throw new Error('No credits');
+        }
+
+        if (!res.ok) throw new Error('Error generando certificado');
+
+        const blob = await res.blob();
+        const blobUrl = window.URL.createObjectURL(blob);
         const link = document.createElement('a');
-        link.href = `/api/luggage/${cleanId}/certificate?userName=${encodeURIComponent(userName)}&lang=${lang}&t=${Date.now()}`;
+        link.href = blobUrl;
         link.setAttribute('download', `Certificate_${cleanId}.pdf`);
         document.body.appendChild(link);
         link.click();
         link.remove();
+        window.URL.revokeObjectURL(blobUrl);
 
         queryClient.invalidateQueries({ queryKey: ["/api/luggage"] });
         return true;
-      } catch (error) {
-        toast({
-          title: "Error",
-          description: "No se pudo descargar el certificado.",
-          variant: "destructive",
-        });
+      } catch (error: any) {
+        if (error.message !== 'No credits') {
+          toast({
+            title: "Error",
+            description: "No se pudo descargar el certificado.",
+            variant: "destructive",
+          });
+        }
         throw error;
       }
     },
