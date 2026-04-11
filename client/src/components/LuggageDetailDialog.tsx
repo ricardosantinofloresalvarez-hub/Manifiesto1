@@ -39,8 +39,10 @@ export default function LuggageDetailDialog({ luggage, trip, user, open, onOpenC
           onOpenChange(false);
         }, 1000);
       }
-    } catch (e) {
-      toast({ title: "Error", description: "Revisa la conexión del servidor.", variant: "destructive" });
+    } catch (e: any) {
+      if (e?.message !== "No credits") {
+        toast({ title: "Error", description: "Revisa la conexión del servidor.", variant: "destructive" });
+      }
     }
   };
 
