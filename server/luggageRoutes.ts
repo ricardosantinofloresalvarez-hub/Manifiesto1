@@ -332,6 +332,18 @@ router.get("/:luggageId/certificate", async (req, res) => {
       });
 
       
+     // GET HASH
+     router.get("/:luggageId/hash", async (req, res) => {
+       try {
+         const { luggageId } = req.params;
+         const [lug] = await db.select().from(luggage).where(eq(luggage.id, luggageId));
+         if (!lug) return res.status(404).json({ error: "Not found" });
+         res.json({ hash: lug.certificateHash || null });
+       } catch (err) {
+         res.status(500).json({ error: "Error" });
+       }
+     });
+
      // VERIFICAR
      router.get("/verify", async (req, res) => {
         const hash = (req.query.hash as string)?.trim();

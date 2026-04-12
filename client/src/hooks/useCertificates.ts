@@ -42,6 +42,24 @@ export function useGenerateLuggageCertificate() {
         window.URL.revokeObjectURL(blobUrl);
 
         queryClient.invalidateQueries({ queryKey: ["/api/luggage"] });
+
+        // Obtener hash recién generado y mostrarlo
+        try {
+          const hashRes = await fetch(`/api/luggage/${cleanId}/hash`);
+          if (hashRes.ok) {
+            const { hash } = await hashRes.json();
+            if (hash) {
+              navigator.clipboard.writeText(hash).catch(() => {});
+              toast({
+                title: lang === 'en' ? '✅ Certificate generated' : '✅ Certificado generado',
+                description: lang === 'en' 
+                  ? `Hash copied to clipboard: ${hash.substring(0, 16)}...`
+                  : `Hash copiado: ${hash.substring(0, 16)}...`,
+                duration: 8000,
+              });
+            }
+          }
+        } catch {}
         
         // Actualizar créditos en localStorage y notificar
         const storedUser = localStorage.getItem('user');
