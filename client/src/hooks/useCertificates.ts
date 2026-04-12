@@ -53,8 +53,8 @@ export function useGenerateLuggageCertificate() {
               toast({
                 title: lang === 'en' ? '✅ Certificate generated' : '✅ Certificado generado',
                 description: lang === 'en' 
-                  ? `Hash copied to clipboard: ${hash.substring(0, 16)}...`
-                  : `Hash copiado: ${hash.substring(0, 16)}...`,
+                  ? `🔑 Hash copied! Paste it in Verify to confirm authenticity.`
+                  : `🔑 Hash copiado. Pégalo en Verificar para confirmar autenticidad.`,
                 duration: 8000,
               });
             }
