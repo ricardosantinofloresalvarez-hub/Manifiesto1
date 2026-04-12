@@ -34,10 +34,9 @@ export default function LuggageDetailDialog({ luggage, trip, user, open, onOpenC
     try {
       const res = await generateCertificate.mutateAsync({ luggage, items, trip, user });
       if (res) {
-        toast({ title: t("success"), description: t("certificateGenerated") });
         setTimeout(() => {
           onOpenChange(false);
-        }, 1000);
+        }, 2500);
       }
     } catch (e: any) {
       if (e?.message !== "No credits") {
