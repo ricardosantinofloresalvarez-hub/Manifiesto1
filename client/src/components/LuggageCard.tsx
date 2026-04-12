@@ -67,7 +67,7 @@ export default function LuggageCard({
             </div>
           </div>
 
-          <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+          <div className="flex items-center gap-1 opacity-70 group-hover:opacity-100 transition-opacity">
             {onEdit && (
               <Button
                 variant="ghost"
@@ -116,6 +116,15 @@ export default function LuggageCard({
             </Badge>
           )}
         </div>
+
+        {onClick && (
+          <button
+            onClick={(e) => { e.stopPropagation(); onClick(luggage); }}
+            className="mt-3 w-full text-xs text-primary/70 hover:text-primary border border-primary/20 hover:border-primary/50 rounded-lg py-1.5 transition-colors"
+          >
+            {t('viewContents')} →
+          </button>
+        )}
       </div>
     </Card>
   );
