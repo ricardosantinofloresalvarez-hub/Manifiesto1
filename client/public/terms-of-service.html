@@ -3,323 +3,153 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Términos de Uso - Manifiesto</title>
+    <title>Términos de Uso / Terms of Use - Manifiesto</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-            line-height: 1.6;
-            color: #333;
-            background: #f8f9fa;
-            padding: 20px;
-        }
-        .container {
-            max-width: 800px;
-            margin: 0 auto;
-            background: white;
-            padding: 40px;
-            border-radius: 8px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-        }
-        h1 {
-            color: #1a1a1a;
-            font-size: 2em;
-            margin-bottom: 10px;
-        }
-        h2 {
-            color: #2563eb;
-            font-size: 1.5em;
-            margin-top: 30px;
-            margin-bottom: 15px;
-            padding-bottom: 10px;
-            border-bottom: 2px solid #e5e7eb;
-        }
-        h3 {
-            color: #374151;
-            font-size: 1.2em;
-            margin-top: 20px;
-            margin-bottom: 10px;
-        }
-        p {
-            margin-bottom: 15px;
-            color: #4b5563;
-        }
-        ul, ol {
-            margin-left: 25px;
-            margin-bottom: 15px;
-        }
-        li {
-            margin-bottom: 8px;
-            color: #4b5563;
-        }
-        .date {
-            color: #6b7280;
-            font-size: 0.9em;
-            margin-bottom: 30px;
-        }
-        .warning {
-            background: #fef2f2;
-            padding: 20px;
-            border-left: 4px solid #ef4444;
-            margin: 20px 0;
-            border-radius: 4px;
-        }
-        .success {
-            background: #f0fdf4;
-            padding: 20px;
-            border-left: 4px solid #22c55e;
-            margin: 20px 0;
-            border-radius: 4px;
-        }
-        .highlight {
-            background: #fef3c7;
-            padding: 15px;
-            border-left: 4px solid #f59e0b;
-            margin: 20px 0;
-            border-radius: 4px;
-        }
-        a {
-            color: #2563eb;
-            text-decoration: none;
-        }
-        a:hover {
-            text-decoration: underline;
-        }
-        .contact {
-            background: #f3f4f6;
-            padding: 20px;
-            border-radius: 8px;
-            margin-top: 30px;
-        }
-        .check {
-            color: #22c55e;
-            font-weight: bold;
-        }
-        .cross {
-            color: #ef4444;
-            font-weight: bold;
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; background: #f8f9fa; padding: 20px; }
+        .container { max-width: 800px; margin: 0 auto; background: white; padding: 40px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        h1 { color: #1a1a1a; font-size: 2em; margin-bottom: 10px; }
+        h2 { color: #2563eb; font-size: 1.5em; margin-top: 30px; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 2px solid #e5e7eb; }
+        h3 { color: #374151; font-size: 1.2em; margin-top: 20px; margin-bottom: 10px; }
+        h4 { color: #374151; font-size: 1em; margin-top: 15px; margin-bottom: 8px; }
+        p { margin-bottom: 15px; color: #4b5563; }
+        ul, ol { margin-left: 25px; margin-bottom: 15px; }
+        li { margin-bottom: 8px; color: #4b5563; }
+        .date { color: #6b7280; font-size: 0.9em; margin-bottom: 30px; }
+        .warning { background: #fef2f2; padding: 20px; border-left: 4px solid #ef4444; margin: 20px 0; border-radius: 4px; }
+        .success { background: #f0fdf4; padding: 20px; border-left: 4px solid #22c55e; margin: 20px 0; border-radius: 4px; }
+        .highlight { background: #fef3c7; padding: 15px; border-left: 4px solid #f59e0b; margin: 20px 0; border-radius: 4px; }
+        a { color: #2563eb; text-decoration: none; }
+        a:hover { text-decoration: underline; }
+        .contact { background: #f3f4f6; padding: 20px; border-radius: 8px; margin-top: 30px; }
+        .lang-toggle { position: fixed; top: 20px; right: 20px; background: white; border: 1px solid #e5e7eb; border-radius: 8px; padding: 6px 12px; display: flex; gap: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); z-index: 100; }
+        .lang-btn { background: none; border: none; cursor: pointer; font-size: 0.9em; color: #6b7280; padding: 2px 6px; border-radius: 4px; }
+        .lang-btn.active { font-weight: bold; color: #2563eb; background: #eff6ff; }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h1>Términos de Uso</h1>
-        <p class="date"><strong>Última actualización:</strong> Febrero 2026</p>
-
-        <div class="highlight">
-            <p><strong>En resumen:</strong> Manifiesto es tu herramienta personal de organización. Tú eres responsable de la información que ingresas. Nosotros no somos responsables por pérdidas, daños o problemas legales derivados del uso de la aplicación.</p>
-        </div>
-
-        <h2>1. Aceptación de los Términos</h2>
-        <p>Al acceder y usar Manifiesto (la "Aplicación"), aceptas estar legalmente obligado por estos Términos de Uso. Si no estás de acuerdo con alguna parte de estos términos, no debes usar la Aplicación.</p>
-        <p>Estos términos constituyen un acuerdo legal entre tú (el "Usuario") y Manifiesto.</p>
-
-        <h2>2. Descripción del Servicio</h2>
-        <p>Manifiesto es una aplicación móvil y web diseñada para ayudarte a organizar y documentar tu equipaje y planificar tus viajes.</p>
-
-        <div class="success">
-            <h3><span class="check">✅</span> Lo que SÍ es Manifiesto:</h3>
-            <ul>
-                <li><strong>Herramienta de organización personal</strong> - Te ayuda a registrar y organizar tu equipaje</li>
-                <li><strong>Registro fotográfico con timestamp</strong> - Documenta visualmente tus pertenencias con fecha y hora</li>
-                <li><strong>Declaración personal de buena fe</strong> - Creas un registro de lo que declaras llevar contigo</li>
-                <li><strong>Certificado verificable</strong> - Genera PDFs con código QR y hash criptográfico que prueban que TÚ hiciste esta declaración en esta fecha</li>
-                <li><strong>Respaldo documental</strong> - Sirve como evidencia de lo que llevabas en caso de pérdida o robo</li>
-                <li><strong>Apoyo para reclamos</strong> - Puede ayudarte con reclamos ante seguros o aerolíneas (a discreción de ellos)</li>
-            </ul>
-        </div>
-
-        <div class="warning">
-            <h3><span class="cross">❌</span> Lo que NO es Manifiesto:</h3>
-            <ul>
-                <li><strong>NO es un documento oficial de aduanas</strong> - No tiene validez legal ante autoridades gubernamentales</li>
-                <li><strong>NO reemplaza declaraciones legales</strong> - Debes cumplir con todas las regulaciones aduaneras de tu país y destino</li>
-                <li><strong>NO tiene fuerza legal vinculante</strong> - Los certificados son declaraciones personales, no documentos legales</li>
-                <li><strong>NO es una póliza de seguro</strong> - No cubre pérdidas, daños o robos</li>
-                <li><strong>NO garantiza aceptación</strong> - Aduanas, seguros o terceros pueden no aceptar estos certificados</li>
-                <li><strong>NO valida ni verifica información</strong> - Aceptamos de buena fe lo que ingresas</li>
-            </ul>
-        </div>
-
-        <h2>3. Uso Aceptable</h2>
-        <p>Al usar Manifiesto, te comprometes a:</p>
-        <ul>
-            <li><strong>Proporcionar información veraz:</strong> La información que ingresas debe ser precisa y honesta</li>
-            <li><strong>Uso personal:</strong> Usar la aplicación solo para fines legítimos de organización personal</li>
-            <li><strong>No realizar actividades ilegales:</strong> No usar la aplicación para facilitar contrabando, evasión fiscal u otras actividades ilegales</li>
-            <li><strong>Cumplir con leyes locales:</strong> Eres responsable de cumplir con todas las regulaciones aduaneras y legales de tu país y destinos</li>
-            <li><strong>No abusar del servicio:</strong> No intentar hackear, dañar o sobrecargar los servidores</li>
-        </ul>
-
-        <h2>4. LIMITACIÓN DE RESPONSABILIDAD</h2>
-
-        <div class="warning">
-            <h3>⚠️ IMPORTANTE - Lee cuidadosamente:</h3>
-
-            <h4>4.1 Declaración de Buena Fe</h4>
-            <p>Los certificados generados por Manifiesto son <strong>declaraciones personales de buena fe</strong>. Tú, como usuario, declares bajo tu propia responsabilidad el contenido de tu equipaje.</p>
-
-            <h4>4.2 Sin Validez Legal Oficial</h4>
-            <p>Manifiesto <strong>NO</strong> valida, verifica ni certifica legalmente la información que ingresas. Los documentos generados no tienen validez como:</p>
-            <ul>
-                <li>Declaraciones aduaneras oficiales</li>
-                <li>Comprobantes fiscales</li>
-                <li>Documentos con fuerza legal ante autoridades</li>
-                <li>Garantías de cobertura de seguros</li>
-            </ul>
-
-            <h4>4.3 Responsabilidad del Usuario</h4>
-            <p><strong>TÚ ERES EL ÚNICO RESPONSABLE DE:</strong></p>
-            <ul>
-                <li>La veracidad y exactitud de la información ingresada</li>
-                <li>Cumplir con todas las regulaciones aduaneras aplicables</li>
-                <li>Declarar correctamente tus pertenencias ante autoridades cuando sea requerido por ley</li>
-                <li>El contenido de las fotos y descripciones que subes</li>
-                <li>Cualquier consecuencia derivada del uso o mal uso de la aplicación</li>
-            </ul>
-
-            <h4>4.4 Exclusión de Responsabilidad</h4>
-            <p><strong>Manifiesto NO SE HACE RESPONSABLE POR:</strong></p>
-            <ul>
-                <li>Pérdida, robo o daño de equipaje o pertenencias</li>
-                <li>Problemas con aduanas, autoridades o terceros</li>
-                <li>Rechazo de certificados por parte de seguros, aerolíneas o autoridades</li>
-                <li>Multas, sanciones o consecuencias legales por información incorrecta o incompleta</li>
-                <li>Discrepancias entre lo declarado y lo real</li>
-                <li>Decisiones tomadas basadas en la información de la aplicación</li>
-                <li>Interrupciones del servicio, errores técnicos o pérdida de datos</li>
-                <li>Acceso no autorizado a tu cuenta por falta de seguridad de tu parte</li>
-            </ul>
-
-            <h4>4.5 Uso Bajo Tu Propio Riesgo</h4>
-            <p>Al usar Manifiesto, aceptas que lo haces <strong>BAJO TU PROPIO RIESGO</strong>. El servicio se proporciona "TAL CUAL" y "SEGÚN DISPONIBILIDAD" sin garantías de ningún tipo.</p>
-        </div>
-
-        <h2>5. Propiedad Intelectual</h2>
-
-        <h3>5.1 Propiedad de Manifiesto</h3>
-        <p>El código, diseño, marca, logotipos y todo el contenido de la aplicación Manifiesto son propiedad exclusiva de sus creadores. No puedes:</p>
-        <ul>
-            <li>Copiar, modificar o distribuir la aplicación</li>
-            <li>Realizar ingeniería inversa del código</li>
-            <li>Usar la marca "Manifiesto" sin autorización</li>
-            <li>Crear aplicaciones derivadas</li>
-        </ul>
-
-        <h3>5.2 Tu Contenido</h3>
-        <p>Tú conservas todos los derechos sobre:</p>
-        <ul>
-            <li>Las fotos que subes</li>
-            <li>La información que ingresas</li>
-            <li>Los certificados que generas</li>
-        </ul>
-        <p>Al usar Manifiesto, nos otorgas una licencia limitada para almacenar y procesar tu contenido únicamente con el propósito de proveer el servicio.</p>
-
-        <h2>6. Cuentas de Usuario</h2>
-
-        <h3>6.1 Responsabilidad de la Cuenta</h3>
-        <p>Eres responsable de:</p>
-        <ul>
-            <li>Mantener la confidencialidad de tu contraseña</li>
-            <li>Todas las actividades realizadas desde tu cuenta</li>
-            <li>Notificarnos inmediatamente si sospechas acceso no autorizado</li>
-        </ul>
-
-        <h3>6.2 Suspensión de Cuentas</h3>
-        <p>Nos reservamos el derecho de suspender o eliminar cuentas que:</p>
-        <ul>
-            <li>Violen estos términos</li>
-            <li>Sean usadas para actividades ilegales</li>
-            <li>Abusen del servicio</li>
-            <li>Proporcionen información fraudulenta deliberadamente</li>
-        </ul>
-
-        <h2>7. Modificaciones del Servicio</h2>
-        <p>Manifiesto se reserva el derecho de:</p>
-        <ul>
-            <li>Modificar, mejorar o descontinuar funcionalidades</li>
-            <li>Realizar mantenimiento que interrumpa temporalmente el servicio</li>
-            <li>Cambiar estos términos (con notificación previa)</li>
-        </ul>
-        <p>Intentaremos notificarte sobre cambios importantes, pero no garantizamos disponibilidad ininterrumpida del servicio.</p>
-
-        <h2>8. Terminación</h2>
-
-        <h3>8.1 Terminación por tu Parte</h3>
-        <p>Puedes eliminar tu cuenta en cualquier momento desde la configuración de la aplicación o contactando a <a href="mailto:contact@manifiesto.app">contact@manifiesto.app</a>.</p>
-        <p>Al eliminar tu cuenta, tus datos serán eliminados permanentemente dentro de 30 días.</p>
-
-        <h3>8.2 Terminación por Nuestra Parte</h3>
-        <p>Podemos suspender o eliminar tu cuenta inmediatamente si:</p>
-        <ul>
-            <li>Violas estos términos</li>
-            <li>Realizas actividades ilegales</li>
-            <li>Representas un riesgo de seguridad</li>
-        </ul>
-
-        <h2>9. Pagos y Suscripciones</h2>
-        <p><em>(Esta sección aplicará cuando se implementen planes de pago)</em></p>
-
-        <h3>9.1 Planes Gratuitos y de Pago</h3>
-        <p>Manifiesto puede ofrecer:</p>
-        <ul>
-            <li><strong>Plan Gratuito:</strong> Funcionalidades básicas con limitaciones</li>
-            <li><strong>Plan Premium:</strong> Acceso completo mediante suscripción de pago</li>
-        </ul>
-
-        <h3>9.2 Facturación</h3>
-        <p>Los planes de pago se facturan de forma recurrente (mensual o anual). Al suscribirte, autorizas cargos automáticos hasta que canceles.</p>
-
-        <h3>9.3 Reembolsos</h3>
-        <p>Evaluaremos solicitudes de reembolso caso por caso. No garantizamos reembolsos automáticos.</p>
-
-        <h3>9.4 Cambios de Precio</h3>
-        <p>Podemos modificar los precios con 30 días de anticipación. Los cambios no afectan suscripciones activas hasta su renovación.</p>
-
-        <h2>10. Privacidad</h2>
-        <p>El manejo de tus datos personales está regido por nuestra <a href="/privacy-policy.html">Política de Privacidad</a>, que forma parte integral de estos términos.</p>
-
-        <h2>11. Ley Aplicable y Jurisdicción</h2>
-        <p>Estos Términos de Uso se rigen por las leyes de El Salvador. Cualquier disputa será resuelta en los tribunales competentes de El Salvador.</p>
-        <p>Si alguna disposición de estos términos es considerada inválida o inaplicable, las demás disposiciones permanecerán en pleno vigor.</p>
-
-        <h2>12. Indemnización</h2>
-        <p>Aceptas indemnizar y mantener indemne a Manifiesto, sus desarrolladores y afiliados de cualquier reclamo, pérdida, responsabilidad, daño o gasto (incluyendo honorarios legales) que surja de:</p>
-        <ul>
-            <li>Tu uso de la aplicación</li>
-            <li>Violación de estos términos</li>
-            <li>Violación de derechos de terceros</li>
-            <li>Información falsa o engañosa que proporciones</li>
-        </ul>
-
-        <h2>13. Cambios a estos Términos</h2>
-        <p>Podemos actualizar estos Términos de Uso ocasionalmente. Los cambios serán efectivos inmediatamente después de su publicación. Te notificaremos sobre cambios significativos mediante:</p>
-        <ul>
-            <li>Notificación dentro de la aplicación</li>
-            <li>Correo electrónico</li>
-            <li>Actualización de la fecha en la parte superior</li>
-        </ul>
-        <p>Tu uso continuado de Manifiesto después de cambios constituye tu aceptación de los términos actualizados.</p>
-
-        <h2>14. Contacto</h2>
-        <div class="contact">
-            <p>Si tienes preguntas sobre estos Términos de Uso, contáctanos:</p>
-            <p><strong>Email:</strong> <a href="mailto:contact@manifiesto.app">contact@manifiesto.app</a></p>
-            <p><strong>Aplicación:</strong> Manifiesto - Gestión de Equipaje y Viajes</p>
-            <p><strong>Ubicación:</strong> El Salvador</p>
-        </div>
-
-        <div class="highlight" style="margin-top: 30px;">
-            <p><strong>Última Palabra:</strong> Manifiesto es una herramienta diseñada para ayudarte a organizarte mejor. Úsala con responsabilidad, declara con honestidad, y recuerda siempre cumplir con las leyes y regulaciones de tu país y destinos de viaje.</p>
-        </div>
-
-        <p style="margin-top: 40px; padding-top: 20px; border-top: 1px solid #e5e7eb; color: #6b7280; font-size: 0.9em;">
-            © 2026 Manifiesto. Todos los derechos reservados.
-        </p>
+    <div class="lang-toggle">
+        <button class="lang-btn" id="btn-es" onclick="setLang('es')">ES</button>
+        <span style="color:#e5e7eb">|</span>
+        <button class="lang-btn" id="btn-en" onclick="setLang('en')">EN</button>
     </div>
+
+    <div class="container">
+        <!-- ESPAÑOL -->
+        <div id="content-es">
+            <h1>Términos de Uso</h1>
+            <p class="date"><strong>Última actualización:</strong> Febrero 2026</p>
+            <div class="highlight"><p><strong>En resumen:</strong> Manifiesto es tu herramienta personal de organización. Tú eres responsable de la información que ingresas. Nosotros no somos responsables por pérdidas, daños o problemas legales derivados del uso de la aplicación.</p></div>
+            <h2>1. Aceptación de los Términos</h2>
+            <p>Al acceder y usar Manifiesto, aceptas estar legalmente obligado por estos Términos de Uso. Si no estás de acuerdo, no debes usar la Aplicación.</p>
+            <h2>2. Descripción del Servicio</h2>
+            <div class="success">
+                <h3>✅ Lo que SÍ es Manifiesto:</h3>
+                <ul>
+                    <li><strong>Herramienta de organización personal</strong> - Registra y organiza tu equipaje</li>
+                    <li><strong>Registro fotográfico con timestamp</strong> - Documenta tus pertenencias con fecha y hora</li>
+                    <li><strong>Certificado verificable</strong> - PDFs con QR y hash criptográfico</li>
+                    <li><strong>Respaldo documental</strong> - Evidencia de lo que llevabas en caso de pérdida</li>
+                </ul>
+            </div>
+            <div class="warning">
+                <h3>❌ Lo que NO es Manifiesto:</h3>
+                <ul>
+                    <li>NO es un documento oficial de aduanas</li>
+                    <li>NO reemplaza declaraciones legales</li>
+                    <li>NO es una póliza de seguro</li>
+                    <li>NO garantiza aceptación por aerolíneas o autoridades</li>
+                </ul>
+            </div>
+            <h2>3. Uso Aceptable</h2>
+            <ul>
+                <li>Proporcionar información veraz y honesta</li>
+                <li>Usar la aplicación solo para fines legítimos</li>
+                <li>No realizar actividades ilegales</li>
+                <li>Cumplir con leyes locales y aduaneras</li>
+            </ul>
+            <h2>4. Limitación de Responsabilidad</h2>
+            <div class="warning">
+                <p>Los certificados son <strong>declaraciones personales de buena fe</strong>. Manifiesto NO valida legalmente la información. Tú eres el único responsable de la veracidad de los datos ingresados y de cumplir con regulaciones aduaneras.</p>
+                <p>Manifiesto NO se hace responsable por pérdida de equipaje, problemas con aduanas, rechazo de certificados, multas o sanciones.</p>
+            </div>
+            <h2>5. Propiedad Intelectual</h2>
+            <p>El código, diseño y marca de Manifiesto son propiedad exclusiva de sus creadores. Tú conservas todos los derechos sobre las fotos e información que ingresas.</p>
+            <h2>6. Pagos</h2>
+            <p>Manifiesto ofrece un plan gratuito y planes de pago. Los reembolsos se evalúan caso por caso según nuestra <a href="/refund-policy.html">Política de Reembolso</a>.</p>
+            <h2>7. Ley Aplicable</h2>
+            <p>Estos términos se rigen por las leyes de El Salvador.</p>
+            <h2>8. Contacto</h2>
+            <div class="contact">
+                <p><strong>Email:</strong> <a href="mailto:contact@manifiesto.app">contact@manifiesto.app</a></p>
+                <p><strong>Ubicación:</strong> El Salvador</p>
+            </div>
+            <p style="margin-top:40px;padding-top:20px;border-top:1px solid #e5e7eb;color:#6b7280;font-size:0.9em;">© 2026 Manifiesto. Todos los derechos reservados.</p>
+        </div>
+
+        <!-- ENGLISH -->
+        <div id="content-en" style="display:none">
+            <h1>Terms of Use</h1>
+            <p class="date"><strong>Last updated:</strong> February 2026</p>
+            <div class="highlight"><p><strong>In summary:</strong> Manifiesto is your personal organization tool. You are responsible for the information you enter. We are not responsible for losses, damages or legal issues arising from use of the application.</p></div>
+            <h2>1. Acceptance of Terms</h2>
+            <p>By accessing and using Manifiesto, you agree to be legally bound by these Terms of Use. If you disagree with any part, you must not use the Application.</p>
+            <h2>2. Service Description</h2>
+            <div class="success">
+                <h3>✅ What Manifiesto IS:</h3>
+                <ul>
+                    <li><strong>Personal organization tool</strong> - Register and organize your luggage</li>
+                    <li><strong>Timestamped photo record</strong> - Document your belongings with date and time</li>
+                    <li><strong>Verifiable certificate</strong> - PDFs with QR code and cryptographic hash</li>
+                    <li><strong>Documentary backup</strong> - Evidence of what you carried in case of loss</li>
+                </ul>
+            </div>
+            <div class="warning">
+                <h3>❌ What Manifiesto is NOT:</h3>
+                <ul>
+                    <li>NOT an official customs document</li>
+                    <li>NOT a replacement for legal declarations</li>
+                    <li>NOT an insurance policy</li>
+                    <li>NOT guaranteed acceptance by airlines or authorities</li>
+                </ul>
+            </div>
+            <h2>3. Acceptable Use</h2>
+            <ul>
+                <li>Provide truthful and honest information</li>
+                <li>Use the application for legitimate purposes only</li>
+                <li>Do not engage in illegal activities</li>
+                <li>Comply with local and customs laws</li>
+            </ul>
+            <h2>4. Limitation of Liability</h2>
+            <div class="warning">
+                <p>Certificates are <strong>personal good-faith declarations</strong>. Manifiesto does NOT legally validate the information. You are solely responsible for the accuracy of data entered and for complying with customs regulations.</p>
+                <p>Manifiesto is NOT responsible for luggage loss, customs issues, certificate rejection, fines or penalties.</p>
+            </div>
+            <h2>5. Intellectual Property</h2>
+            <p>Manifiesto's code, design and brand are the exclusive property of its creators. You retain all rights to the photos and information you enter.</p>
+            <h2>6. Payments</h2>
+            <p>Manifiesto offers a free plan and paid plans. Refunds are evaluated case by case per our <a href="/refund-policy.html">Refund Policy</a>.</p>
+            <h2>7. Applicable Law</h2>
+            <p>These terms are governed by the laws of El Salvador.</p>
+            <h2>8. Contact</h2>
+            <div class="contact">
+                <p><strong>Email:</strong> <a href="mailto:contact@manifiesto.app">contact@manifiesto.app</a></p>
+                <p><strong>Location:</strong> El Salvador</p>
+            </div>
+            <p style="margin-top:40px;padding-top:20px;border-top:1px solid #e5e7eb;color:#6b7280;font-size:0.9em;">© 2026 Manifiesto. All rights reserved.</p>
+        </div>
+    </div>
+
+    <script>
+        function setLang(lang) {
+            document.getElementById('content-es').style.display = lang === 'es' ? 'block' : 'none';
+            document.getElementById('content-en').style.display = lang === 'en' ? 'block' : 'none';
+            document.getElementById('btn-es').classList.toggle('active', lang === 'es');
+            document.getElementById('btn-en').classList.toggle('active', lang === 'en');
+            localStorage.setItem('legal-lang', lang);
+        }
+        const saved = localStorage.getItem('legal-lang') || 'es';
+        setLang(saved);
+    </script>
 </body>
 </html>

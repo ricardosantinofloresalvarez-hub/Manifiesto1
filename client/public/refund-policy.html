@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Política de Reembolso - Manifiesto</title>
+    <title>Política de Reembolso / Refund Policy - Manifiesto</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; background: #f8f9fa; padding: 20px; }
@@ -18,39 +18,86 @@
         a:hover { text-decoration: underline; }
         .contact { background: #f3f4f6; padding: 20px; border-radius: 8px; margin-top: 30px; }
         .back { display: inline-block; margin-bottom: 20px; color: #2563eb; font-size: 0.9em; }
+        .lang-toggle { position: fixed; top: 20px; right: 20px; background: white; border: 1px solid #e5e7eb; border-radius: 8px; padding: 6px 12px; display: flex; gap: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); z-index: 100; }
+        .lang-btn { background: none; border: none; cursor: pointer; font-size: 0.9em; color: #6b7280; padding: 2px 6px; border-radius: 4px; }
+        .lang-btn.active { font-weight: bold; color: #2563eb; background: #eff6ff; }
     </style>
 </head>
 <body>
+    <div class="lang-toggle">
+        <button class="lang-btn" id="btn-es" onclick="setLang('es')">ES</button>
+        <span style="color:#e5e7eb">|</span>
+        <button class="lang-btn" id="btn-en" onclick="setLang('en')">EN</button>
+    </div>
+
     <div class="container">
-        <a href="javascript:history.back()" class="back">← Volver</a>
-        <h1>Política de Reembolso / Refund Policy</h1>
-        <p class="date">Última actualización / Last updated: Abril 2026</p>
+        <!-- ESPAÑOL -->
+        <div id="content-es">
+            <a href="javascript:history.back()" class="back">← Volver</a>
+            <h1>Política de Reembolso</h1>
+            <p class="date">Última actualización: Abril 2026</p>
+            <h2>1. Período de reembolso</h2>
+            <p>Ofrecemos reembolso completo dentro de las primeras 48 horas después de la compra, siempre que no hayas generado ningún certificado durante ese período.</p>
+            <h2>2. Condiciones</h2>
+            <ul>
+                <li>La solicitud debe realizarse dentro de las 48 horas posteriores a la compra.</li>
+                <li>No haber generado ningún certificado de equipaje.</li>
+                <li>Contactarnos directamente por correo.</li>
+            </ul>
+            <h2>3. Casos no elegibles</h2>
+            <ul>
+                <li>Han pasado más de 48 horas desde la compra.</li>
+                <li>Ya se generaron certificados de equipaje.</li>
+                <li>El servicio fue utilizado durante el período del plan.</li>
+            </ul>
+            <h2>4. Cómo solicitar</h2>
+            <p>Envía un correo a <a href="mailto:contact@manifiesto.app">contact@manifiesto.app</a> con el asunto <strong>"Solicitud de reembolso"</strong>, incluyendo tu correo de registro y el motivo. Procesaremos tu solicitud en 3 días hábiles.</p>
+            <div class="contact">
+                <strong>Contacto:</strong><br>
+                <a href="mailto:contact@manifiesto.app">contact@manifiesto.app</a>
+            </div>
+            <p style="margin-top:40px;padding-top:20px;border-top:1px solid #e5e7eb;color:#6b7280;font-size:0.9em;">© 2026 Manifiesto. Todos los derechos reservados.</p>
+        </div>
 
-        <h2>1. Período de reembolso / Refund Period</h2>
-        <p>Ofrecemos reembolso completo dentro de las primeras 48 horas después de la compra, siempre que no hayas generado ningún certificado durante ese período.</p>
-        <p>We offer a full refund within the first 48 hours after purchase, provided you have not generated any certificates during that period.</p>
-
-        <h2>2. Condiciones / Eligibility Conditions</h2>
-        <ul>
-            <li>La solicitud debe realizarse dentro de las 48 horas posteriores a la compra. / The request must be made within 48 hours of purchase.</li>
-            <li>No haber generado ningún certificado de equipaje. / No luggage certificates have been generated.</li>
-            <li>Contactarnos directamente por correo. / You must contact us directly via email.</li>
-        </ul>
-
-        <h2>3. Casos no elegibles / Non-eligible Cases</h2>
-        <ul>
-            <li>Han pasado más de 48 horas desde la compra. / More than 48 hours have passed since purchase.</li>
-            <li>Ya se generaron certificados de equipaje. / Luggage certificates have already been generated.</li>
-            <li>El servicio fue utilizado durante el período del plan. / The service was used during the plan period.</li>
-        </ul>
-
-        <h2>4. Cómo solicitar / How to Request</h2>
-        <p>Envía un correo a <a href="mailto:contact@manifiesto.app">contact@manifiesto.app</a> con el asunto <strong>"Solicitud de reembolso / Refund Request"</strong>, incluyendo tu correo de registro y el motivo. Procesaremos tu solicitud en 3 días hábiles.</p>
-
-        <div class="contact">
-            <strong>Contacto / Contact:</strong><br>
-            <a href="mailto:contact@manifiesto.app">contact@manifiesto.app</a>
+        <!-- ENGLISH -->
+        <div id="content-en" style="display:none">
+            <a href="javascript:history.back()" class="back">← Back</a>
+            <h1>Refund Policy</h1>
+            <p class="date">Last updated: April 2026</p>
+            <h2>1. Refund Period</h2>
+            <p>We offer a full refund within the first 48 hours after purchase, provided you have not generated any certificates during that period.</p>
+            <h2>2. Eligibility Conditions</h2>
+            <ul>
+                <li>The request must be made within 48 hours of purchase.</li>
+                <li>No luggage certificates have been generated.</li>
+                <li>You must contact us directly via email.</li>
+            </ul>
+            <h2>3. Non-eligible Cases</h2>
+            <ul>
+                <li>More than 48 hours have passed since purchase.</li>
+                <li>Luggage certificates have already been generated.</li>
+                <li>The service was used during the plan period.</li>
+            </ul>
+            <h2>4. How to Request</h2>
+            <p>Send an email to <a href="mailto:contact@manifiesto.app">contact@manifiesto.app</a> with the subject <strong>"Refund Request"</strong>, including your registered email and reason. We will process your request within 3 business days.</p>
+            <div class="contact">
+                <strong>Contact:</strong><br>
+                <a href="mailto:contact@manifiesto.app">contact@manifiesto.app</a>
+            </div>
+            <p style="margin-top:40px;padding-top:20px;border-top:1px solid #e5e7eb;color:#6b7280;font-size:0.9em;">© 2026 Manifiesto. All rights reserved.</p>
         </div>
     </div>
+
+    <script>
+        function setLang(lang) {
+            document.getElementById('content-es').style.display = lang === 'es' ? 'block' : 'none';
+            document.getElementById('content-en').style.display = lang === 'en' ? 'block' : 'none';
+            document.getElementById('btn-es').classList.toggle('active', lang === 'es');
+            document.getElementById('btn-en').classList.toggle('active', lang === 'en');
+            localStorage.setItem('legal-lang', lang);
+        }
+        const saved = localStorage.getItem('legal-lang') || 'es';
+        setLang(saved);
+    </script>
 </body>
 </html>
