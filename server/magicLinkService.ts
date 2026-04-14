@@ -16,7 +16,7 @@ export async function sendMagicLink(email: string): Promise<void> {
   const magicUrl = `${BASE_URL}/api/auth/magic?token=${token}`;
 
   await resend.emails.send({
-    from: 'Manifiesto <onboarding@resend.dev>',
+    from: 'Manifiesto <noreply@manifiesto.app>',
     to: email,
     subject: 'Tu enlace de acceso a Manifiesto',
     html: `
