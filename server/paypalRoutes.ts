@@ -13,12 +13,14 @@ const PRODUCT_CREDITS: Record<string, number> = {
   "pack3": 3,
   "pack10": 10,
   "annual": -1,
+  "pro599": -1,
 };
 
 const PRODUCT_PRICES: Record<string, string> = {
   "pack3": "2.99",
   "pack10": "6.99",
   "annual": "12.99",
+  "pro599": "5.99",
 };
 
 async function getAccessToken() {

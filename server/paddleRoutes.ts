@@ -13,18 +13,21 @@ const PRODUCT_CREDITS: Record<string, number> = {
   "pack3": 3,
   "pack10": 10,
   "annual": -1,
+  "pro599": -1,
 };
 
 const PRICE_IDS: Record<string, string> = {
   "pack3": "pri_01kntjaz1emrptz1rsmm1dcb5t",
   "pack10": "pri_01kntjhydjjn1k7etbfjka575s",
   "annual": "pri_01kntjtcg4t9jddrthncp8avvv",
+  "pro599": "pri_01krq75y4zgwnc66kkzqd3an6k",
 };
 
 const PRODUCT_PRICES: Record<string, string> = {
   "pack3": "2.99",
   "pack10": "6.99",
   "annual": "12.99",
+  "pro599": "5.99",
 };
 
 // GET /api/paddle/checkout/:productId
