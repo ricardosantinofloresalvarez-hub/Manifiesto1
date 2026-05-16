@@ -38,10 +38,7 @@ function ManifestCard({ accentColor, icon }: { accentColor: string; icon: string
 
 const plans = [
   { id: "free", bg: "from-[#0d1b2e] to-[#0a1628]", accentColor: "#4FC3F7", icon: "📋", nameKey: "GRATIS", priceDisplay: "$0", period: "para siempre", bigNumber: "4", bigLabel: "Manifiestos", badge: null, badgeBg: "", features: ["1 viaje completo", "Hasta 4 manifiestos", "Certificado PDF con QR", "Verificación pública"], productId: null },
-  { id: "pack3", bg: "from-[#0d1b2e] to-[#0f2540]", accentColor: "#29B6F6", icon: "✈️", nameKey: "PAQUETE 3", priceDisplay: "$2.99", period: "pago único", bigNumber: "3", bigLabel: "Manifiestos", badge: null, badgeBg: "", features: ["3 manifiestos adicionales", "PDF con QR verificable", "Clima en tiempo real", "Fotos por destino", "Compartir con familia"], productId: "pack3" },
-  { id: "pack10", bg: "from-[#0d1f1a] to-[#0a1f15]", accentColor: "#66BB6A", icon: "🌍", nameKey: "PAQUETE 10", priceDisplay: "$6.99", period: "pago único", bigNumber: "10", bigLabel: "Manifiestos", badge: "MÁS POPULAR", badgeBg: "#66BB6A", features: ["10 manifiestos adicionales", "PDF con QR verificable", "Clima en tiempo real", "Fotos por destino", "Compartir con familia", "Ahorra vs paquete 3"], productId: "pack10" },
   { id: "pro599", bg: "from-[#1a1020] to-[#140d1c]", accentColor: "#FFD700", icon: "🚀", nameKey: "PRO ANUAL", priceDisplay: "$5.99", period: "por año · cancela cuando quieras", bigNumber: "∞", bigLabel: "Manifiestos / año", badge: "MEJOR VALOR", badgeBg: "#FFD700", features: ["Manifiestos ilimitados", "PDF con QR verificable", "Clima en tiempo real", "Fotos por destino", "Soporte prioritario"], productId: "pro599" },
-  { id: "annual", bg: "from-[#1a1020] to-[#140d1c]", accentColor: "#FFB300", icon: "⭐", nameKey: "PLAN ANUAL", priceDisplay: "$12.99", period: "por año · cancela cuando quieras", bigNumber: "∞", bigLabel: "Manifiestos / año", badge: "PLAN ANUAL", badgeBg: "#FFB300", features: ["Manifiestos ilimitados", "PDF con QR verificable", "Clima en tiempo real", "Fotos por destino", "Soporte prioritario"], productId: "annual" },
 ];
 
 // Inicializar Paddle una sola vez
