@@ -229,6 +229,10 @@ const resources = {
 
       // Mensajes específicos
       tripCreated: 'Viaje creado exitosamente',
+      nextStepTitle: '¡Viaje creado!',
+      nextStepDescription: 'Ahora agrega tu maleta para generar el certificado.',
+      nextStepButton: 'Agregar maleta →',
+      nextStepSkip: 'Ahora no',
       tripUpdated: 'Viaje actualizado',
       tripDeleted: 'Viaje eliminado',
       luggageDeleted: 'Maleta eliminada',
@@ -726,6 +730,10 @@ const resources = {
 
       // Specific messages
       tripCreated: 'Trip created successfully',
+      nextStepTitle: 'Trip created!',
+      nextStepDescription: 'Now add your luggage to generate the certificate.',
+      nextStepButton: 'Add luggage →',
+      nextStepSkip: 'Not now',
       tripUpdated: 'Trip updated',
       tripDeleted: 'Trip deleted',
       luggageDeleted: 'Luggage deleted',

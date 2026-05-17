@@ -31,6 +31,8 @@ export default function Dashboard() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
   const [showCreateDialog, setShowCreateDialog] = useState(false);
+  const [showNextStepModal, setShowNextStepModal] = useState(false);
+  const [newTripId, setNewTripId] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     title: '',
     destination: '',
@@ -131,13 +133,11 @@ export default function Dashboard() {
         imageUrl: null,
       },
       {
-        onSuccess: () => {
+        onSuccess: (data: any) => {
           setShowCreateDialog(false);
           setFormData({ title: '', destination: '', startDate: '', endDate: '', notes: '' });
-          toast({
-            title: t('tripCreated'),
-            description: t('tripCreated'),
-          });
+          setNewTripId(data?.id || null);
+          setShowNextStepModal(true);
         },
         onError: () => {
           toast({
@@ -180,6 +180,30 @@ export default function Dashboard() {
   return (
     <div className="min-h-screen bg-background pb-20">
       <OnboardingModal />
+
+      {/* Modal siguiente paso después de crear viaje */}
+      {showNextStepModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4">
+          <div className="rounded-2xl border border-white/10 bg-[#0d1b2e] p-6 w-full max-w-sm text-center shadow-xl">
+            <div className="text-4xl mb-3">✅</div>
+            <h2 className="text-white font-bold text-lg mb-1">{t('nextStepTitle')}</h2>
+            <p className="text-white/60 text-sm mb-5">{t('nextStepDescription')}</p>
+            <button
+              onClick={() => { setShowNextStepModal(false); if (newTripId) setLocation(`/trip/${newTripId}`); }}
+              className="w-full py-2.5 rounded-xl font-bold text-sm text-gray-900 mb-2"
+              style={{ background: "#4FC3F7" }}
+            >
+              {t('nextStepButton')}
+            </button>
+            <button
+              onClick={() => setShowNextStepModal(false)}
+              className="w-full py-2 rounded-xl text-sm text-white/40 hover:text-white/60 transition-colors"
+            >
+              {t('nextStepSkip')}
+            </button>
+          </div>
+        </div>
+      )}
       <TopAppBar
         title={t('trips')}
         onAction={() => setShowCreateDialog(true)}
