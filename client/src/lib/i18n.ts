@@ -32,7 +32,7 @@ const resources = {
 
       // Navegación
       trips: 'Viajes',
-      manifests: 'Manifiestos',
+      manifests: 'Maletas',
       verify: 'Verificar',
       profile: 'Perfil',
       dashboard: 'Dashboard',
@@ -533,7 +533,7 @@ const resources = {
 
       // Navigation
       trips: 'Trips',
-      manifests: 'Manifests',
+      manifests: 'Luggage',
       verify: 'Verify',
       profile: 'Profile',
       dashboard: 'Dashboard',
