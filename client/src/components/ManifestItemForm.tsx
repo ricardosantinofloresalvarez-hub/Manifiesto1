@@ -162,10 +162,6 @@ export default function ManifestItemForm({
         });
       } else {
         await createMutation.mutateAsync(data);
-        toast({
-          title: t('itemAdded'),
-          description: `"${values.name}" ${t('itemAddedToLuggage')}.`,
-        });
       }
 
       onOpenChange(false);

@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -99,6 +100,7 @@ export default function LuggageTab({ tripId, trip, user }: LuggageTabProps) {
   const [deletingLuggage, setDeletingLuggage] = useState<Luggage | null>(null);
   const [selectedLuggage, setSelectedLuggage] = useState<Luggage | null>(null);
   const [detailOpen, setDetailOpen] = useState(false);
+  const [showAddItemsPrompt, setShowAddItemsPrompt] = useState(false);
 
   const { data: luggageList, isLoading, error } = useLuggage(tripId);
   const createMutation = useCreateLuggage();
@@ -145,9 +147,9 @@ export default function LuggageTab({ tripId, trip, user }: LuggageTabProps) {
       };
 
       await createMutation.mutateAsync(data);
-      toast({ title: t('luggageAdded'), description: t('luggageAddedSuccess') });
       setIsCreateOpen(false);
       createForm.reset();
+      setShowAddItemsPrompt(true);
     } catch (err) {
       toast({ title: t('error'), description: t('errorCreatingLuggage'), variant: 'destructive' });
     }
@@ -217,6 +219,7 @@ export default function LuggageTab({ tripId, trip, user }: LuggageTabProps) {
   }
 
   return (
+    <>
     <div className="space-y-4">
       <div className="flex items-center justify-between gap-2">
         <h3 className="font-semibold text-lg flex items-center gap-2">
@@ -689,5 +692,23 @@ export default function LuggageTab({ tripId, trip, user }: LuggageTabProps) {
         }}
       />
     </div>
+
+      {showAddItemsPrompt && createPortal(
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4">
+          <div className="rounded-2xl border border-white/10 bg-[#0d1b2e] p-6 w-full max-w-sm text-center shadow-xl">
+            <div className="text-4xl mb-3">✅</div>
+            <h2 className="text-white font-bold text-lg mb-1">{t('luggageCreatedPromptTitle')}</h2>
+            <p className="text-white/60 text-sm mb-5">{t('luggageCreatedPromptDesc')}</p>
+            <button
+              onClick={() => setShowAddItemsPrompt(false)}
+              className="w-full py-2.5 rounded-xl font-bold text-sm text-gray-900 mb-2"
+              style={{ background: "#4FC3F7" }}
+            >
+              {t('luggageCreatedPromptButton')}
+            </button>
+          </div>
+        </div>
+      , document.body)}
+    </>
   );
 }

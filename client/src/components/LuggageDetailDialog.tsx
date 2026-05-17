@@ -1,12 +1,14 @@
 import { useState, useRef } from "react";
 import { useTranslation } from 'react-i18next';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { createPortal } from "react-dom";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Package, FileText, Plus, Camera, Loader2, Check } from "lucide-react";
 import { useManifestItems, useDeleteManifestItem } from "@/hooks/useManifestItems";
 import { useGenerateLuggageCertificate } from "@/hooks/useCertificates";
 import { useToast } from "@/hooks/use-toast";
+import { ToastAction } from "@/components/ui/toast";
 import ManifestItemCard from "@/components/ManifestItemCard";
 import ManifestItemForm from "@/components/ManifestItemForm";
 
@@ -24,6 +26,8 @@ export default function LuggageDetailDialog({ luggage, trip, user, open, onOpenC
   const [editingItem, setEditingItem] = useState<any>(null);
   const [uploadingOpen, setUploadingOpen] = useState(false);
   const [uploadingClosed, setUploadingClosed] = useState(false);
+  const [showGeneratePrompt, setShowGeneratePrompt] = useState(false);
+  const [showVerifyPrompt, setShowVerifyPrompt] = useState(false);
 
   const openPhotoInputRef = useRef<HTMLInputElement>(null);
   const closedPhotoInputRef = useRef<HTMLInputElement>(null);
@@ -36,6 +40,7 @@ export default function LuggageDetailDialog({ luggage, trip, user, open, onOpenC
       if (res) {
         setTimeout(() => {
           onOpenChange(false);
+          setShowVerifyPrompt(true);
         }, 2500);
       }
     } catch (e: any) {
@@ -151,6 +156,7 @@ export default function LuggageDetailDialog({ luggage, trip, user, open, onOpenC
   if (!luggage) return null;
 
   return (
+    <>
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl bg-zinc-950 text-white border-zinc-800">
         <DialogHeader>
@@ -194,6 +200,18 @@ export default function LuggageDetailDialog({ luggage, trip, user, open, onOpenC
             </div>
           </div>
 
+          {showGeneratePrompt && (
+            <div className="rounded-xl p-3 mb-2 flex items-center justify-between gap-3" style={{ background: "rgba(79,195,247,0.12)", border: "1px solid rgba(79,195,247,0.3)" }}>
+              <p className="text-xs text-white/80">🎉 {t('generatePromptDesc')}</p>
+              <button
+                onClick={() => { setShowGeneratePrompt(false); handleDownload(); }}
+                className="flex-shrink-0 px-3 py-1.5 rounded-lg text-xs font-bold text-gray-900"
+                style={{ background: "#4FC3F7" }}
+              >
+                {t('generatePromptButton')}
+              </button>
+            </div>
+          )}
           <div className="grid grid-cols-2 gap-2">
             <input
               ref={openPhotoInputRef}
@@ -296,9 +314,42 @@ export default function LuggageDetailDialog({ luggage, trip, user, open, onOpenC
           onOpenChange={(open) => {
             setShowForm(open);
             if (!open) setEditingItem(null);
-          }} 
+          }}
+          onSuccess={() => {
+            const key = `generate_prompt_shown_${luggage.id}`;
+            if (!localStorage.getItem(key)) {
+              localStorage.setItem(key, 'true');
+              setShowGeneratePrompt(true);
+            }
+          }}
         />
       )}
     </Dialog>
+
+
+      {/* Modal: Ir a Verificar después de generar certificado */}
+      {showVerifyPrompt && createPortal(
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4">
+          <div className="rounded-2xl border border-white/10 bg-[#0d1b2e] p-6 w-full max-w-sm text-center shadow-xl">
+            <div className="text-4xl mb-3">✅</div>
+            <h2 className="text-white font-bold text-lg mb-1">{t('verifyPromptTitle')}</h2>
+            <p className="text-white/60 text-sm mb-5">{t('verifyPromptDesc')}</p>
+            <button
+              onClick={() => { setShowVerifyPrompt(false); window.location.href = '/verify'; }}
+              className="w-full py-2.5 rounded-xl font-bold text-sm text-gray-900 mb-2"
+              style={{ background: "#4FC3F7" }}
+            >
+              {t('verifyPromptButton')}
+            </button>
+            <button
+              onClick={() => setShowVerifyPrompt(false)}
+              className="w-full py-2 rounded-xl text-sm text-white/40 hover:text-white/60 transition-colors"
+            >
+              {t('nextStepSkip')}
+            </button>
+          </div>
+        </div>
+      , document.body)}
+    </>
   );
 }
