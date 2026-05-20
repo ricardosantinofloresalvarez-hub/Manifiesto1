@@ -201,11 +201,11 @@ export default function LuggageDetailDialog({ luggage, trip, user, open, onOpenC
           </div>
 
           {showGeneratePrompt && (
-            <div className="rounded-xl p-3 mb-2 flex items-center justify-between gap-3" style={{ background: "rgba(79,195,247,0.12)", border: "1px solid rgba(79,195,247,0.3)" }}>
+            <div className="rounded-xl p-3 mb-2 flex flex-col gap-2" style={{ background: "rgba(79,195,247,0.12)", border: "1px solid rgba(79,195,247,0.3)" }}>
               <p className="text-xs text-white/80">🎉 {t('generatePromptDesc')}</p>
               <button
                 onClick={() => { setShowGeneratePrompt(false); handleDownload(); }}
-                className="flex-shrink-0 px-3 py-1.5 rounded-lg text-xs font-bold text-gray-900"
+                className="w-full py-2 rounded-lg text-xs font-bold text-gray-900"
                 style={{ background: "#4FC3F7" }}
               >
                 {t('generatePromptButton')}
@@ -230,7 +230,7 @@ export default function LuggageDetailDialog({ luggage, trip, user, open, onOpenC
 
             <Button 
               variant="secondary" 
-              className="bg-zinc-800 text-zinc-300 border-zinc-700 relative"
+              className="bg-zinc-800 text-zinc-300 border-zinc-700 relative text-xs"
               onClick={() => handlePhotoSelect('open')}
               disabled={uploadingOpen}
             >
@@ -246,7 +246,7 @@ export default function LuggageDetailDialog({ luggage, trip, user, open, onOpenC
 
             <Button 
               variant="secondary" 
-              className="bg-zinc-800 text-zinc-300 border-zinc-700"
+              className="bg-zinc-800 text-zinc-300 border-zinc-700 text-xs"
               onClick={() => handlePhotoSelect('closed')}
               disabled={uploadingClosed}
             >
