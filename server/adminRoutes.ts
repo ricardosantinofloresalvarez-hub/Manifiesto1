@@ -42,4 +42,17 @@ router.get("/stats", async (req, res) => {
   }
 });
 
+router.post("/users/:id/credits", async (req, res) => {
+  try {
+    const userId = req.query.userId as string;
+    if (!await isAdmin(userId)) return res.status(403).json({ error: "No autorizado" });
+    const { credits } = req.body;
+    if (typeof credits !== 'number') return res.status(400).json({ error: "Créditos inválidos" });
+    await db.update(users).set({ manifestCredits: credits }).where(eq(users.id, req.params.id));
+    res.json({ success: true });
+  } catch (error) {
+    res.status(500).json({ error: "Error interno" });
+  }
+});
+
 export default router;
