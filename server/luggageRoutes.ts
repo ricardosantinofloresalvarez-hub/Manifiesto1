@@ -51,7 +51,8 @@ router.get("/:luggageId/certificate", async (req, res) => {
             : 'No tienes manifiestos disponibles. Adquiere un plan para continuar.';
           return res.status(403).json({ error: msg });
         }
-        if (!isAnnual) {
+        const alreadyCertified = !!(lug.certificateHash);
+        if (!isAnnual && !alreadyCertified) {
           await db.update(users).set({
             manifestCredits: Math.max(0, (currentUser.manifestCredits || 0) - 1)
           }).where(eq(users.id, trip.userId));
@@ -164,6 +165,10 @@ router.get("/:luggageId/certificate", async (req, res) => {
     // PÁGINA 1
     doc.rect(0, 0, 612, 60).fill("#0f172a");
     doc.fillColor("#ffffff").fontSize(18).text(t.title, 50, 22, { align: "center" });
+    try {
+      const logoPath = require("path").join(process.cwd(), "dist/public/Manifiesto_logo_jpg.png");
+      doc.image(logoPath, 540, 8, { width: 44, height: 44 });
+    } catch(e) {}
     doc.fillColor("#000000").fontSize(12).moveDown(4);
 
     doc.font("Helvetica-Bold").fontSize(14).text(t.ownerInfo, { underline: true });

@@ -48,6 +48,9 @@ const resources = {
       editTrip: 'Editar Viaje',
       deleteTrip: 'Eliminar Viaje',
       noTrips: 'No tienes viajes aún',
+      welcomeHeroTitle: '¡Hola, {{name}}!',
+      welcomeHeroSubtitle: 'Tu respaldo de viaje te espera.',
+      welcomeHeroDesc: 'Registra tu equipaje, documenta tus artículos y viaja con tranquilidad.',
       noTripsDescription: 'Comienza creando tu primer viaje',
 
       // Maletas
@@ -559,6 +562,9 @@ const resources = {
       editTrip: 'Edit Trip',
       deleteTrip: 'Delete Trip',
       noTrips: 'No trips yet',
+      welcomeHeroTitle: 'Hi, {{name}}!',
+      welcomeHeroSubtitle: 'Your travel backup is ready.',
+      welcomeHeroDesc: 'Register your luggage, document your items and travel with peace of mind.',
       noTripsDescription: 'Start by creating your first trip',
 
       // Luggage

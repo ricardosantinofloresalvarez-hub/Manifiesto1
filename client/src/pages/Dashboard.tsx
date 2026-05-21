@@ -232,12 +232,26 @@ export default function Dashboard() {
         </div>
 
         {trips.length === 0 ? (
-          <EmptyState
-            title={t('noTrips')}
-            description={t('noTripsDescription')}
-            actionLabel={t('createTrip')}
-            onAction={() => setShowCreateDialog(true)}
-          />
+          <div className="flex flex-col items-center justify-center px-6 py-10 text-center">
+            <div className="relative w-full mb-6 rounded-2xl overflow-hidden" style={{ height: 380 }}>
+              <img src="https://images.unsplash.com/photo-1488646953014-85cb44e25828?w=1200" alt="viaje" className="w-full h-full object-cover" />
+              <div className="absolute inset-0" style={{ background: "rgba(0,0,0,0.35)" }} />
+              <div className="absolute inset-0 flex flex-col items-center justify-between px-6 py-8">
+                <div className="flex flex-col items-center">
+                  <p className="text-white font-bold text-2xl leading-tight drop-shadow-lg">{t('welcomeHeroTitle', { name: user?.name?.split(' ')[0] })}</p>
+                  <p className="text-white/90 text-base mt-2 font-medium drop-shadow-md">{t('welcomeHeroSubtitle')}</p>
+                </div>
+                <button
+                  onClick={() => setShowCreateDialog(true)}
+                  className="px-8 py-3 rounded-xl font-bold text-white text-sm shadow-lg"
+                  style={{ background: "linear-gradient(135deg, #0ea5e9, #0284c7)" }}
+                >
+                  {t('createTrip')}
+                </button>
+              </div>
+            </div>
+
+          </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {tripsWithCounts.map((trip: any) => (
