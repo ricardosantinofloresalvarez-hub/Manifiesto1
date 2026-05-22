@@ -42,6 +42,14 @@ export default function Admin() {
     });
   }, [user]);
 
+  const handleDeleteUser = async (userId: string) => {
+    if (!confirm("¿Eliminar este usuario y todos sus datos?")) return;
+    await fetch(`/api/admin/users/${userId}?userId=${adminId}`, {
+      method: "DELETE",
+    });
+    setUsers(users.filter(u => u.id !== userId));
+  };
+
   const handleUpdateCredits = async () => {
     if (!editingUser) return;
     setSaving(true);
@@ -127,12 +135,20 @@ export default function Admin() {
                 </td>
                 <td className="p-3 font-bold">{u.manifestCredits ?? 4}</td>
                 <td className="p-3">
-                  <button
-                    onClick={() => { setEditingUser(u); setNewCredits(u.manifestCredits ?? 4); }}
-                    className="text-xs px-2 py-1 rounded-lg bg-blue-600 hover:bg-blue-700 text-white"
-                  >
-                    Editar
-                  </button>
+                  <div className="flex gap-1">
+                    <button
+                      onClick={() => { setEditingUser(u); setNewCredits(u.manifestCredits ?? 4); }}
+                      className="text-xs px-2 py-1 rounded-lg bg-blue-600 hover:bg-blue-700 text-white"
+                    >
+                      Editar
+                    </button>
+                    <button
+                      onClick={() => handleDeleteUser(u.id)}
+                      className="text-xs px-2 py-1 rounded-lg bg-red-600 hover:bg-red-700 text-white"
+                    >
+                      Eliminar
+                    </button>
+                  </div>
                 </td>
               </tr>
             ))}

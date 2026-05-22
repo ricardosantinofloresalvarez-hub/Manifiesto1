@@ -18,19 +18,19 @@ export default function OnboardingModal() {
 
   const steps = [
     {
-      emoji: "🧳",
+      image: "https://images.unsplash.com/photo-1488646953014-85cb44e25828?w=1200",
       title: "¿Perdiste tu maleta alguna vez?",
       desc: "Con Manifiesto registras todo lo que llevas y generas un respaldo verificable. Si algo pasa, tienes prueba.",
     },
     {
-      emoji: "📋",
-      title: "Crea tu viaje y agrega tus maletas",
-      desc: "Registra cada artículo con su valor estimado. Fotos, marcas, cantidades — todo en un solo lugar.",
+      image: null,
+      title: "Todo lo que llevas, documentado.",
+      desc: "Registra cada artículo con fotos y valor estimado. Rápido, simple y siempre disponible.",
     },
     {
-      emoji: "📄",
-      title: "Genera tu certificado PDF con QR",
-      desc: "Un documento verificable que puedes mostrar a aerolíneas, aduanas o aseguradoras. Tu palabra respaldada.",
+      image: null,
+      title: "Tu certificado listo en segundos.",
+      desc: "Un PDF verificable con código QR que puedes mostrar a aerolíneas, aduanas o aseguradoras.",
     },
   ];
 
@@ -51,7 +51,14 @@ export default function OnboardingModal() {
 
         {/* Content */}
         <div className="text-center mb-8">
-          <div className="text-6xl mb-4">{steps[step].emoji}</div>
+          {steps[step].image ? (
+            <div className="relative w-full rounded-xl overflow-hidden mb-5" style={{ height: 160 }}>
+              <img src={steps[step].image} alt="" className="w-full h-full object-cover" />
+              <div className="absolute inset-0" style={{ background: "rgba(0,0,0,0.45)" }} />
+            </div>
+          ) : (
+            <div className="h-4" />
+          )}
           <h2 className="text-xl font-bold mb-3">{steps[step].title}</h2>
           <p className="text-gray-400 text-sm leading-relaxed">{steps[step].desc}</p>
         </div>

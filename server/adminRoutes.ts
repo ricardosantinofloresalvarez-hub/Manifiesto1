@@ -55,4 +55,19 @@ router.post("/users/:id/credits", async (req, res) => {
   }
 });
 
+router.delete("/users/:id", async (req, res) => {
+  try {
+    const userId = req.query.userId as string;
+    if (!await isAdmin(userId)) return res.status(403).json({ error: "No autorizado" });
+    const { id } = req.params;
+    // Eliminar en cascada
+    await db.delete(purchases).where(eq(purchases.userId, id));
+    await db.delete(trips).where(eq(trips.userId, id));
+    await db.delete(users).where(eq(users.id, id));
+    res.json({ success: true });
+  } catch (error) {
+    res.status(500).json({ error: "Error interno" });
+  }
+});
+
 export default router;
