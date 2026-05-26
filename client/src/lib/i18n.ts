@@ -6,6 +6,12 @@ const resources = {
     translation: {
       // Bienvenida y autenticación
       welcome: 'Bienvenido a Manifiesto',
+      welcomeFeature1Title: 'Organiza tus Viajes',
+      welcomeFeature1Desc: 'Planifica itinerarios completos con vuelos, hoteles y actividades',
+      welcomeFeature2Title: 'Gestiona tu Equipaje',
+      welcomeFeature2Desc: 'Registra cada artículo con fotos, valores y números de serie',
+      welcomeFeature3Title: 'Certificación Verificable',
+      welcomeFeature3Desc: 'Genera PDFs certificados con códigos QR para verificación',
       welcomeSubtitle: 'Organiza tu equipaje y planifica tus viajes con certificación verificable',
       getStarted: 'Comenzar',
       login: 'Iniciar Sesión',
@@ -520,6 +526,12 @@ const resources = {
     translation: {
       // Welcome and authentication
       welcome: 'Welcome to Manifiesto',
+      welcomeFeature1Title: 'Organize your Trips',
+      welcomeFeature1Desc: 'Plan complete itineraries with flights, hotels and activities',
+      welcomeFeature2Title: 'Manage your Luggage',
+      welcomeFeature2Desc: 'Register each item with photos, values and serial numbers',
+      welcomeFeature3Title: 'Verifiable Certification',
+      welcomeFeature3Desc: 'Generate certified PDFs with QR codes for verification',
       welcomeSubtitle: 'Organize your luggage and plan trips with verifiable certification',
       getStarted: 'Get Started',
       login: 'Login',

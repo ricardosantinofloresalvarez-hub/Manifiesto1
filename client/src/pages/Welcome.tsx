@@ -36,9 +36,9 @@ export default function Welcome() {
                 <Plane className="h-8 w-8 text-primary" />
               </div>
             </div>
-            <h3 className="font-semibold mb-2">Organiza tus Viajes</h3>
+            <h3 className="font-semibold mb-2">{t('welcomeFeature1Title')}</h3>
             <p className="text-sm text-muted-foreground">
-              Planifica itinerarios completos con vuelos, hoteles y actividades
+              {t('welcomeFeature1Desc')}
             </p>
           </div>
 
@@ -48,9 +48,9 @@ export default function Welcome() {
                 <CheckCircle2 className="h-8 w-8 text-primary" />
               </div>
             </div>
-            <h3 className="font-semibold mb-2">Gestiona tu Equipaje</h3>
+            <h3 className="font-semibold mb-2">{t('welcomeFeature2Title')}</h3>
             <p className="text-sm text-muted-foreground">
-              Registra cada artículo con fotos, valores y números de serie
+              {t('welcomeFeature2Desc')}
             </p>
           </div>
 
@@ -60,9 +60,9 @@ export default function Welcome() {
                 <Shield className="h-8 w-8 text-primary" />
               </div>
             </div>
-            <h3 className="font-semibold mb-2">Certificación Verificable</h3>
+            <h3 className="font-semibold mb-2">{t('welcomeFeature3Title')}</h3>
             <p className="text-sm text-muted-foreground">
-              Genera PDFs certificados con códigos QR para verificación
+              {t('welcomeFeature3Desc')}
             </p>
           </div>
         </div>
