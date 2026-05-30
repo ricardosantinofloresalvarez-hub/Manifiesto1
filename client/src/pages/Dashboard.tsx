@@ -75,6 +75,7 @@ export default function Dashboard() {
               return { ...trip, itemCount: 0 };
             }
             const luggageList = await luggageRes.json();
+            let certifiedCount = luggageList.filter((lug: any) => lug.certificateHash).length;
 
             // Sumar artículos de todas las maletas
             let totalItems = 0;
@@ -88,7 +89,7 @@ export default function Dashboard() {
               }
             }
 
-            return { ...trip, itemCount: totalItems };
+            return { ...trip, itemCount: totalItems, certifiedCount };
           } catch (error) {
             console.error(`Error calculating items for trip ${trip.id}:`, error);
             return { ...trip, itemCount: 0 };
@@ -286,7 +287,7 @@ export default function Dashboard() {
             </div>
             <div className="bg-muted/30 rounded-lg p-4 text-center">
               <p className="text-2xl font-bold text-primary">
-                {tripsWithCounts.filter((trip: any) => trip.verified).length}
+                {tripsWithCounts.reduce((acc: number, trip: any) => acc + (trip.certifiedCount || 0), 0)}
               </p>
               <p className="text-xs text-muted-foreground mt-1">{t('certified')}</p>
             </div>
