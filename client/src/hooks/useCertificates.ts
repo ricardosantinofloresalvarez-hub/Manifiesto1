@@ -23,9 +23,10 @@ export function useGenerateLuggageCertificate() {
           const data = await res.json();
           toast({
             title: lang === 'en' ? 'No credits available' : 'Sin créditos disponibles',
-            description: data.error || (lang === 'en' ? 'Purchase a plan to continue.' : 'Adquiere un plan para continuar.'),
+            description: data.error || (lang === 'en' ? 'Click here to buy credits.' : 'Haz clic aquí para comprar créditos.'),
             variant: "destructive",
           });
+          setTimeout(() => { window.location.href = '/planes'; }, 2000);
           throw new Error('No credits');
         }
 
