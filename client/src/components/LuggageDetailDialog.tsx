@@ -339,7 +339,7 @@ export default function LuggageDetailDialog({ luggage, trip, user, open, onOpenC
                   />
                   <div className="flex gap-2">
                     <button
-                      onClick={() => { setDictatedText(transcript); setEditingItem(null); setShowForm(true); setShowDictatePanel(false); resetTranscript(); }}
+                      onClick={() => { const text = transcript; setDictatedText(text); setEditingItem(null); setShowDictatePanel(false); resetTranscript(); setTimeout(() => setShowForm(true), 50); }}
                       className="flex-1 py-2 rounded-lg text-sm font-bold text-gray-900"
                       style={{ background: "#4FC3F7" }}
                     >
@@ -382,7 +382,7 @@ export default function LuggageDetailDialog({ luggage, trip, user, open, onOpenC
           open={showForm} 
           onOpenChange={(open) => {
             setShowForm(open);
-            if (!open) setEditingItem(null);
+            if (!open) { setEditingItem(null); setDictatedText(''); }
           }}
           onSuccess={() => {
             const key = `generate_prompt_shown_${luggage.id}`;
