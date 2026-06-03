@@ -11,6 +11,7 @@ import { useToast } from "@/hooks/use-toast";
 import { ToastAction } from "@/components/ui/toast";
 import ManifestItemCard from "@/components/ManifestItemCard";
 import ManifestItemForm from "@/components/ManifestItemForm";
+import { useSpeechRecognition } from "@/hooks/useSpeechRecognition";
 
 const CLOUDINARY_CLOUD_NAME = "drjrozqs8";
 const CLOUDINARY_UPLOAD_PRESET = "luggage_photos";
@@ -28,6 +29,9 @@ export default function LuggageDetailDialog({ luggage, trip, user, open, onOpenC
   const [uploadingClosed, setUploadingClosed] = useState(false);
   const [showGeneratePrompt, setShowGeneratePrompt] = useState(false);
   const [showVerifyPrompt, setShowVerifyPrompt] = useState(false);
+  const [showDictatePanel, setShowDictatePanel] = useState(false);
+  const [dictatedText, setDictatedText] = useState("");
+  const { isListening, transcript, error: speechError, isSupported, startListening, stopListening, resetTranscript } = useSpeechRecognition();
 
   const openPhotoInputRef = useRef<HTMLInputElement>(null);
   const closedPhotoInputRef = useRef<HTMLInputElement>(null);
@@ -184,6 +188,15 @@ export default function LuggageDetailDialog({ luggage, trip, user, open, onOpenC
               >
                 <Plus className="h-4 w-4 mr-1" /> {t('addItem')}
               </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => { setShowDictatePanel(true); resetTranscript(); setDictatedText(""); }}
+                className="border-zinc-700"
+                title="Dictar artículo por voz"
+              >
+                🎙️ {isListening ? "Escuchando..." : "Dictar"}
+              </Button>
               <Button 
                 size="sm" 
                 onClick={handleDownload} 
@@ -291,6 +304,61 @@ export default function LuggageDetailDialog({ luggage, trip, user, open, onOpenC
             </div>
           )}
 
+          {showDictatePanel && (
+            <div className="rounded-xl p-4 space-y-3 bg-zinc-900 border border-zinc-700">
+              <p className="text-sm text-zinc-300 font-medium">🎙️ Dictar artículo</p>
+              {!isListening && !dictatedText && (
+                <button
+                  onClick={startListening}
+                  disabled={!isSupported}
+                  className="w-full py-3 rounded-lg text-sm font-bold text-gray-900"
+                  style={{ background: "#4FC3F7" }}
+                >
+                  {isSupported ? "Presiona y habla" : "No disponible en este navegador"}
+                </button>
+              )}
+              {isListening && (
+                <div className="text-center space-y-2">
+                  <div className="flex justify-center gap-1">
+                    {[0,1,2].map(i => (
+                      <div key={i} className="w-2 h-6 bg-blue-400 rounded animate-bounce" style={{ animationDelay: `${i * 0.15}s` }} />
+                    ))}
+                  </div>
+                  <p className="text-xs text-zinc-400">Escuchando...</p>
+                  <button onClick={stopListening} className="text-xs text-red-400 underline">Detener</button>
+                </div>
+              )}
+              {transcript && !dictatedText && (
+                <div className="space-y-2">
+                  <p className="text-xs text-zinc-400">Escuché:</p>
+                  <input
+                    className="w-full bg-zinc-800 text-white rounded-lg px-3 py-2 text-sm border border-zinc-600"
+                    value={transcript}
+                    onChange={(e) => {}}
+                    readOnly
+                  />
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => { setDictatedText(transcript); setEditingItem(null); setShowForm(true); setShowDictatePanel(false); resetTranscript(); }}
+                      className="flex-1 py-2 rounded-lg text-sm font-bold text-gray-900"
+                      style={{ background: "#4FC3F7" }}
+                    >
+                      ✓ Usar este texto
+                    </button>
+                    <button
+                      onClick={() => { resetTranscript(); startListening(); }}
+                      className="flex-1 py-2 rounded-lg text-sm text-zinc-300 border border-zinc-600"
+                    >
+                      🔄 Repetir
+                    </button>
+                  </div>
+                </div>
+              )}
+              {speechError && <p className="text-xs text-red-400">{speechError}</p>}
+              <button onClick={() => { setShowDictatePanel(false); resetTranscript(); }} className="text-xs text-zinc-500 underline">Cancelar</button>
+            </div>
+          )}
+
           <ScrollArea className="h-[300px] pr-4">
             <div className="space-y-2">
               {items?.map((item: any) => (
@@ -310,6 +378,7 @@ export default function LuggageDetailDialog({ luggage, trip, user, open, onOpenC
         <ManifestItemForm 
           luggageId={luggage.id} 
           item={editingItem}
+          initialName={dictatedText || undefined}
           open={showForm} 
           onOpenChange={(open) => {
             setShowForm(open);

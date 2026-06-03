@@ -58,6 +58,7 @@ interface ManifestItemFormProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSuccess?: () => void;
+  initialName?: string;
 }
 
 export default function ManifestItemForm({
@@ -66,6 +67,7 @@ export default function ManifestItemForm({
   open,
   onOpenChange,
   onSuccess,
+  initialName,
 }: ManifestItemFormProps) {
   const { toast } = useToast();
   const { t } = useTranslation();
@@ -83,13 +85,13 @@ export default function ManifestItemForm({
   const updateMutation = useUpdateManifestItem();
 
   const isEditing = !!item;
-  const [showCustomName, setShowCustomName] = useState(false);
+  const [showCustomName, setShowCustomName] = useState(!!initialName);
   const [showCustomBrand, setShowCustomBrand] = useState(false);
 
   const form = useForm<z.infer<typeof manifestItemFormSchema>>({
     resolver: zodResolver(manifestItemFormSchema),
     defaultValues: {
-      name: '',
+      name: initialName || '',
       category: '',
       brand: '',
       quantity: 1,
