@@ -114,6 +114,18 @@ export default function ManifestItemForm({
   const selectedCategory = form.watch('category') as ItemCategory;
 
   useEffect(() => {
+    if (initialCategory && !item) {
+      form.setValue('category', initialCategory);
+    }
+    if (initialValue && !item) {
+      form.setValue('value', initialValue);
+    }
+    if (initialQuantity && !item) {
+      form.setValue('quantity', initialQuantity);
+    }
+  }, [initialCategory, initialValue, initialQuantity]);
+
+  useEffect(() => {
     if (item) {
       const categoryData = ITEM_CATEGORIES[item.category as ItemCategory];
       const isNameInSuggestions = categoryData?.suggestions.includes(item.name || '');
