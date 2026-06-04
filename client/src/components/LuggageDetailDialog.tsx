@@ -31,7 +31,7 @@ export default function LuggageDetailDialog({ luggage, trip, user, open, onOpenC
   const [showVerifyPrompt, setShowVerifyPrompt] = useState(false);
   const [showDictatePanel, setShowDictatePanel] = useState(false);
   const [dictatedText, setDictatedText] = useState("");
-  const dictatedTextRef = useRef("");
+  const dictatedDataRef = useRef<any>({ name: "", category: "", brand: "", quantity: 1, value: null });
   const { isListening, transcript, error: speechError, isSupported, startListening, stopListening, resetTranscript } = useSpeechRecognition();
 
   const openPhotoInputRef = useRef<HTMLInputElement>(null);
@@ -340,7 +340,7 @@ export default function LuggageDetailDialog({ luggage, trip, user, open, onOpenC
                   />
                   <div className="flex gap-2">
                     <button
-                      onClick={() => { const text = transcript; dictatedTextRef.current = text; setDictatedText(text); setEditingItem(null); setShowDictatePanel(false); resetTranscript(); setShowForm(true); }}
+                      onClick={async () => { const text = transcript; try { const res = await fetch('/api/dictate', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ text }) }); const parsed = await res.json(); dictatedDataRef.current.name = parsed.name || text; setDictatedText(parsed.name || text); if (parsed.category) dictatedDataRef.current.category = parsed.category; if (parsed.brand) dictatedDataRef.current.brand = parsed.brand; if (parsed.quantity) dictatedDataRef.current.quantity = parsed.quantity; if (parsed.value) dictatedDataRef.current.value = parsed.value; } catch { dictatedDataRef.current.name = text; setDictatedText(text); } setEditingItem(null); setShowDictatePanel(false); resetTranscript(); setShowForm(true); }}
                       className="flex-1 py-2 rounded-lg text-sm font-bold text-gray-900"
                       style={{ background: "#4FC3F7" }}
                     >
@@ -379,11 +379,11 @@ export default function LuggageDetailDialog({ luggage, trip, user, open, onOpenC
         <ManifestItemForm 
           luggageId={luggage.id} 
           item={editingItem}
-          initialName={dictatedTextRef.current || undefined}
+          initialName={dictatedDataRef.current.name || undefined}
           open={showForm} 
           onOpenChange={(open) => {
             setShowForm(open);
-            if (!open) { setEditingItem(null); setDictatedText(''); dictatedTextRef.current = ''; }
+            if (!open) { setEditingItem(null); setDictatedText(''); dictatedDataRef.current = { name: '', category: '', brand: '', quantity: 1, value: null }; }
           }}
           onSuccess={() => {
             const key = `generate_prompt_shown_${luggage.id}`;

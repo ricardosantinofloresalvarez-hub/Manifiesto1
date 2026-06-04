@@ -74,6 +74,42 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // 4. RUTA DE SALUD (Para verificar que el servidor corre)
+
+  app.post("/api/dictate", async (req, res) => {
+    try {
+      const { text } = req.body;
+      if (!text) return res.status(400).json({ error: "No text provided" });
+
+      const Anthropic = (await import("@anthropic-ai/sdk")).default;
+      const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+
+      const message = await client.messages.create({
+        model: "claude-haiku-4-5-20251001",
+        max_tokens: 300,
+        messages: [{
+          role: "user",
+          content: `Extrae la información de este texto dictado sobre un artículo de equipaje: "${text}"
+          
+Responde SOLO con JSON válido, sin explicaciones:
+{
+  "name": "nombre del artículo",
+  "category": "una de: clothing|electronics|footwear|accessories|documents|medications|other",
+  "brand": "marca si se menciona, sino null",
+  "quantity": número entero,
+  "value": número decimal si se menciona precio, sino null
+}`
+        }]
+      });
+
+      const responseText = message.content[0].type === 'text' ? message.content[0].text : '';
+      const clean = responseText.replace(/\`\`\`json|\`\`\`/g, '').trim();
+      const parsed = JSON.parse(clean);
+      res.json(parsed);
+    } catch (error) {
+      console.error("Dictate error:", error);
+      res.status(500).json({ error: "Error procesando dictado" });
+    }
+  });
   app.get("/api/health", (_req, res) => {    res.json({ status: "ok" });
   });
   return createServer(app);

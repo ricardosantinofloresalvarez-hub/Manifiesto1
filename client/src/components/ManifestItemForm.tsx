@@ -59,6 +59,10 @@ interface ManifestItemFormProps {
   onOpenChange: (open: boolean) => void;
   onSuccess?: () => void;
   initialName?: string;
+  initialCategory?: string;
+  initialBrand?: string;
+  initialQuantity?: number;
+  initialValue?: number | null;
 }
 
 export default function ManifestItemForm({
@@ -68,6 +72,10 @@ export default function ManifestItemForm({
   onOpenChange,
   onSuccess,
   initialName,
+  initialCategory,
+  initialBrand,
+  initialQuantity,
+  initialValue,
 }: ManifestItemFormProps) {
   const { toast } = useToast();
   const { t } = useTranslation();
@@ -92,10 +100,10 @@ export default function ManifestItemForm({
     resolver: zodResolver(manifestItemFormSchema),
     defaultValues: {
       name: initialName || '',
-      category: '',
-      brand: '',
-      quantity: 1,
-      value: undefined,
+      category: initialCategory || '',
+      brand: initialBrand || '',
+      quantity: initialQuantity || 1,
+      value: initialValue || undefined,
       serialNumber: '',
       notes: '',
     },
