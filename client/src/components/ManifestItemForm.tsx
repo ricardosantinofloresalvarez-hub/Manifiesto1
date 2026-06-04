@@ -115,15 +115,17 @@ export default function ManifestItemForm({
 
   useEffect(() => {
     if (initialCategory && !item) {
-      form.setValue('category', initialCategory);
+      form.reset({
+        name: initialName || '',
+        category: initialCategory || '',
+        brand: initialBrand || '',
+        quantity: initialQuantity || 1,
+        value: initialValue || undefined,
+        serialNumber: '',
+        notes: '',
+      });
     }
-    if (initialValue && !item) {
-      form.setValue('value', initialValue);
-    }
-    if (initialQuantity && !item) {
-      form.setValue('quantity', initialQuantity);
-    }
-  }, [initialCategory, initialValue, initialQuantity]);
+  }, [initialCategory]);
 
   useEffect(() => {
     if (item) {
