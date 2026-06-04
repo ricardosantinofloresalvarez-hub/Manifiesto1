@@ -31,6 +31,7 @@ export default function LuggageDetailDialog({ luggage, trip, user, open, onOpenC
   const [showVerifyPrompt, setShowVerifyPrompt] = useState(false);
   const [showDictatePanel, setShowDictatePanel] = useState(false);
   const [dictatedText, setDictatedText] = useState("");
+  const dictatedTextRef = useRef("");
   const { isListening, transcript, error: speechError, isSupported, startListening, stopListening, resetTranscript } = useSpeechRecognition();
 
   const openPhotoInputRef = useRef<HTMLInputElement>(null);
@@ -339,7 +340,7 @@ export default function LuggageDetailDialog({ luggage, trip, user, open, onOpenC
                   />
                   <div className="flex gap-2">
                     <button
-                      onClick={() => { const text = transcript; setDictatedText(text); setEditingItem(null); setShowDictatePanel(false); resetTranscript(); setTimeout(() => setShowForm(true), 50); }}
+                      onClick={() => { const text = transcript; dictatedTextRef.current = text; setDictatedText(text); setEditingItem(null); setShowDictatePanel(false); resetTranscript(); setShowForm(true); }}
                       className="flex-1 py-2 rounded-lg text-sm font-bold text-gray-900"
                       style={{ background: "#4FC3F7" }}
                     >
@@ -378,11 +379,11 @@ export default function LuggageDetailDialog({ luggage, trip, user, open, onOpenC
         <ManifestItemForm 
           luggageId={luggage.id} 
           item={editingItem}
-          initialName={dictatedText || undefined}
+          initialName={dictatedTextRef.current || undefined}
           open={showForm} 
           onOpenChange={(open) => {
             setShowForm(open);
-            if (!open) { setEditingItem(null); setDictatedText(''); }
+            if (!open) { setEditingItem(null); setDictatedText(''); dictatedTextRef.current = ''; }
           }}
           onSuccess={() => {
             const key = `generate_prompt_shown_${luggage.id}`;
