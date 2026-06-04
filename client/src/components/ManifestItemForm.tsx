@@ -240,6 +240,17 @@ export default function ManifestItemForm({
             />
 
             {/* NOMBRE DEL ARTÍCULO (con sugerencias) */}
+            {initialName && !selectedCategory && (
+              <div className="space-y-2">
+                <label className="text-sm font-medium">{t('itemNameRequired')}</label>
+                <input
+                  className="w-full border rounded-md px-3 py-2 text-sm bg-background"
+                  value={initialName}
+                  readOnly
+                />
+                <p className="text-xs text-muted-foreground">Selecciona una categoría para continuar</p>
+              </div>
+            )}
             {selectedCategory && (
               <>
                 <FormField

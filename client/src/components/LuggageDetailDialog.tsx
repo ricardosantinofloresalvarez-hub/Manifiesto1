@@ -177,7 +177,7 @@ export default function LuggageDetailDialog({ luggage, trip, user, open, onOpenC
               </p>
               <p className="text-zinc-400 text-sm">{items?.length || 0} {t('items')}</p>
             </div>
-            <div className="flex gap-2">
+            <div className="flex flex-wrap gap-2">
               <Button 
                 variant="outline" 
                 size="sm" 
