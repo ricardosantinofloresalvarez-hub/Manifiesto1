@@ -11,6 +11,7 @@ import { useToast } from "@/hooks/use-toast";
 import { ToastAction } from "@/components/ui/toast";
 import ManifestItemCard from "@/components/ManifestItemCard";
 import ManifestItemForm from "@/components/ManifestItemForm";
+import DictateItemForm from "@/components/DictateItemForm";
 import { useSpeechRecognition } from "@/hooks/useSpeechRecognition";
 
 const CLOUDINARY_CLOUD_NAME = "drjrozqs8";
@@ -30,6 +31,7 @@ export default function LuggageDetailDialog({ luggage, trip, user, open, onOpenC
   const [showGeneratePrompt, setShowGeneratePrompt] = useState(false);
   const [showVerifyPrompt, setShowVerifyPrompt] = useState(false);
   const [showDictatePanel, setShowDictatePanel] = useState(false);
+  const [showDictateForm, setShowDictateForm] = useState(false);
   const [dictatedText, setDictatedText] = useState("");
   const dictatedDataRef = useRef<any>({ name: "", category: "", brand: "", quantity: 1, value: null });
   const { isListening, transcript, error: speechError, isSupported, startListening, stopListening, resetTranscript } = useSpeechRecognition();
@@ -340,7 +342,7 @@ export default function LuggageDetailDialog({ luggage, trip, user, open, onOpenC
                   />
                   <div className="flex gap-2">
                     <button
-                      onClick={async () => { const text = transcript; try { const res = await fetch('/api/dictate', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ text }) }); const parsed = await res.json(); dictatedDataRef.current.name = parsed.name || text; setDictatedText(parsed.name || text); if (parsed.category) dictatedDataRef.current.category = parsed.category; if (parsed.brand) dictatedDataRef.current.brand = parsed.brand; if (parsed.quantity) dictatedDataRef.current.quantity = parsed.quantity; if (parsed.value) dictatedDataRef.current.value = parsed.value; } catch { dictatedDataRef.current.name = text; setDictatedText(text); } setEditingItem(null); setShowDictatePanel(false); resetTranscript(); setShowForm(true); }}
+                      onClick={async () => { const text = transcript; try { const res = await fetch('/api/dictate', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ text }) }); const parsed = await res.json(); dictatedDataRef.current = { name: parsed.name || text, category: parsed.category || '', brand: parsed.brand || '', quantity: parsed.quantity || 1, value: parsed.value || null }; } catch { dictatedDataRef.current = { name: text, category: '', brand: '', quantity: 1, value: null }; } setShowDictatePanel(false); resetTranscript(); setShowDictateForm(true); }}
                       className="flex-1 py-2 rounded-lg text-sm font-bold text-gray-900"
                       style={{ background: "#4FC3F7" }}
                     >
@@ -374,6 +376,19 @@ export default function LuggageDetailDialog({ luggage, trip, user, open, onOpenC
           </ScrollArea>
         </div>
       </DialogContent>
+
+      {showDictateForm && (
+        <DictateItemForm
+          luggageId={luggage.id}
+          open={showDictateForm}
+          onOpenChange={(open) => { setShowDictateForm(open); if (!open) dictatedDataRef.current = { name: '', category: '', brand: '', quantity: 1, value: null }; }}
+          onSuccess={() => {
+            const key = `generate_prompt_shown_${luggage.id}`;
+            if (!localStorage.getItem(key)) { localStorage.setItem(key, 'true'); setShowGeneratePrompt(true); }
+          }}
+          initialData={dictatedDataRef.current}
+        />
+      )}
 
       {showForm && (
         <ManifestItemForm 
