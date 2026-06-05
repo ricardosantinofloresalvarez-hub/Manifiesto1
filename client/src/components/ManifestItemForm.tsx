@@ -219,6 +219,7 @@ export default function ManifestItemForm({
                 <FormItem>
                   <FormLabel>{t('categoryRequired')}</FormLabel>
                   <Select 
+                    key={field.value}
                     onValueChange={(value) => {
                       field.onChange(value);
                       form.setValue('name', '');
