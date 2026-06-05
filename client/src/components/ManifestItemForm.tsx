@@ -125,7 +125,7 @@ export default function ManifestItemForm({
         notes: '',
       });
     }
-  }, [initialCategory]);
+  }, []);
 
   useEffect(() => {
     if (item) {
