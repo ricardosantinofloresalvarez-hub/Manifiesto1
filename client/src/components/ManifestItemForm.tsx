@@ -113,19 +113,7 @@ export default function ManifestItemForm({
 
   const selectedCategory = form.watch('category') as ItemCategory;
 
-  useEffect(() => {
-    if (initialCategory && !item) {
-      form.reset({
-        name: initialName || '',
-        category: initialCategory || '',
-        brand: initialBrand || '',
-        quantity: initialQuantity || 1,
-        value: initialValue || undefined,
-        serialNumber: '',
-        notes: '',
-      });
-    }
-  }, []);
+
 
   useEffect(() => {
     if (item) {
@@ -147,15 +135,15 @@ export default function ManifestItemForm({
       setShowCustomBrand(!isBrandInList && !!item.brand);
     } else {
       form.reset({
-        name: '',
-        category: '',
-        brand: '',
-        quantity: 1,
-        value: undefined,
+        name: initialName || '',
+        category: initialCategory || '',
+        brand: initialBrand || '',
+        quantity: initialQuantity || 1,
+        value: initialValue || undefined,
         serialNumber: '',
         notes: '',
       });
-      setShowCustomName(false);
+      setShowCustomName(!!initialName);
       setShowCustomBrand(false);
     }
   }, [item, form]);
