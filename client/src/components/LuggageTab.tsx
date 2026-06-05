@@ -41,7 +41,8 @@ import {
 } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Plus, Briefcase, AlertCircle } from 'lucide-react';
+import { Plus, Briefcase, AlertCircle, Copy } from 'lucide-react';
+import { useTrips } from '@/hooks/useTrips';
 import { useToast } from '@/hooks/use-toast';
 import LuggageCard from '@/components/LuggageCard';
 import LuggageDetailDialog from '@/components/LuggageDetailDialog';
@@ -96,6 +97,9 @@ export default function LuggageTab({ tripId, trip, user }: LuggageTabProps) {
     return t(`color_${colorKey}`, color); // fallback al original si no existe
   });
   const [isCreateOpen, setIsCreateOpen] = useState(false);
+  const [isDuplicateOpen, setIsDuplicateOpen] = useState(false);
+  const [duplicating, setDuplicating] = useState(false);
+  const [sourceTripId, setSourceTripId] = useState('');
   const [editingLuggage, setEditingLuggage] = useState<Luggage | null>(null);
   const [deletingLuggage, setDeletingLuggage] = useState<Luggage | null>(null);
   const [selectedLuggage, setSelectedLuggage] = useState<Luggage | null>(null);
@@ -103,6 +107,30 @@ export default function LuggageTab({ tripId, trip, user }: LuggageTabProps) {
   const [showAddItemsPrompt, setShowAddItemsPrompt] = useState(false);
 
   const { data: luggageList, isLoading, error } = useLuggage(tripId);
+  const storedUser = localStorage.getItem('user');
+  const userId = storedUser ? JSON.parse(storedUser)?.id : null;
+  const { data: allTrips = [] } = useTrips(userId);
+  const otherTrips = allTrips.filter((t: any) => t.id !== tripId);
+
+  const handleDuplicate = async () => {
+    if (!sourceTripId) return;
+    setDuplicating(true);
+    try {
+      const res = await fetch('/api/luggage/duplicate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ sourceTripId, targetTripId: tripId }),
+      });
+      if (!res.ok) throw new Error('Error al duplicar');
+      toast({ title: 'Maletas duplicadas', description: 'Las maletas y artículos fueron copiados correctamente.' });
+      setIsDuplicateOpen(false);
+      setSourceTripId('');
+    } catch (err) {
+      toast({ title: 'Error', description: 'No se pudieron duplicar las maletas', variant: 'destructive' });
+    } finally {
+      setDuplicating(false);
+    }
+  };
   const createMutation = useCreateLuggage();
   const updateMutation = useUpdateLuggage();
   const deleteMutation = useDeleteLuggage();
@@ -226,14 +254,16 @@ export default function LuggageTab({ tripId, trip, user }: LuggageTabProps) {
           <Briefcase className="h-5 w-5" />
           {t('luggage')}
         </h3>
-        <Button
-          size="sm"
-          onClick={() => setIsCreateOpen(true)}
-          data-testid="button-add-luggage"
-        >
-          <Plus className="h-4 w-4 mr-1" />
-          {t('add')}
-        </Button>
+        <div className="flex gap-2">
+          {otherTrips.length > 0 && (
+            <Button size="sm" variant="outline" onClick={() => setIsDuplicateOpen(true)}>
+              <Copy className="h-4 w-4 mr-1" /> Duplicar
+            </Button>
+          )}
+          <Button size="sm" onClick={() => setIsCreateOpen(true)} data-testid="button-add-luggage">
+            <Plus className="h-4 w-4 mr-1" />{t('add')}
+          </Button>
+        </div>
       </div>
 
       {isLoading ? (
@@ -272,6 +302,35 @@ export default function LuggageTab({ tripId, trip, user }: LuggageTabProps) {
           </Button>
         </div>
       )}
+
+      <Dialog open={isDuplicateOpen} onOpenChange={setIsDuplicateOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Duplicar maletas de viaje anterior</DialogTitle>
+            <DialogDescription>
+              Selecciona un viaje para copiar sus maletas y artículos a este viaje.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <Select value={sourceTripId} onValueChange={setSourceTripId}>
+              <SelectTrigger><SelectValue placeholder="Selecciona un viaje" /></SelectTrigger>
+              <SelectContent>
+                {otherTrips.map((trip: any) => (
+                  <SelectItem key={trip.id} value={trip.id}>
+                    {trip.title} — {trip.destination}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsDuplicateOpen(false)} disabled={duplicating}>{t('cancel')}</Button>
+            <Button onClick={handleDuplicate} disabled={!sourceTripId || duplicating}>
+              {duplicating ? 'Duplicando...' : 'Duplicar maletas'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
         <DialogContent className="max-w-md">

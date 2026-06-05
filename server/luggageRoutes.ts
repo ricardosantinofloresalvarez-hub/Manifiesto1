@@ -378,6 +378,61 @@ router.get("/:luggageId/certificate", async (req, res) => {
          });
 
       // ELIMINAR MALETA
+router.post("/duplicate", async (req, res) => {
+  try {
+    const { sourceTripId, targetTripId } = req.body;
+    if (!sourceTripId || !targetTripId) {
+      return res.status(400).json({ error: "sourceTripId y targetTripId son requeridos" });
+    }
+
+    // Obtener maletas del viaje origen
+    const sourceLuggage = await db.select().from(luggage).where(eq(luggage.tripId, sourceTripId));
+    if (sourceLuggage.length === 0) {
+      return res.status(404).json({ error: "No hay maletas en el viaje origen" });
+    }
+
+    const results = [];
+    for (const bag of sourceLuggage) {
+      // Crear nueva maleta en viaje destino
+      const [newBag] = await db.insert(luggage).values({
+        tripId: targetTripId,
+        nickname: bag.nickname,
+        brand: bag.brand,
+        type: bag.type,
+        size: bag.size,
+        color: bag.color,
+        isSealed: false,
+        isLocked: false,
+      }).returning();
+
+      // Obtener artículos de la maleta origen
+      const sourceItems = await db.select().from(manifestItems).where(eq(manifestItems.luggageId, bag.id));
+
+      // Duplicar artículos en la nueva maleta
+      if (sourceItems.length > 0) {
+        await db.insert(manifestItems).values(
+          sourceItems.map(item => ({
+            luggageId: newBag.id,
+            name: item.name,
+            category: item.category,
+            brand: item.brand,
+            quantity: item.quantity,
+            value: item.value,
+            serialNumber: item.serialNumber,
+            notes: item.notes,
+          }))
+        );
+      }
+      results.push(newBag);
+    }
+
+    res.json({ success: true, duplicated: results.length });
+  } catch (error) {
+    console.error("Error duplicating luggage:", error);
+    res.status(500).json({ error: "Error al duplicar maletas" });
+  }
+});
+
       router.delete("/:id", async (req, res) => {
       try {
       const { id } = req.params;
