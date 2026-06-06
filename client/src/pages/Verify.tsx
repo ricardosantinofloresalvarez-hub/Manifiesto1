@@ -79,11 +79,18 @@ export default function Verify() {
 
       <div className="p-4 max-w-2xl mx-auto">
         {!verificationResult ? (
-          <Card className="p-6">
-            <h2 className="text-xl font-semibold mb-4">{t('verifyManifest')}</h2>
-            <p className="text-muted-foreground mb-6">
-              {t('enterHashDescription')}
+          <div className="space-y-4">
+          <div className="text-center mb-6">
+            <div className="w-20 h-20 mx-auto mb-4 rounded-full bg-primary/10 flex items-center justify-center">
+              <span className="text-4xl">🔍</span>
+            </div>
+            <h2 className="text-xl font-bold mb-2">Verificar autenticidad</h2>
+            <p className="text-sm text-muted-foreground">
+              Esta página es para verificar certificados de equipaje generados con Manifiesto.app.
+              Si tienes un PDF de certificado, escanea el código QR o copia el hash que aparece al final del documento y pégalo aquí.
             </p>
+          </div>
+          <Card className="p-6">
             <div className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="hash">{t('enterVerificationHash')}</Label>
@@ -106,6 +113,7 @@ export default function Verify() {
               </Button>
             </div>
           </Card>
+          </div>
         ) : (
           <>
             <VerificationResult
