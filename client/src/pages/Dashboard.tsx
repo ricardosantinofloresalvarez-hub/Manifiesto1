@@ -215,7 +215,7 @@ export default function Dashboard() {
       <div className="p-4 max-w-7xl mx-auto">
         <div className="mb-6">
         {/* Banner de créditos */}
-        {user?.manifestCredits !== undefined && user.manifestCredits < 10 && (
+        {user?.manifestCredits !== undefined && (
           <div className="mb-4 flex items-center justify-between bg-primary/5 border border-primary/20 rounded-lg px-4 py-3">
             <p className="text-sm text-muted-foreground">🎟️ {t("bannerCredits", { count: user.manifestCredits })}</p>
             <button
