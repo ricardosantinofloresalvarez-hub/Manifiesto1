@@ -9,6 +9,7 @@ export default function BottomNavigation() {
   const navItems = [
     { path: '/dashboard', icon: Home, label: t('trips') },
     { path: '/manifests', icon: FileText, label: t('manifests') },
+    { path: '/verify', icon: Shield, label: t('verify') },
     { path: '/profile', icon: User, label: t('profile') },
   ];
 
