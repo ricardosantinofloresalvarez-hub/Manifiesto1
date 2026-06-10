@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Package, FileText, Plus, Camera, Loader2, Check, QrCode } from "lucide-react";
 import { QRCodeSVG } from "qrcode.react";
+import RecoveryLabel from "@/components/RecoveryLabel";
 import { useManifestItems, useDeleteManifestItem } from "@/hooks/useManifestItems";
 import { useGenerateLuggageCertificate } from "@/hooks/useCertificates";
 import { useToast } from "@/hooks/use-toast";
@@ -233,7 +234,7 @@ export default function LuggageDetailDialog({ luggage, trip, user, open, onOpenC
                 <div className="flex-1 space-y-1">
                   <p className="text-xs text-zinc-400">Si alguien encuentra tu maleta y escanea este código, recibirás una notificación inmediata.</p>
                   <button
-                    onClick={() => window.print()}
+                    onClick={() => window.open(`/label/${luggage.recoveryToken}`, '_blank')}
                     className="text-xs text-blue-400 underline"
                   >
                     Imprimir etiqueta
