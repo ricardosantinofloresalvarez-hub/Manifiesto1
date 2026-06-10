@@ -16,7 +16,9 @@ router.get("/", async (req, res) => {
 });
 
 router.post("/", async (req, res) => {
-  const [newItem] = await db.insert(luggage).values(req.body).returning();
+  const crypto = await import("crypto");
+  const recoveryToken = crypto.randomBytes(16).toString("hex");
+  const [newItem] = await db.insert(luggage).values({ ...req.body, recoveryToken }).returning();
   res.json(newItem);
 });
 

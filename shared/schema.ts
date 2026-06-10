@@ -30,6 +30,7 @@ export const trips = pgTable("trips", {
   notes: text("notes"),
   imageUrl: text("image_url"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
+  recoveryToken: text("recovery_token").unique(),
 });
 
 export const insertTripSchema = createInsertSchema(trips).omit({

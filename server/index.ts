@@ -82,6 +82,78 @@ app.use("/api/luggage", luggageRoutes);
 app.use("/api/auth", authRoutes);
 app.use("/api/trips", tripRoutes);
 app.use("/api/travelers", travelerRoutes);
+
+app.get("/api/found/:token", async (req, res) => {
+  try {
+    const { token } = req.params;
+    const { db } = await import("./db.js");
+    const { luggage, trips, users } = await import("../shared/schema.js");
+    const { eq } = await import("drizzle-orm");
+    
+    const result = await db.select({
+      luggageId: luggage.id,
+      nickname: luggage.nickname,
+      type: luggage.type,
+      color: luggage.color,
+      tripId: luggage.tripId,
+    }).from(luggage).where(eq(luggage.recoveryToken, token));
+    
+    if (!result.length) return res.status(404).json({ error: "No encontrado" });
+    res.json({ found: true, luggage: result[0] });
+  } catch (error) {
+    console.error("Found error:", error);
+    res.status(500).json({ error: "Error del servidor" });
+  }
+});
+
+app.post("/api/found/:token/report", async (req, res) => {
+  try {
+    const { token } = req.params;
+    const { message } = req.body;
+    const { db } = await import("./db.js");
+    const { luggage, trips, users } = await import("../shared/schema.js");
+    const { eq } = await import("drizzle-orm");
+    const { Resend } = await import("resend");
+    
+    const result = await db.select({
+      luggageId: luggage.id,
+      nickname: luggage.nickname,
+      tripId: luggage.tripId,
+    }).from(luggage).where(eq(luggage.recoveryToken, token));
+    
+    if (!result.length) return res.status(404).json({ error: "No encontrado" });
+    
+    const bag = result[0];
+    
+    // Obtener email del dueño
+    const tripResult = await db.select({ userId: trips.userId }).from(trips).where(eq(trips.id, bag.tripId));
+    if (!tripResult.length) return res.status(404).json({ error: "Viaje no encontrado" });
+    
+    const userResult = await db.select({ email: users.email, name: users.name }).from(users).where(eq(users.id, tripResult[0].userId));
+    if (!userResult.length) return res.status(404).json({ error: "Usuario no encontrado" });
+    
+    const owner = userResult[0];
+    const resend = new Resend(process.env.RESEND_API_KEY);
+    
+    await resend.emails.send({
+      from: "noreply@manifiesto.app",
+      to: owner.email,
+      subject: "🧳 Alguien encontró tu maleta",
+      html: `
+        <h2>Buenas noticias</h2>
+        <p>Alguien escaneó el código QR de tu maleta <strong>${bag.nickname || "sin nombre"}</strong>.</p>
+        <p><strong>Hora:</strong> ${new Date().toLocaleString("es-ES")}</p>
+        ${message ? `<p><strong>Mensaje:</strong> ${message}</p>` : ""}
+        <p>Entra a <a href="https://manifiesto.app">manifiesto.app</a> para más detalles.</p>
+      `
+    });
+    
+    res.json({ success: true });
+  } catch (error) {
+    console.error("Report error:", error);
+    res.status(500).json({ error: "Error del servidor" });
+  }
+});
 app.post("/api/dictate", async (req, res) => {
   try {
     const { text } = req.body;
