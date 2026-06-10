@@ -4,7 +4,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { createPortal } from "react-dom";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Package, FileText, Plus, Camera, Loader2, Check } from "lucide-react";
+import { Package, FileText, Plus, Camera, Loader2, Check, QrCode } from "lucide-react";
+import { QRCodeSVG } from "qrcode.react";
 import { useManifestItems, useDeleteManifestItem } from "@/hooks/useManifestItems";
 import { useGenerateLuggageCertificate } from "@/hooks/useCertificates";
 import { useToast } from "@/hooks/use-toast";
@@ -215,6 +216,32 @@ export default function LuggageDetailDialog({ luggage, trip, user, open, onOpenC
               </Button>
             </div>
           </div>
+
+          {luggage.recoveryToken && (
+            <div className="rounded-xl p-4 bg-zinc-900 border border-zinc-700 space-y-3">
+              <div className="flex items-center gap-2">
+                <QrCode className="h-4 w-4 text-blue-400" />
+                <p className="text-sm text-zinc-300 font-medium">QR de Recuperación</p>
+              </div>
+              <div className="flex items-center gap-4">
+                <div className="bg-white p-2 rounded-lg">
+                  <QRCodeSVG
+                    value={`https://manifiesto.app/found/${luggage.recoveryToken}`}
+                    size={100}
+                  />
+                </div>
+                <div className="flex-1 space-y-1">
+                  <p className="text-xs text-zinc-400">Si alguien encuentra tu maleta y escanea este código, recibirás una notificación inmediata.</p>
+                  <button
+                    onClick={() => window.print()}
+                    className="text-xs text-blue-400 underline"
+                  >
+                    Imprimir etiqueta
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
 
           {showGeneratePrompt && (
             <div className="rounded-xl p-3 mb-2 flex flex-col gap-2" style={{ background: "rgba(79,195,247,0.12)", border: "1px solid rgba(79,195,247,0.3)" }}>
