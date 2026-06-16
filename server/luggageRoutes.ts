@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { db } from "./db";
 import { luggage, manifestItems, trips, users } from "@shared/schema";
-import { eq } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 import crypto from "crypto";
 import PDFDocument from "pdfkit";
 import QRCode from "qrcode";
@@ -12,14 +12,34 @@ const router = Router();
 router.get("/", async (req, res) => {
   const { tripId } = req.query;
   const results = await db.select().from(luggage).where(eq(luggage.tripId, String(tripId)));
+  // Add recovery token via raw query
+  const ids = results.map(r => r.id);
+  if (ids.length > 0) {
+    const idList = ids.map(id => `'${id}'`).join(',');
+    const tokens = await db.execute(sql.raw(`SELECT id, recovery_token FROM luggage WHERE id IN (${idList})`));
+    const tokenMap: Record<string, string> = {};
+    for (const row of tokens.rows as any[]) {
+      tokenMap[row.id] = row.recovery_token;
+    }
+    const withTokens = results.map(r => ({ ...r, recoveryToken: tokenMap[r.id] || null }));
+    return res.json(withTokens);
+  }
   res.json(results);
 });
 
 router.post("/", async (req, res) => {
-  const crypto = await import("crypto");
-  const recoveryToken = crypto.randomBytes(16).toString("hex");
-  const [newItem] = await db.insert(luggage).values({ ...req.body, recoveryToken }).returning();
-  res.json(newItem);
+  try {
+    const { randomBytes } = await import("crypto");
+    const recoveryToken = randomBytes(16).toString("hex");
+    const [newItem] = await db.insert(luggage).values(req.body).returning();
+    // Update recovery token via raw SQL
+    await db.execute(sql`UPDATE luggage SET recovery_token = ${recoveryToken} WHERE id = ${newItem.id}`);
+    newItem.recoveryToken = recoveryToken;
+    res.json(newItem);
+  } catch (error) {
+    console.error("ERROR CREATING LUGGAGE:", error);
+    res.status(500).json({ error: "Error creando maleta" });
+  }
 });
 
 // CERTIFICADO CON FOTOS

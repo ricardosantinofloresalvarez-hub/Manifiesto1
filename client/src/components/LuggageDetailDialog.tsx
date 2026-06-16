@@ -218,32 +218,6 @@ export default function LuggageDetailDialog({ luggage, trip, user, open, onOpenC
             </div>
           </div>
 
-          {luggage.recoveryToken && (
-            <div className="rounded-xl p-4 bg-zinc-900 border border-zinc-700 space-y-3">
-              <div className="flex items-center gap-2">
-                <QrCode className="h-4 w-4 text-blue-400" />
-                <p className="text-sm text-zinc-300 font-medium">QR de Recuperación</p>
-              </div>
-              <div className="flex items-center gap-4">
-                <div className="bg-white p-2 rounded-lg">
-                  <QRCodeSVG
-                    value={`https://manifiesto.app/found/${luggage.recoveryToken}`}
-                    size={100}
-                  />
-                </div>
-                <div className="flex-1 space-y-1">
-                  <p className="text-xs text-zinc-400">Si alguien encuentra tu maleta y escanea este código, recibirás una notificación inmediata.</p>
-                  <button
-                    onClick={() => window.open(`/label/${luggage.recoveryToken}`, '_blank')}
-                    className="text-xs text-blue-400 underline"
-                  >
-                    Imprimir etiqueta
-                  </button>
-                </div>
-              </div>
-            </div>
-          )}
-
           {showGeneratePrompt && (
             <div className="rounded-xl p-3 mb-2 flex flex-col gap-2" style={{ background: "rgba(79,195,247,0.12)", border: "1px solid rgba(79,195,247,0.3)" }}>
               <p className="text-xs text-white/80">🎉 {t('generatePromptDesc')}</p>
@@ -402,6 +376,30 @@ export default function LuggageDetailDialog({ luggage, trip, user, open, onOpenC
               ))}
             </div>
           </ScrollArea>
+
+          {luggage.recoveryToken && (
+            <div className="rounded-xl p-3 bg-zinc-900 border border-zinc-700 mt-2">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <QrCode className="h-4 w-4 text-blue-400" />
+                  <p className="text-xs text-zinc-300 font-medium">QR de Recuperación</p>
+                </div>
+                <button
+                  onClick={() => window.open(`/label/${luggage.recoveryToken}`, '_blank')}
+                  className="text-xs text-blue-400 underline"
+                >
+                  Imprimir etiqueta
+                </button>
+              </div>
+              <div className="flex items-center gap-3 mt-2">
+                <div className="bg-white p-1.5 rounded-lg">
+                  <QRCodeSVG value={`https://manifiesto.app/found/${luggage.recoveryToken}`} size={70} />
+                </div>
+                <p className="text-xs text-zinc-400">Si alguien encuentra tu maleta y escanea este código, recibirás una notificación inmediata.</p>
+              </div>
+            </div>
+          )}
+
         </div>
       </DialogContent>
 
