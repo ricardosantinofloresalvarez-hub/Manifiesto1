@@ -5,14 +5,14 @@ const resources = {
   es: {
     translation: {
       // Bienvenida y autenticación
-      welcome: 'Bienvenido a Manifiesto',
-      welcomeFeature1Title: 'Organiza tus Viajes',
-      welcomeFeature1Desc: 'Planifica itinerarios completos con vuelos, hoteles y actividades',
-      welcomeFeature2Title: 'Gestiona tu Equipaje',
-      welcomeFeature2Desc: 'Registra cada artículo con fotos, valores y números de serie',
-      welcomeFeature3Title: 'Certificación Verificable',
-      welcomeFeature3Desc: 'Genera PDFs certificados con códigos QR para verificación',
-      welcomeSubtitle: 'Organiza tu equipaje y planifica tus viajes con certificación verificable',
+      welcome: 'Tu respaldo de viaje',
+      welcomeFeature1Title: 'Certifica tu equipaje',
+      welcomeFeature1Desc: 'Registra tus artículos antes de viajar y genera evidencia digital verificable',
+      welcomeFeature2Title: 'Respaldo ante cualquier imprevisto',
+      welcomeFeature2Desc: 'Si la aerolínea pierde tu maleta, tienes pruebas concretas de lo que llevabas',
+      welcomeFeature3Title: 'QR de recuperación',
+      welcomeFeature3Desc: 'Si alguien encuentra tu maleta y escanea el código, recibes una notificación inmediata',
+      welcomeSubtitle: 'Si pierdes tu maleta, podrás probar exactamente lo que llevabas.',
       getStarted: 'Comenzar',
       login: 'Iniciar Sesión',
         register: 'Registrarse',
