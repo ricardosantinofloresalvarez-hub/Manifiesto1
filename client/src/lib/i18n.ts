@@ -5,7 +5,7 @@ const resources = {
   es: {
     translation: {
       // Bienvenida y autenticación
-      welcome: 'Tu respaldo de viaje',
+      welcome: 'Manifiesto',
       welcomeFeature1Title: 'Certifica tu equipaje',
       welcomeFeature1Desc: 'Registra tus artículos antes de viajar y genera evidencia digital verificable',
       welcomeFeature2Title: 'Respaldo ante cualquier imprevisto',

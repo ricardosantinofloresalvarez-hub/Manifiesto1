@@ -80,51 +80,7 @@ export default function Login() {
           </p>
         </div>
 
-        <form onSubmit={handleLogin} className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="name">{t('name')}</Label>
-            <Input
-              id="name"
-              type="text"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder={t('namePlaceholder')}
-              data-testid="input-name"
-              required
-            />
-          </div>
-          <div className="space-y-2">
-             <Label htmlFor="email">{t('email')}</Label>
-            <Input
-              id="email"
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder={t('emailPlaceholder')}
-              data-testid="input-email"
-              required
-            />
-          </div>
-          <Button
-            type="submit"
-            className="w-full"
-            disabled={isLoading}
-            data-testid="button-login"
-          >
-            {isLoading ? t('loggingIn') : t('login')}
-          </Button>
-          </form>
-
-          <div className="relative my-6">
-            <div className="absolute inset-0 flex items-center">
-              <span className="w-full border-t" />
-            </div>
-            <div className="relative flex justify-center text-xs uppercase">
-              <span className="bg-background px-2 text-muted-foreground">{t('orDivider')}</span>
-            </div>
-          </div>
-
-          <Button
+        <Button
             type="button"
             variant="outline"
             className="w-full flex items-center gap-3"
@@ -171,6 +127,45 @@ export default function Login() {
               </div>
             )}
           </div>
+
+          <div className="relative my-6">
+            <div className="absolute inset-0 flex items-center">
+              <span className="w-full border-t" />
+            </div>
+            <div className="relative flex justify-center text-xs uppercase">
+              <span className="bg-background px-2 text-muted-foreground">{t('orDivider')}</span>
+            </div>
+          </div>
+
+          <form onSubmit={handleLogin} className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="name">{t('name')}</Label>
+              <Input
+                id="name"
+                type="text"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder={t('namePlaceholder')}
+                data-testid="input-name"
+                required
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="email">{t('email')}</Label>
+              <Input
+                id="email"
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder={t('emailPlaceholder')}
+                data-testid="input-email"
+                required
+              />
+            </div>
+            <Button type="submit" className="w-full" disabled={isLoading} data-testid="button-login">
+              {isLoading ? t('loggingIn') : t('login')}
+            </Button>
+          </form>
 
           <p className="text-xs text-muted-foreground text-center mt-6">
             {t('demoNotice')}
