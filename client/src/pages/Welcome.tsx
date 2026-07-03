@@ -21,7 +21,7 @@ export default function Welcome() {
         <div className="absolute inset-0 flex flex-col items-center justify-center text-center px-6 text-white">
           
 
-          <h1 className="text-5xl md:text-7xl font-bold mb-4">{t('welcome')}</h1>
+          <h1 className="text-5xl md:text-7xl font-bold mb-4 leading-tight">Bienvenido a<br />Manifiesto</h1>
           <p className="text-lg md:text-xl text-white/90 max-w-2xl">
             {t('welcomeSubtitle')}
           </p>
