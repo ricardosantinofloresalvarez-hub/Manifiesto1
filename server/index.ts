@@ -87,19 +87,12 @@ app.get("/api/found/:token", async (req, res) => {
   try {
     const { token } = req.params;
     const { db } = await import("./db.js");
-    const { luggage, trips, users } = await import("../shared/schema.js");
-    const { eq } = await import("drizzle-orm");
+    const { sql } = await import("drizzle-orm");
     
-    const result = await db.select({
-      luggageId: luggage.id,
-      nickname: luggage.nickname,
-      type: luggage.type,
-      color: luggage.color,
-      tripId: luggage.tripId,
-    }).from(luggage).where(eq(luggage.recoveryToken, token));
+    const result = await db.execute(sql.raw(`SELECT id as "luggageId", nickname, type, color, trip_id as "tripId" FROM luggage WHERE recovery_token = '${token.replace(/'/g, "''")}'`));
     
-    if (!result.length) return res.status(404).json({ error: "No encontrado" });
-    res.json({ found: true, luggage: result[0] });
+    if (!result.rows.length) return res.status(404).json({ error: "No encontrado" });
+    res.json({ found: true, luggage: result.rows[0] });
   } catch (error) {
     console.error("Found error:", error);
     res.status(500).json({ error: "Error del servidor" });
