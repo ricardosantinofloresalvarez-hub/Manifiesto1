@@ -179,7 +179,7 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="min-h-screen pb-20" style={{ background: "linear-gradient(160deg, #0f1923 0%, #1a1410 50%, #0f1923 100%)" }}>
+    <div className="min-h-screen pb-20 bg-background">
       <OnboardingModal />
 
       {/* Modal siguiente paso después de crear viaje */}
