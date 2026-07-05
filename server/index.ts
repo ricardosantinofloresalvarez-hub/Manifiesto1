@@ -137,7 +137,7 @@ app.post("/api/found/:token/report", async (req, res) => {
     
     res.json({ success: true });
   } catch (error) {
-    console.error("Report error:", error);
+    console.error("Report error:", String(error));
     res.status(500).json({ error: "Error del servidor" });
   }
 });
