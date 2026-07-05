@@ -131,7 +131,7 @@ app.post("/api/found/:token/report", async (req, res) => {
         <p>Alguien escaneó el código QR de tu maleta <strong>${bag.nickname || "sin nombre"}</strong>.</p>
         <p><strong>Hora:</strong> ${new Date().toLocaleString("es-ES")}</p>
         ${message ? `<p><strong>Mensaje:</strong> ${message}</p>` : ""}
-        <p>Entra a <a href="https://manifiesto.app">manifiesto.app</a> para más detalles.</p>
+        <p>Si puedes contactar a quien la encontró, responde a este correo o comunícate directamente. Tu maleta puede estar esperándote.</p>
       `
     });
     
