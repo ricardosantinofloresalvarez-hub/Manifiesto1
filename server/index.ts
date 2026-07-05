@@ -119,7 +119,7 @@ app.post("/api/found/:token/report", async (req, res) => {
     const userResult = await db.execute(sqlTag.raw(`SELECT email, name FROM users WHERE id = '${(tripResult.rows[0] as any).userId}'`));
     if (!userResult.rows.length) return res.status(404).json({ error: "Usuario no encontrado" });
     
-    const owner = userResult[0];
+    const owner = userResult.rows[0] as any;
     const resend = new Resend(process.env.RESEND_API_KEY);
     
     await resend.emails.send({
