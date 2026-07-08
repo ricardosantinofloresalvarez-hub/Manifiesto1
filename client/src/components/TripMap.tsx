@@ -92,11 +92,7 @@ export default function TripMap({ destination }: TripMapProps) {
         </div>
       )}
       <div ref={mapRef} style={{ height: loading ? 0 : 350 }} />
-      {!loading && (
-        <div className="px-4 py-2 bg-muted/10 border-t">
-          <p className="text-xs text-muted-foreground text-center">Usa dos dedos para hacer zoom</p>
-        </div>
-      )}
+
     </div>
   );
 }
