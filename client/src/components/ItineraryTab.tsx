@@ -28,14 +28,18 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { Plane, Hotel, Train, UtensilsCrossed, CalendarDays, ChevronDown, Plus, Trash2, Camera } from 'lucide-react';
+import TripMap from '@/components/TripMap';
 
 interface ItineraryTabProps {
   tripId: string;
+  destination?: string;
 }
 
-export default function ItineraryTab({ tripId }: ItineraryTabProps) {
+export default function ItineraryTab({ tripId, destination }: ItineraryTabProps) {
   const { t } = useTranslation();
   const { toast } = useToast();
+
+  const mapSection = destination ? <TripMap destination={destination} /> : null;
 
   const { uploadCertificate, uploading } = useFlightCertificates();
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -123,6 +127,7 @@ export default function ItineraryTab({ tripId }: ItineraryTabProps) {
 
   return (
     <div className="space-y-6">
+      {mapSection}
       <Collapsible defaultOpen>
         <Card className="p-6">
           <CollapsibleTrigger className="flex items-center justify-between w-full">
