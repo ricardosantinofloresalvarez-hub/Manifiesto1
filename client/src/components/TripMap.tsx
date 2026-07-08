@@ -40,7 +40,7 @@ export default function TripMap({ destination }: TripMapProps) {
         }).addTo(map);
 
         // Fetch nearby places
-        const query = `[out:json][timeout:25];(node["amenity"="restaurant"](around:1500,${lat},${lon});node["tourism"="hotel"](around:1500,${lat},${lon});node["tourism"="attraction"](around:1500,${lat},${lon}););out body;`;
+        const query = `[out:json][timeout:25];(node["amenity"="restaurant"](around:800,${lat},${lon});node["tourism"="hotel"](around:800,${lat},${lon});node["tourism"="attraction"](around:800,${lat},${lon}););out body;`;
         const osmRes = await fetch(`https://overpass-api.de/api/interpreter?data=${encodeURIComponent(query)}`);
         const osmData = await osmRes.json();
 
