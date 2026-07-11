@@ -28,7 +28,7 @@ app.get("/", (_req, res) => {
 
 /* SESSION */
 app.use(session({
-  secret: process.env.SESSION_SECRET || 'manifiesto-secret',
+  secret: process.env.SESSION_SECRET || require('crypto').randomBytes(32).toString('hex'),
   resave: false,
   saveUninitialized: false,
   cookie: { secure: false }
@@ -71,7 +71,7 @@ app.use(express.urlencoded({ extended: true }));
 /* CORS */
 app.use(
   cors({
-    origin: true,
+    origin: ["https://manifiesto.app", "http://localhost:5173", "http://localhost:3000"],
     credentials: true,
   }),
 );
@@ -89,7 +89,7 @@ app.get("/api/found/:token", async (req, res) => {
     const { db } = await import("./db.js");
     const { sql } = await import("drizzle-orm");
     
-    const result = await db.execute(sql.raw(`SELECT id as "luggageId", nickname, type, color, trip_id as "tripId" FROM luggage WHERE recovery_token = '${token.replace(/'/g, "''")}'`));
+    const result = await db.execute(sql`SELECT id as "luggageId", nickname, type, color, trip_id as "tripId" FROM luggage WHERE recovery_token = ${token}`);
     
     if (!result.rows.length) return res.status(404).json({ error: "No encontrado" });
     res.json({ found: true, luggage: result.rows[0] });
@@ -109,14 +109,14 @@ app.post("/api/found/:token/report", async (req, res) => {
     const { Resend } = await import("resend");
     
     const { sql: sqlTag } = await import("drizzle-orm");
-    const bagResult = await db.execute(sqlTag.raw(`SELECT id as "luggageId", nickname, trip_id as "tripId" FROM luggage WHERE recovery_token = '${token.replace(/'/g, "''")}'`));
+    const bagResult = await db.execute(sqlTag`SELECT id as "luggageId", nickname, trip_id as "tripId" FROM luggage WHERE recovery_token = ${token}`);
     if (!bagResult.rows.length) return res.status(404).json({ error: "No encontrado" });
     const bag = bagResult.rows[0] as any;
 
-    const tripResult = await db.execute(sqlTag.raw(`SELECT user_id as "userId" FROM trips WHERE id = '${bag.tripId}'`));
+    const tripResult = await db.execute(sqlTag`SELECT user_id as "userId" FROM trips WHERE id = ${bag.tripId}`);
     if (!tripResult.rows.length) return res.status(404).json({ error: "Viaje no encontrado" });
 
-    const userResult = await db.execute(sqlTag.raw(`SELECT email, name FROM users WHERE id = '${(tripResult.rows[0] as any).userId}'`));
+    const userResult = await db.execute(sqlTag`SELECT email, name FROM users WHERE id = ${(tripResult.rows[0] as any).userId}`);
     if (!userResult.rows.length) return res.status(404).json({ error: "Usuario no encontrado" });
     
     const owner = userResult.rows[0] as any;
