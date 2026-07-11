@@ -1,4 +1,5 @@
 import { Router } from "express";
+import { requireAuth } from "./authMiddleware";
 import { db } from "./db";
 import { luggage, manifestItems, trips, users } from "@shared/schema";
 import { eq, sql } from "drizzle-orm";
@@ -9,7 +10,7 @@ import QRCode from "qrcode";
 const router = Router();
 
 // LISTAR Y CREAR (Básico)
-router.get("/", async (req, res) => {
+router.get("/", requireAuth, async (req, res) => {
   const { tripId } = req.query;
   const results = await db.select().from(luggage).where(eq(luggage.tripId, String(tripId)));
   // Add recovery token via raw query
@@ -27,7 +28,7 @@ router.get("/", async (req, res) => {
   res.json(results);
 });
 
-router.post("/", async (req, res) => {
+router.post("/", requireAuth, async (req, res) => {
   try {
     const { randomBytes } = await import("crypto");
     const recoveryToken = randomBytes(16).toString("hex");

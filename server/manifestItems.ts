@@ -1,4 +1,5 @@
 import { Router } from "express";
+import { requireAuth } from "./authMiddleware";
 import { db } from "./db";
 import { manifestItems, luggage } from "@shared/schema";
 import { eq } from "drizzle-orm";
@@ -6,7 +7,7 @@ import { eq } from "drizzle-orm";
 const router = Router();
 
 // 1. GET /api/manifestItems?luggageId=xxx - Obtener artículos por ID de maleta
-router.get("/", async (req, res) => {
+router.get("/", requireAuth, async (req, res) => {
   try {
     const { luggageId } = req.query;
 
@@ -59,7 +60,7 @@ router.get("/trip/:tripId", async (req, res) => {
 });
 
 // 3. POST /api/manifestItems - Crear nuevo artículo
-router.post("/", async (req, res) => {
+router.post("/", requireAuth, async (req, res) => {
   try {
     const data = req.body;
 

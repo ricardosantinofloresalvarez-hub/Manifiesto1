@@ -1,4 +1,5 @@
 import { Router } from "express";
+import { requireAuth } from "./authMiddleware";
 import { db } from "./db";
 import { trips } from "@shared/schema";
 import { eq } from "drizzle-orm";
@@ -6,7 +7,7 @@ import { eq } from "drizzle-orm";
 const router = Router();
 
 // GET /api/trips?userId=xxx
-router.get("/", async (req, res) => {
+router.get("/", requireAuth, async (req, res) => {
   try {
     const { userId } = req.query;
     if (!userId) return res.status(400).send("userId is required");
@@ -34,7 +35,7 @@ router.get("/:id", async (req, res) => {
 });
 
 // POST /api/trips
-router.post("/", async (req, res) => {
+router.post("/", requireAuth, async (req, res) => {
   try {
     let imageUrl = req.body.imageUrl;
     if (!imageUrl && req.body.destination) {
@@ -101,7 +102,7 @@ router.patch("/:id", async (req, res) => {
 });
 
 // DELETE /api/trips/:id
-router.delete("/:id", async (req, res) => {
+router.delete("/:id", requireAuth, async (req, res) => {
   try {
     const { id } = req.params;
     const [deleted] = await db.delete(trips).where(eq(trips.id, id)).returning();
