@@ -12,6 +12,8 @@ export function requireAuth(req: Request, res: Response, next: NextFunction) {
     return next();
   }
 
+  console.warn();
+  console.warn(`[SECURITY] Acceso no autorizado: ${req.method} ${req.path} IP:${req.ip}`);
   return res.status(401).json({ error: "No autorizado" });
 }
 
