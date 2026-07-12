@@ -401,7 +401,7 @@ router.get("/:luggageId/certificate", async (req, res) => {
          });
 
       // ELIMINAR MALETA
-router.post("/duplicate", async (req, res) => {
+router.post("/duplicate", requireAuth, async (req, res) => {
   try {
     const { sourceTripId, targetTripId } = req.body;
     if (!sourceTripId || !targetTripId) {
@@ -456,7 +456,7 @@ router.post("/duplicate", async (req, res) => {
   }
 });
 
-      router.delete("/:id", async (req, res) => {
+      router.delete("/:id", requireAuth, async (req, res) => {
       try {
       const { id } = req.params;
       await db.delete(manifestItems).where(eq(manifestItems.luggageId, id));
@@ -477,7 +477,7 @@ router.post("/duplicate", async (req, res) => {
       });
 
       // PATCH - Actualizar maleta (para fotos)
-      router.patch("/:id", async (req, res) => {
+      router.patch("/:id", requireAuth, async (req, res) => {
       try {
       const { id } = req.params;
       const data = req.body;

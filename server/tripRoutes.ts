@@ -21,12 +21,14 @@ router.get("/", requireAuth, async (req, res) => {
 });
 
 // GET /api/trips/:id
-router.get("/:id", async (req, res) => {
+router.get("/:id", requireAuth, async (req, res) => {
   try {
     const { id } = req.params;
+    const userId = req.query.userId || (req.user as any)?.id;
     const [trip] = await db.select().from(trips).where(eq(trips.id, id));
 
     if (!trip) return res.status(404).send("Trip not found");
+    if (userId && trip.userId !== String(userId)) return res.status(403).json({ error: "No autorizado" });
     res.json(trip);
   } catch (error) {
     console.error("Error fetching trip:", error);
