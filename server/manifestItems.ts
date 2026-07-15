@@ -3,6 +3,18 @@ import { requireAuth } from "./authMiddleware";
 import { db } from "./db";
 import { manifestItems, luggage, trips } from "@shared/schema";
 import { eq } from "drizzle-orm";
+import { z } from "zod";
+
+const manifestItemSchema = z.object({
+  luggageId: z.string().uuid(),
+  name: z.string().min(1).max(200),
+  category: z.string().min(1).max(50),
+  brand: z.string().max(100).optional().nullable(),
+  quantity: z.number().int().min(1).max(1000).default(1),
+  value: z.number().min(0).max(1000000).optional().nullable(),
+  serialNumber: z.string().max(100).optional().nullable(),
+  notes: z.string().max(500).optional().nullable(),
+});
 
 const router = Router();
 
@@ -101,8 +113,19 @@ router.post("/", requireAuth, async (req, res) => {
 // 4. PUT /api/manifestItems/:id - Actualizar artículo
 router.put("/:id", requireAuth, async (req, res) => {
   try {
-    const { id } = req.params; // ID es string (VARCHAR), no número
+    const { id } = req.params;
     const data = req.body;
+    const userId = req.query.userId || req.body?.userId;
+    if (userId) {
+      const [item] = await db.select().from(manifestItems).where(eq(manifestItems.id, id));
+      if (item) {
+        const [bag] = await db.select().from(luggage).where(eq(luggage.id, item.luggageId));
+        if (bag) {
+          const [trip] = await db.select().from(trips).where(eq(trips.id, bag.tripId));
+          if (!trip || trip.userId !== String(userId)) return res.status(403).json({ error: "No autorizado" });
+        }
+      }
+    }
 
     const [updatedItem] = await db
       .update(manifestItems)
