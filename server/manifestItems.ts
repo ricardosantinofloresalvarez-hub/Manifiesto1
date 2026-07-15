@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { requireAuth } from "./authMiddleware";
 import { db } from "./db";
-import { manifestItems, luggage } from "@shared/schema";
+import { manifestItems, luggage, trips } from "@shared/schema";
 import { eq } from "drizzle-orm";
 
 const router = Router();
@@ -9,10 +9,18 @@ const router = Router();
 // 1. GET /api/manifestItems?luggageId=xxx - Obtener artículos por ID de maleta
 router.get("/", requireAuth, async (req, res) => {
   try {
-    const { luggageId } = req.query;
+    const { luggageId, userId } = req.query;
 
     if (!luggageId || typeof luggageId !== "string") {
       return res.status(400).send("luggageId is required");
+    }
+
+    if (userId) {
+      const [bag] = await db.select().from(luggage).where(eq(luggage.id, luggageId));
+      if (bag) {
+        const [trip] = await db.select().from(trips).where(eq(trips.id, bag.tripId));
+        if (!trip || trip.userId !== String(userId)) return res.status(403).json({ error: "No autorizado" });
+      }
     }
 
     const items = await db
