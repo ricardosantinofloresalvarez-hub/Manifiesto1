@@ -3,6 +3,18 @@ import { requireAuth } from "./authMiddleware";
 import { db } from "./db";
 import { luggage, manifestItems, trips, users } from "@shared/schema";
 import { eq, sql } from "drizzle-orm";
+import { z } from "zod";
+
+const luggageSchema = z.object({
+  tripId: z.string().min(1),
+  nickname: z.string().max(100).optional().nullable(),
+  brand: z.string().max(100).optional().nullable(),
+  type: z.string().max(50).optional().nullable(),
+  size: z.string().max(50).optional().nullable(),
+  color: z.string().max(50).optional().nullable(),
+  isSealed: z.boolean().default(false),
+  isLocked: z.boolean().default(false),
+});
 import crypto from "crypto";
 import PDFDocument from "pdfkit";
 import QRCode from "qrcode";
@@ -36,9 +48,13 @@ router.get("/", requireAuth, async (req, res) => {
 
 router.post("/", requireAuth, async (req, res) => {
   try {
+    const parsed = luggageSchema.safeParse(req.body);
+    if (!parsed.success) {
+      return res.status(400).json({ error: "Datos inválidos", details: parsed.error.errors });
+    }
     const { randomBytes } = await import("crypto");
     const recoveryToken = randomBytes(16).toString("hex");
-    const [newItem] = await db.insert(luggage).values(req.body).returning();
+    const [newItem] = await db.insert(luggage).values(parsed.data).returning();
     // Update recovery token via raw SQL
     await db.execute(sql`UPDATE luggage SET recovery_token = ${recoveryToken} WHERE id = ${newItem.id}`);
     newItem.recoveryToken = recoveryToken;
