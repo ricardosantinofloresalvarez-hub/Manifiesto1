@@ -3,6 +3,17 @@ import { requireAuth } from "./authMiddleware";
 import { db } from "./db";
 import { trips } from "@shared/schema";
 import { eq } from "drizzle-orm";
+import { z } from "zod";
+
+const tripSchema = z.object({
+  userId: z.string().min(1),
+  title: z.string().min(1).max(200),
+  destination: z.string().min(1).max(200),
+  startDate: z.string().min(1),
+  endDate: z.string().min(1),
+  notes: z.string().max(1000).optional().nullable(),
+  imageUrl: z.string().url().optional().nullable(),
+});
 
 const router = Router();
 
@@ -81,7 +92,11 @@ router.post("/", requireAuth, async (req, res) => {
         console.error('❌ Error fetching Unsplash image:', err);
       }
     }
-    const [newTrip] = await db.insert(trips).values({ ...req.body, imageUrl }).returning();
+    const parsed = tripSchema.safeParse({ ...req.body, imageUrl });
+    if (!parsed.success) {
+      return res.status(400).json({ error: "Datos inválidos", details: parsed.error.errors });
+    }
+    const [newTrip] = await db.insert(trips).values(parsed.data).returning();
     res.json(newTrip);
   } catch (error) {
     console.error("Error creating trip:", error);
