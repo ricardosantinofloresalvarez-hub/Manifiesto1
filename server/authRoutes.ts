@@ -1,4 +1,10 @@
 import { Router } from "express";
+import { z } from "zod";
+
+const loginSchema = z.object({
+  email: z.string().email().max(255),
+  name: z.string().min(1).max(100).regex(/^[a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s]+$/, "Nombre inválido"),
+});
 import { db } from "./db";
 import { users } from "@shared/schema";
 import { eq } from "drizzle-orm";
