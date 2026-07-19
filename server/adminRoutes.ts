@@ -1,4 +1,5 @@
 import { Router } from "express";
+import { requireAuth } from "./authMiddleware";
 import { db } from "./db";
 import { users, trips, purchases } from "@shared/schema";
 import { sql, eq } from "drizzle-orm";
@@ -12,7 +13,7 @@ async function isAdmin(userId: string) {
   return user?.email === ADMIN_EMAIL;
 }
 
-router.get("/users", async (req, res) => {
+router.get("/users", requireAuth, async (req, res) => {
   try {
     const userId = req.query.userId as string;
     if (!await isAdmin(userId)) return res.status(403).json({ error: "No autorizado" });
@@ -23,7 +24,7 @@ router.get("/users", async (req, res) => {
   }
 });
 
-router.get("/stats", async (req, res) => {
+router.get("/stats", requireAuth, async (req, res) => {
   try {
     const userId = req.query.userId as string;
     if (!await isAdmin(userId)) return res.status(403).json({ error: "No autorizado" });
@@ -42,7 +43,7 @@ router.get("/stats", async (req, res) => {
   }
 });
 
-router.post("/users/:id/credits", async (req, res) => {
+router.post("/users/:id/credits", requireAuth, async (req, res) => {
   try {
     const userId = req.query.userId as string;
     if (!await isAdmin(userId)) return res.status(403).json({ error: "No autorizado" });
@@ -55,7 +56,7 @@ router.post("/users/:id/credits", async (req, res) => {
   }
 });
 
-router.delete("/users/:id", async (req, res) => {
+router.delete("/users/:id", requireAuth, async (req, res) => {
   try {
     const userId = req.query.userId as string;
     if (!await isAdmin(userId)) return res.status(403).json({ error: "No autorizado" });
