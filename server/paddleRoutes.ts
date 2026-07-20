@@ -7,7 +7,7 @@ const router = Router();
 
 const PADDLE_API_KEY = process.env.PADDLE_API_KEY!;
 const PADDLE_API = "https://api.paddle.com";
-const BASE_URL = (process.env.BASE_URL || "https://proyecto-manifiesto.replit.app").trim();
+const BASE_URL = (process.env.BASE_URL || "https://manifiesto.app").trim();
 
 const PRODUCT_CREDITS: Record<string, number> = {
   "pack3": 3,

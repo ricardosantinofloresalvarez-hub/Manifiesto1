@@ -357,7 +357,7 @@ router.get("/:luggageId/certificate", async (req, res) => {
       doc.fontSize(8).font("Helvetica").fillColor("#888888").text(copyHint, { align: "center" });
       doc.fillColor("#000000").moveDown(1.5);
 
-      const qrData = await QRCode.toDataURL(`${process.env.BASE_URL || "https://159cf49c-0920-4684-b3d1-58a353686a03-00-32y8k86zgc8mg.worf.replit.dev"}/verify?hash=${hash}`);
+      const qrData = await QRCode.toDataURL(`${process.env.BASE_URL || "https://manifiesto.app"}/verify?hash=${hash}`);
       const qrX = (doc.page.width - 180) / 2;
       const qrY = doc.y + 20;
       doc.image(qrData, qrX, qrY, { width: 180 });

@@ -5,7 +5,7 @@ import { eq, and, gt } from 'drizzle-orm';
 import crypto from 'crypto';
 
 const resend = new Resend(process.env.RESEND_API_KEY);
-const BASE_URL = process.env.BASE_URL || 'https://159cf49c-0920-4684-b3d1-58a353686a03-00-32y8k86zgc8mg.worf.replit.dev';
+const BASE_URL = process.env.BASE_URL || 'https://manifiesto.app';
 
 export async function sendMagicLink(email: string): Promise<void> {
   const token = crypto.randomBytes(32).toString('hex');
