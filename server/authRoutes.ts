@@ -31,7 +31,15 @@ router.post("/login", async (req, res) => {
       [user] = await db.update(users).set({ name }).where(eq(users.email, email)).returning();
     }
 
-    res.json(user);
+    res.json({
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      photoUrl: user.photoUrl,
+      manifestCredits: user.manifestCredits,
+      planType: user.planType,
+      planExpiresAt: user.planExpiresAt,
+    });
   } catch (error) {
     console.error("Error en login:", error);
     res.status(500).json({ error: "Error en el servidor" });
