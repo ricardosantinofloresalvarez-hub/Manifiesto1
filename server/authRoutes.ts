@@ -65,8 +65,10 @@ router.post("/update-photo", async (req, res) => {
 // MAGIC LINK
 router.post("/magic-link", async (req, res) => {
   try {
-    const { email } = req.body;
-    if (!email) return res.status(400).json({ error: "Email requerido" });
+    const emailSchema = z.string().email().max(255);
+    const emailParsed = emailSchema.safeParse(req.body.email);
+    if (!emailParsed.success) return res.status(400).json({ error: "Email inválido" });
+    const { data: email } = emailParsed;
     await sendMagicLink(email);
     res.json({ success: true });
   } catch (error) {
@@ -87,7 +89,7 @@ router.get("/magic", async (req, res) => {
       name: user.name,
       photoUrl: user.photoUrl
     }));
-    res.redirect(`${process.env.BASE_URL || 'https://159cf49c-0920-4684-b3d1-58a353686a03-00-32y8k86zgc8mg.worf.replit.dev'}/auth/callback?user=${userData}`);
+    res.redirect(`${process.env.BASE_URL || 'https://manifiesto.app'}/auth/callback?user=${userData}`);
   } catch (error) {
     console.error("Error verifying magic token:", error);
     res.redirect("/login?error=invalid");
@@ -107,7 +109,7 @@ router.get("/google/callback",
       name: user.name,
       photoUrl: user.photoUrl
     }));
-    res.redirect(`${process.env.BASE_URL || 'https://159cf49c-0920-4684-b3d1-58a353686a03-00-32y8k86zgc8mg.worf.replit.dev'}/auth/callback?user=${userData}`);
+    res.redirect(`${process.env.BASE_URL || 'https://manifiesto.app'}/auth/callback?user=${userData}`);
   }
 );
 
