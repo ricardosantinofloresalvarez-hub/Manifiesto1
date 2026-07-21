@@ -105,7 +105,7 @@ router.post("/", requireAuth, async (req, res) => {
 });
 
 // PATCH /api/trips/:id
-router.patch("/:id", async (req, res) => {
+router.patch("/:id", requireAuth, async (req, res) => {
   try {
     const { id } = req.params;
     const [updated] = await db.update(trips).set(req.body).where(eq(trips.id, id)).returning();

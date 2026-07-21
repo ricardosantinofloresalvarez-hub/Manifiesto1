@@ -1,4 +1,5 @@
 import { Router } from "express";
+import { requireAuth } from "./authMiddleware";
 import { db } from "./db";
 import { flights, hotels, transport, restaurants, activities } from "@shared/schema";
 import { eq } from "drizzle-orm";
@@ -18,7 +19,7 @@ function getTable(type: string) {
 }
 
 // GET /api/:type?tripId=xxx - List items
-router.get("/:type", async (req, res) => {
+router.get("/:type", requireAuth, async (req, res) => {
   try {
     const { type } = req.params;
     const { tripId } = req.query;
@@ -41,7 +42,7 @@ router.get("/:type", async (req, res) => {
 });
 
 // POST /api/:type - Create item
-router.post("/:type", async (req, res) => {
+router.post("/:type", requireAuth, async (req, res) => {
   try {
     const { type } = req.params;
     const table = getTable(type);
@@ -59,7 +60,7 @@ router.post("/:type", async (req, res) => {
 });
 
 // PATCH /api/:type/:id - Update item
-router.patch("/:type/:id", async (req, res) => {
+router.patch("/:type/:id", requireAuth, async (req, res) => {
   try {
     const { type, id } = req.params;
     const table = getTable(type);
@@ -82,7 +83,7 @@ router.patch("/:type/:id", async (req, res) => {
 });
 
 // DELETE /api/:type/:id - Delete item
-router.delete("/:type/:id", async (req, res) => {
+router.delete("/:type/:id", requireAuth, async (req, res) => {
   try {
     const { type, id } = req.params;
     const table = getTable(type);
