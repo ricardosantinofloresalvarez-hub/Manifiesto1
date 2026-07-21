@@ -9,6 +9,7 @@ import { db } from "./db";
 import { users } from "@shared/schema";
 import { eq } from "drizzle-orm";
 import crypto from "crypto";
+import { requireAuth } from "./authMiddleware";
 import passport from "passport";
 import { sendMagicLink, verifyMagicToken } from "./magicLinkService";
 
@@ -46,7 +47,7 @@ router.post("/login", async (req, res) => {
   }
 });
 // POST /api/auth/update-photo - Actualizar foto de perfil
-router.post("/update-photo", async (req, res) => {
+router.post("/update-photo", requireAuth, async (req, res) => {
   try {
     const { userId, photoUrl } = req.body;
 

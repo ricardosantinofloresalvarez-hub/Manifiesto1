@@ -48,7 +48,7 @@ router.get("/", requireAuth, async (req, res) => {
 });
 
 // 2. GET /api/manifestItems/trip/:tripId - Obtener TODOS los artículos de un viaje
-router.get("/trip/:tripId", async (req, res) => {
+router.get("/trip/:tripId", requireAuth, async (req, res) => {
   try {
     const { tripId } = req.params;
 
