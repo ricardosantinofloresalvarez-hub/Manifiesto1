@@ -10,7 +10,8 @@ export function useLuggage(tripId: string | null) {
     queryKey: ["/api/luggage", tripId],
     queryFn: async () => {
       if (!tripId) return [];
-      const res = await fetch(`/api/luggage?tripId=${tripId}`);
+      const storedUser = localStorage.getItem("user"); const uid = storedUser ? JSON.parse(storedUser)?.id : "";
+      const res = await fetch(`/api/luggage?tripId=${tripId}&userId=${uid}`);
       if (!res.ok) return [];
       return res.json();
     },
@@ -40,7 +41,9 @@ export function useLuggageById(luggageId: string | null) {
 export function useCreateLuggage() {
   return useMutation({
     mutationFn: async (data: InsertLuggage) => {
-      const res = await fetch("/api/luggage", {
+      const storedUser = localStorage.getItem("user");
+      const uid = storedUser ? JSON.parse(storedUser)?.id : "";
+      const res = await fetch(`/api/luggage?userId=${uid}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data),
