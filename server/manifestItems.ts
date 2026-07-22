@@ -14,7 +14,7 @@ const manifestItemSchema = z.object({
   value: z.number().min(0).max(1000000).optional().nullable(),
   serialNumber: z.string().max(100).optional().nullable(),
   notes: z.string().max(500).optional().nullable(),
-});
+}).passthrough();
 
 const router = Router();
 

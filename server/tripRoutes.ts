@@ -13,7 +13,7 @@ const tripSchema = z.object({
   endDate: z.string().min(1),
   notes: z.string().max(1000).optional().nullable(),
   imageUrl: z.string().url().optional().nullable(),
-});
+}).passthrough();
 
 const router = Router();
 

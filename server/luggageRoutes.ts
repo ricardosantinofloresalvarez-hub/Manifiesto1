@@ -12,9 +12,12 @@ const luggageSchema = z.object({
   type: z.string().max(50).optional().nullable(),
   size: z.string().max(50).optional().nullable(),
   color: z.string().max(50).optional().nullable(),
-  isSealed: z.boolean().default(false),
-  isLocked: z.boolean().default(false),
-});
+  isSealed: z.boolean().default(false).optional(),
+  isLocked: z.boolean().default(false).optional(),
+  travelerId: z.string().optional().nullable(),
+  openPhotoUrl: z.string().optional().nullable(),
+  closedPhotoUrl: z.string().optional().nullable(),
+}).passthrough();
 import crypto from "crypto";
 import PDFDocument from "pdfkit";
 import QRCode from "qrcode";
