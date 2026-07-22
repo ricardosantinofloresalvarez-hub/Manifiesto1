@@ -22,7 +22,7 @@ export function useTrip(tripId: string | null) {
     queryFn: async () => {
       if (!tripId) return null;
 
-      const res = await fetch(`/api/trips/${tripId}`);
+      const storedUser = localStorage.getItem("user"); const uid = storedUser ? JSON.parse(storedUser)?.id : ""; const res = await fetch(`/api/trips/${tripId}?userId=${uid}`);
       if (!res.ok) return null;
       return res.json();
     },
