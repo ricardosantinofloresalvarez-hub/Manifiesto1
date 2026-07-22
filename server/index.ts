@@ -49,7 +49,7 @@ passport.deserializeUser(async (id: string, done) => {
 passport.use(new GoogleStrategy({
   clientID: process.env.GOOGLE_CLIENT_ID!,
   clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
-  callbackURL: `${(process.env.BASE_URL || 'https://manifiesto.app').trim()}/api/auth/google/callback`
+  callbackURL: `${(process.env.BASE_URL || 'https://proyecto-manifiesto.replit.app').trim()}/api/auth/google/callback`
 }, async (_accessToken, _refreshToken, profile, done) => {
   try {
     const email = profile.emails?.[0].value!;

@@ -1,15 +1,8 @@
 import { Router } from "express";
-import { z } from "zod";
-
-const loginSchema = z.object({
-  email: z.string().email().max(255),
-  name: z.string().min(1).max(100).regex(/^[a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s]+$/, "Nombre inválido"),
-});
 import { db } from "./db";
 import { users } from "@shared/schema";
 import { eq } from "drizzle-orm";
 import crypto from "crypto";
-import { requireAuth } from "./authMiddleware";
 import passport from "passport";
 import { sendMagicLink, verifyMagicToken } from "./magicLinkService";
 
@@ -32,22 +25,14 @@ router.post("/login", async (req, res) => {
       [user] = await db.update(users).set({ name }).where(eq(users.email, email)).returning();
     }
 
-    res.json({
-      id: user.id,
-      name: user.name,
-      email: user.email,
-      photoUrl: user.photoUrl,
-      manifestCredits: user.manifestCredits,
-      planType: user.planType,
-      planExpiresAt: user.planExpiresAt,
-    });
+    res.json(user);
   } catch (error) {
     console.error("Error en login:", error);
     res.status(500).json({ error: "Error en el servidor" });
   }
 });
 // POST /api/auth/update-photo - Actualizar foto de perfil
-router.post("/update-photo", requireAuth, async (req, res) => {
+router.post("/update-photo", async (req, res) => {
   try {
     const { userId, photoUrl } = req.body;
 
@@ -74,10 +59,8 @@ router.post("/update-photo", requireAuth, async (req, res) => {
 // MAGIC LINK
 router.post("/magic-link", async (req, res) => {
   try {
-    const emailSchema = z.string().email().max(255);
-    const emailParsed = emailSchema.safeParse(req.body.email);
-    if (!emailParsed.success) return res.status(400).json({ error: "Email inválido" });
-    const { data: email } = emailParsed;
+    const { email } = req.body;
+    if (!email) return res.status(400).json({ error: "Email requerido" });
     await sendMagicLink(email);
     res.json({ success: true });
   } catch (error) {
@@ -98,7 +81,7 @@ router.get("/magic", async (req, res) => {
       name: user.name,
       photoUrl: user.photoUrl
     }));
-    res.redirect(`${process.env.BASE_URL || 'https://manifiesto.app'}/auth/callback?user=${userData}`);
+    res.redirect(`${process.env.BASE_URL || 'https://159cf49c-0920-4684-b3d1-58a353686a03-00-32y8k86zgc8mg.worf.replit.dev'}/auth/callback?user=${userData}`);
   } catch (error) {
     console.error("Error verifying magic token:", error);
     res.redirect("/login?error=invalid");
@@ -118,7 +101,7 @@ router.get("/google/callback",
       name: user.name,
       photoUrl: user.photoUrl
     }));
-    res.redirect(`${process.env.BASE_URL || 'https://manifiesto.app'}/auth/callback?user=${userData}`);
+    res.redirect(`${process.env.BASE_URL || 'https://159cf49c-0920-4684-b3d1-58a353686a03-00-32y8k86zgc8mg.worf.replit.dev'}/auth/callback?user=${userData}`);
   }
 );
 

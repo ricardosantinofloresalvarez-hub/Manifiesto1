@@ -1,5 +1,4 @@
 import { Router } from "express";
-import { requireAuth } from "./authMiddleware";
 import { db } from "./db";
 import { users, purchases } from "@shared/schema";
 import { eq } from "drizzle-orm";
@@ -154,7 +153,7 @@ router.post("/webhook", async (req, res) => {
 
 // GET /api/payments/credits
 // Retorna créditos actuales del usuario
-router.get("/credits", requireAuth, async (req, res) => {
+router.get("/credits", async (req, res) => {
   try {
     const user = req.user as any;
     if (!user) return res.status(401).json({ error: "No autenticado" });

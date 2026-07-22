@@ -7,7 +7,7 @@ const router = Router();
 
 const PADDLE_API_KEY = process.env.PADDLE_API_KEY!;
 const PADDLE_API = "https://api.paddle.com";
-const BASE_URL = (process.env.BASE_URL || "https://manifiesto.app").trim();
+const BASE_URL = (process.env.BASE_URL || "https://proyecto-manifiesto.replit.app").trim();
 
 const PRODUCT_CREDITS: Record<string, number> = {
   "pack3": 3,
@@ -82,24 +82,6 @@ router.get("/checkout/:productId", async (req, res) => {
 // POST /api/paddle/webhook
 router.post("/webhook", async (req, res) => {
   try {
-    // Verificar firma de Paddle
-    const signature = req.headers["paddle-signature"] as string;
-    const webhookSecret = process.env.PADDLE_WEBHOOK_SECRET;
-    
-    if (webhookSecret && signature) {
-      const crypto = await import("crypto");
-      const rawBody = JSON.stringify(req.body);
-      const [tsPart, h1Part] = signature.split(";");
-      const ts = tsPart?.split("=")[1];
-      const h1 = h1Part?.split("=")[1];
-      const signed = `${ts}:${rawBody}`;
-      const expected = crypto.default.createHmac("sha256", webhookSecret).update(signed).digest("hex");
-      if (expected !== h1) {
-        console.warn("[SECURITY] Webhook signature invalida");
-        return res.status(401).json({ error: "Firma invalida" });
-      }
-    }
-    
     const event = req.body;
     
     if (event.event_type === "transaction.completed") {

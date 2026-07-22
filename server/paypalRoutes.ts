@@ -49,7 +49,7 @@ router.get("/checkout/:productId", async (req, res) => {
     if (!price) return res.status(404).json({ error: "Producto no encontrado" });
 
     const accessToken = await getAccessToken();
-    const baseUrl = (process.env.BASE_URL || "").trim() || "https://manifiesto.app";
+    const baseUrl = (process.env.BASE_URL || "").trim() || "https://proyecto-manifiesto.replit.app";
 
     const orderRes = await fetch(`${PAYPAL_API}/v2/checkout/orders`, {
       method: "POST",

@@ -3,21 +3,6 @@ import { requireAuth } from "./authMiddleware";
 import { db } from "./db";
 import { luggage, manifestItems, trips, users } from "@shared/schema";
 import { eq, sql } from "drizzle-orm";
-import { z } from "zod";
-
-const luggageSchema = z.object({
-  tripId: z.string().min(1),
-  nickname: z.string().max(100).optional().nullable(),
-  brand: z.string().max(100).optional().nullable(),
-  type: z.string().max(50).optional().nullable(),
-  size: z.string().max(50).optional().nullable(),
-  color: z.string().max(50).optional().nullable(),
-  isSealed: z.boolean().default(false).optional(),
-  isLocked: z.boolean().default(false).optional(),
-  travelerId: z.string().optional().nullable(),
-  openPhotoUrl: z.string().optional().nullable(),
-  closedPhotoUrl: z.string().optional().nullable(),
-}).passthrough();
 import crypto from "crypto";
 import PDFDocument from "pdfkit";
 import QRCode from "qrcode";
@@ -51,13 +36,9 @@ router.get("/", requireAuth, async (req, res) => {
 
 router.post("/", requireAuth, async (req, res) => {
   try {
-    const parsed = luggageSchema.safeParse(req.body);
-    if (!parsed.success) {
-      return res.status(400).json({ error: "Datos inválidos", details: parsed.error.errors });
-    }
     const { randomBytes } = await import("crypto");
     const recoveryToken = randomBytes(16).toString("hex");
-    const [newItem] = await db.insert(luggage).values(parsed.data).returning();
+    const [newItem] = await db.insert(luggage).values(req.body).returning();
     // Update recovery token via raw SQL
     await db.execute(sql`UPDATE luggage SET recovery_token = ${recoveryToken} WHERE id = ${newItem.id}`);
     newItem.recoveryToken = recoveryToken;
@@ -360,7 +341,7 @@ router.get("/:luggageId/certificate", async (req, res) => {
       doc.fontSize(8).font("Helvetica").fillColor("#888888").text(copyHint, { align: "center" });
       doc.fillColor("#000000").moveDown(1.5);
 
-      const qrData = await QRCode.toDataURL(`${process.env.BASE_URL || "https://manifiesto.app"}/verify?hash=${hash}`);
+      const qrData = await QRCode.toDataURL(`${process.env.BASE_URL || "https://159cf49c-0920-4684-b3d1-58a353686a03-00-32y8k86zgc8mg.worf.replit.dev"}/verify?hash=${hash}`);
       const qrX = (doc.page.width - 180) / 2;
       const qrY = doc.y + 20;
       doc.image(qrData, qrX, qrY, { width: 180 });

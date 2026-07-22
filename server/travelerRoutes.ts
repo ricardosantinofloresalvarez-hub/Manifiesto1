@@ -1,5 +1,4 @@
 import { Router } from "express";
-import { requireAuth } from "./authMiddleware";
 import { db } from "./db";
 import { travelers } from "@shared/schema";
 import { eq } from "drizzle-orm";
@@ -7,7 +6,7 @@ import { eq } from "drizzle-orm";
 const router = Router();
 
 // GET /api/travelers?tripId=xxx - Listar pasajeros de un viaje
-router.get("/", requireAuth, async (req, res) => {
+router.get("/", async (req, res) => {
   try {
     const { tripId } = req.query;
     if (!tripId) {
@@ -27,7 +26,7 @@ router.get("/", requireAuth, async (req, res) => {
 });
 
 // POST /api/travelers - Crear pasajero
-router.post("/", requireAuth, async (req, res) => {
+router.post("/", async (req, res) => {
   try {
     const [newTraveler] = await db
       .insert(travelers)
@@ -42,7 +41,7 @@ router.post("/", requireAuth, async (req, res) => {
 });
 
 // DELETE /api/travelers/:id - Eliminar pasajero
-router.delete("/:id", requireAuth, async (req, res) => {
+router.delete("/:id", async (req, res) => {
   try {
     const { id } = req.params;
 
