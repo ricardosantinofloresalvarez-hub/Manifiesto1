@@ -7,7 +7,7 @@ import { eq } from "drizzle-orm";
 const router = Router();
 
 // GET /api/trips?userId=xxx
-router.get("/", requireAuth, async (req, res) => {
+router.get("/", async (req, res) => {
   try {
     const { userId } = req.query;
     if (!userId) return res.status(400).send("userId is required");
@@ -21,7 +21,7 @@ router.get("/", requireAuth, async (req, res) => {
 });
 
 // GET /api/trips/:id
-router.get("/:id", requireAuth, async (req, res) => {
+router.get("/:id", async (req, res) => {
   try {
     const { id } = req.params;
     const userId = req.query.userId || (req.user as any)?.id;
@@ -37,7 +37,7 @@ router.get("/:id", requireAuth, async (req, res) => {
 });
 
 // POST /api/trips
-router.post("/", requireAuth, async (req, res) => {
+router.post("/", async (req, res) => {
   try {
     let imageUrl = req.body.imageUrl;
     if (!imageUrl && req.body.destination) {
@@ -104,7 +104,7 @@ router.patch("/:id", async (req, res) => {
 });
 
 // DELETE /api/trips/:id
-router.delete("/:id", requireAuth, async (req, res) => {
+router.delete("/:id", async (req, res) => {
   try {
     const { id } = req.params;
     const [deleted] = await db.delete(trips).where(eq(trips.id, id)).returning();

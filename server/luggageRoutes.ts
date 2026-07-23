@@ -10,7 +10,7 @@ import QRCode from "qrcode";
 const router = Router();
 
 // LISTAR Y CREAR (Básico)
-router.get("/", requireAuth, async (req, res) => {
+router.get("/", async (req, res) => {
   const { tripId, userId } = req.query;
   if (!tripId) return res.status(400).json({ error: "tripId requerido" });
   // Verificar que el trip pertenece al usuario
@@ -34,7 +34,7 @@ router.get("/", requireAuth, async (req, res) => {
   res.json(results);
 });
 
-router.post("/", requireAuth, async (req, res) => {
+router.post("/", async (req, res) => {
   try {
     const { randomBytes } = await import("crypto");
     const recoveryToken = randomBytes(16).toString("hex");
@@ -407,7 +407,7 @@ router.get("/:luggageId/certificate", async (req, res) => {
          });
 
       // ELIMINAR MALETA
-router.post("/duplicate", requireAuth, async (req, res) => {
+router.post("/duplicate", async (req, res) => {
   try {
     const { sourceTripId, targetTripId } = req.body;
     if (!sourceTripId || !targetTripId) {
@@ -462,7 +462,7 @@ router.post("/duplicate", requireAuth, async (req, res) => {
   }
 });
 
-      router.delete("/:id", requireAuth, async (req, res) => {
+      router.delete("/:id", async (req, res) => {
       try {
       const { id } = req.params;
       await db.delete(manifestItems).where(eq(manifestItems.luggageId, id));
@@ -483,7 +483,7 @@ router.post("/duplicate", requireAuth, async (req, res) => {
       });
 
       // PATCH - Actualizar maleta (para fotos)
-      router.patch("/:id", requireAuth, async (req, res) => {
+      router.patch("/:id", async (req, res) => {
       try {
       const { id } = req.params;
       const data = req.body;

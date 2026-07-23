@@ -7,7 +7,7 @@ import { eq } from "drizzle-orm";
 const router = Router();
 
 // 1. GET /api/manifestItems?luggageId=xxx - Obtener artículos por ID de maleta
-router.get("/", requireAuth, async (req, res) => {
+router.get("/", async (req, res) => {
   try {
     const { luggageId, userId } = req.query;
 
@@ -68,7 +68,7 @@ router.get("/trip/:tripId", async (req, res) => {
 });
 
 // 3. POST /api/manifestItems - Crear nuevo artículo
-router.post("/", requireAuth, async (req, res) => {
+router.post("/", async (req, res) => {
   try {
     const data = req.body;
 
@@ -99,7 +99,7 @@ router.post("/", requireAuth, async (req, res) => {
 });
 
 // 4. PUT /api/manifestItems/:id - Actualizar artículo
-router.put("/:id", requireAuth, async (req, res) => {
+router.put("/:id", async (req, res) => {
   try {
     const { id } = req.params; // ID es string (VARCHAR), no número
     const data = req.body;
@@ -131,7 +131,7 @@ router.put("/:id", requireAuth, async (req, res) => {
 });
 
 // 5. DELETE /api/manifestItems/:id - Eliminar artículo
-router.delete("/:id", requireAuth, async (req, res) => {
+router.delete("/:id", async (req, res) => {
   try {
     const { id } = req.params; // ID es string (VARCHAR), no número
 
