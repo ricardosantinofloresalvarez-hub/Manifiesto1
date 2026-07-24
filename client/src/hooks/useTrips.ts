@@ -92,14 +92,17 @@ export function useDeleteTrip() {
         mutationFn: async ({
           tripId,
           openPhotoUrl,
+          userId,
           closedPhotoUrl,
         }: {
           tripId: string;
           openPhotoUrl?: string;
+          userId?: string;
           closedPhotoUrl?: string;
         }) => {
           const updateData: any = {};
           if (openPhotoUrl !== undefined) updateData.openPhotoUrl = openPhotoUrl;
+          if (userId !== undefined) updateData.userId = userId;
           if (closedPhotoUrl !== undefined) updateData.closedPhotoUrl = closedPhotoUrl;
 
           const res = await fetch(`/api/trips/${tripId}`, {

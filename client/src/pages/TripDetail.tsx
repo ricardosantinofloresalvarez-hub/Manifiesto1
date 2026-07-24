@@ -83,6 +83,7 @@ export default function TripDetail() {
       setLuggagePhotos({ ...luggagePhotos, openPhotoUrl: url });
       await updateTripPhotosMutation.mutateAsync({
         tripId,
+        userId: user?.id,
         openPhotoUrl: url,
       });
       toast({
@@ -110,6 +111,7 @@ export default function TripDetail() {
       setLuggagePhotos({ ...luggagePhotos, closedPhotoUrl: url });
       await updateTripPhotosMutation.mutateAsync({
         tripId,
+        userId: user?.id,
         closedPhotoUrl: url,
       });
       toast({
@@ -133,6 +135,7 @@ export default function TripDetail() {
       setLuggagePhotos({ ...luggagePhotos, openPhotoUrl: "" });
       await updateTripPhotosMutation.mutateAsync({
         tripId,
+        userId: user?.id,
         openPhotoUrl: "",
       });
       toast({
@@ -156,6 +159,7 @@ export default function TripDetail() {
       setLuggagePhotos({ ...luggagePhotos, closedPhotoUrl: "" });
       await updateTripPhotosMutation.mutateAsync({
         tripId,
+        userId: user?.id,
         closedPhotoUrl: "",
       });
       toast({
