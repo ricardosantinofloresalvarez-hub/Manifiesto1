@@ -75,7 +75,7 @@ type LuggageFormValues = z.infer<typeof luggageFormSchema>;
 interface LuggageTabProps {
   tripId: string;
   trip: Trip | null;
-  user: { name: string; email: string } | null;
+  user: { id?: string; name: string; email: string } | null;
 }
 
 export default function LuggageTab({ tripId, trip, user }: LuggageTabProps) {
@@ -106,7 +106,7 @@ export default function LuggageTab({ tripId, trip, user }: LuggageTabProps) {
   const [detailOpen, setDetailOpen] = useState(false);
   const [showAddItemsPrompt, setShowAddItemsPrompt] = useState(false);
 
-  const { data: luggageList, isLoading, error } = useLuggage(tripId);
+  const { data: luggageList, isLoading, error } = useLuggage(tripId, user?.id);
   const storedUser = localStorage.getItem('user');
   const userId = storedUser ? JSON.parse(storedUser)?.id : null;
   const { data: allTrips = [] } = useTrips(userId);

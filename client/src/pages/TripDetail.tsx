@@ -350,7 +350,7 @@ export default function TripDetail() {
             <LuggageTab 
               tripId={tripId!} 
               trip={trip || null}
-              user={user ? { name: user.name || 'Usuario', email: user.email || '' } : null}
+              user={user ? { id: user.id, name: user.name || 'Usuario', email: user.email || '' } : null}
             />
           </TabsContent>
 

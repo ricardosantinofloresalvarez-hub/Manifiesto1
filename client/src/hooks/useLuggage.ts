@@ -5,12 +5,13 @@ import type { Luggage, InsertLuggage } from "@shared/schema";
 /* =========================
    OBTENER MALETAS
 ========================= */
-export function useLuggage(tripId: string | null) {
+export function useLuggage(tripId: string | null, userId?: string | null) {
   return useQuery({
-    queryKey: ["/api/luggage", tripId],
+    queryKey: ["/api/luggage", tripId, userId],
     queryFn: async () => {
       if (!tripId) return [];
-      const res = await fetch(`/api/luggage?tripId=${tripId}`);
+      const url = userId ? `/api/luggage?tripId=${tripId}&userId=${userId}` : `/api/luggage?tripId=${tripId}`;
+      const res = await fetch(url);
       if (!res.ok) return [];
       return res.json();
     },
