@@ -1,11 +1,14 @@
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient } from "@/lib/queryClient";
 
-export function useManifestItems(luggageId: string | null) {
+export function useManifestItems(luggageId: string | null, userId?: string | null) {
   return useQuery({
-    queryKey: ["manifestItems", luggageId],
+    queryKey: ["manifestItems", luggageId, userId],
     queryFn: async () => {
-      const res = await fetch(`/api/manifestItems?luggageId=${luggageId}`);
+      const url = userId
+        ? `/api/manifestItems?luggageId=${luggageId}&userId=${userId}`
+        : `/api/manifestItems?luggageId=${luggageId}`;
+      const res = await fetch(url);
       return res.json();
     },
     enabled: !!luggageId,

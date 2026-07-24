@@ -22,7 +22,7 @@ const CLOUDINARY_UPLOAD_PRESET = "luggage_photos";
 export default function LuggageDetailDialog({ luggage, trip, user, open, onOpenChange }: any) {
   const { toast } = useToast();
   const { t } = useTranslation();
-  const { data: items, isLoading } = useManifestItems(luggage?.id);
+  const { data: items, isLoading } = useManifestItems(luggage?.id, user?.id);
   const generateCertificate = useGenerateLuggageCertificate();
   const deleteItem = useDeleteManifestItem();
 
