@@ -72,6 +72,8 @@ export function useDeleteTrip() {
     mutationFn: async ({ id, userId }: { id: string; userId: string }) => {
       const res = await fetch(`/api/trips/${id}`, {
         method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId }),
       });
       if (!res.ok) throw new Error("Error deleting trip");
       return { id, userId };
