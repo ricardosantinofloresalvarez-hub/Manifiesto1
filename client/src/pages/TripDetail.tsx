@@ -65,7 +65,7 @@ export default function TripDetail() {
     }
   }, [isLoading, user, setLocation]);
 
-  const { data: trip, isLoading: isTripLoading } = useTrip(tripId || null);
+  const { data: trip, isLoading: isTripLoading } = useTrip(tripId || null, user?.id || null);
   const updateTripPhotosMutation = useUpdateTripPhotos();
 
   const { data: travelers = [] } = useTravelers(tripId || null);

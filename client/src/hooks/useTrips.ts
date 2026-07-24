@@ -16,13 +16,14 @@ export function useTrips(userId: string | null) {
   });
 }
 
-export function useTrip(tripId: string | null) {
+export function useTrip(tripId: string | null, userId?: string | null) {
   return useQuery({
-    queryKey: ["/api/trips", tripId],
+    queryKey: ["/api/trips", tripId, userId],
     queryFn: async () => {
       if (!tripId) return null;
 
-      const res = await fetch(`/api/trips/${tripId}`);
+      const url = userId ? `/api/trips/${tripId}?userId=${userId}` : `/api/trips/${tripId}`;
+      const res = await fetch(url);
       if (!res.ok) return null;
       return res.json();
     },
