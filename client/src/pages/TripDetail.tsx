@@ -343,7 +343,7 @@ export default function TripDetail() {
           </TabsList>
 
           <TabsContent value="itinerary">
-            <ItineraryTab tripId={tripId!} destination={trip?.destination} />
+            <ItineraryTab tripId={tripId!} destination={trip?.destination} user={user ? { id: user.id } : null} />
           </TabsContent>
 
           <TabsContent value="manifest" className="space-y-4">

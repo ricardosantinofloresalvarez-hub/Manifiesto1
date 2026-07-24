@@ -33,9 +33,10 @@ import TripMap from '@/components/TripMap';
 interface ItineraryTabProps {
   tripId: string;
   destination?: string;
+  user?: { id?: string } | null;
 }
 
-export default function ItineraryTab({ tripId, destination }: ItineraryTabProps) {
+export default function ItineraryTab({ tripId, destination, user }: ItineraryTabProps) {
   const { t } = useTranslation();
   const { toast } = useToast();
 
@@ -291,7 +292,7 @@ export default function ItineraryTab({ tripId, destination }: ItineraryTabProps)
                             certificateUrl = await uploadCertificate(selectedFile, tempId);
                           }
                           createFlightMutation.mutate(
-                            { tripId, ...flightForm, certificateUrl },
+                            { tripId, userId: user?.id, ...flightForm, certificateUrl },
                             {
                               onSuccess: () => {
                                 setFlightForm({ airline: '', flightNumber: '', departureAirport: '', arrivalAirport: '', departureDateTime: '', arrivalDateTime: '', notes: '' });
@@ -436,7 +437,7 @@ export default function ItineraryTab({ tripId, destination }: ItineraryTabProps)
                     </div>
                     <Button
                       onClick={() => createHotelMutation.mutate(
-                        { tripId, ...hotelForm },
+                        { tripId, userId: user?.id, ...hotelForm },
                         {
                           onSuccess: () => {
                             setHotelForm({ name: '', address: '', checkInDate: '', checkOutDate: '', reservationLink: '', notes: '' });
@@ -585,7 +586,7 @@ export default function ItineraryTab({ tripId, destination }: ItineraryTabProps)
                     </div>
                     <Button
                       onClick={() => createTransportMutation.mutate(
-                        { tripId, ...transportForm },
+                        { tripId, userId: user?.id, ...transportForm },
                         {
                           onSuccess: () => {
                             setTransportForm({ type: 'train', company: '', route: '', departureDateTime: '', arrivalDateTime: '', ticketNumber: '', notes: '' });
@@ -712,7 +713,7 @@ export default function ItineraryTab({ tripId, destination }: ItineraryTabProps)
                     </div>
                     <Button
                       onClick={() => createRestaurantMutation.mutate(
-                        { tripId, ...restaurantForm },
+                        { tripId, userId: user?.id, ...restaurantForm },
                         {
                           onSuccess: () => {
                             setRestaurantForm({ name: '', address: '', reservationDateTime: '', placeLink: '', notes: '' });
@@ -825,7 +826,7 @@ export default function ItineraryTab({ tripId, destination }: ItineraryTabProps)
                           </div>
                           <Button
                             onClick={() => createActivityMutation.mutate(
-                              { tripId, ...activityForm },
+                              { tripId, userId: user?.id, ...activityForm },
                               {
                                 onSuccess: () => {
                                   setActivityForm({ name: '', location: '', activityDateTime: '', notes: '' });
