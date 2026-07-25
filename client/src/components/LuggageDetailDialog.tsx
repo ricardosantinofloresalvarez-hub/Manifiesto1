@@ -101,7 +101,7 @@ export default function LuggageDetailDialog({ luggage, trip, user, open, onOpenC
       const updateRes = await fetch(`/api/luggage/${luggage.id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ [fieldName]: imageUrl }),
+        body: JSON.stringify({ [fieldName]: imageUrl, userId: user?.id }),
       });
 
       if (!updateRes.ok) throw new Error('Failed to save photo URL');

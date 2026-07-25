@@ -103,18 +103,20 @@ export function useUpdateLuggagePhotos() {
     mutationFn: async ({
       luggageId,
       tripId,
+      userId,
       openPhotoUrl,
       closedPhotoUrl,
     }: {
       luggageId: string;
       tripId: string;
+      userId?: string;
       openPhotoUrl?: string;
       closedPhotoUrl?: string;
     }) => {
       const res = await fetch(`/api/luggage/${luggageId}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ openPhotoUrl, closedPhotoUrl }),
+        body: JSON.stringify({ openPhotoUrl, closedPhotoUrl, userId }),
       });
       if (!res.ok) throw new Error("Error actualizando fotos");
       return res.json();
