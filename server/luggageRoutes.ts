@@ -10,7 +10,7 @@ import QRCode from "qrcode";
 const router = Router();
 
 // LISTAR Y CREAR (Básico)
-router.get("/", async (req, res) => {
+router.get("/", requireAuth, async (req, res) => {
   const { tripId, userId } = req.query;
   if (!tripId) return res.status(400).json({ error: "tripId requerido" });
   // Verificar que el trip pertenece al usuario

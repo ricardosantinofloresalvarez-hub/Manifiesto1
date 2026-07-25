@@ -70,7 +70,7 @@ export default function Dashboard() {
         trips.map(async (trip: any) => {
           try {
             // Obtener maletas del viaje
-            const luggageRes = await fetch(`/api/luggage?tripId=${trip.id}`);
+            const luggageRes = await fetch(`/api/luggage?tripId=${trip.id}&userId=${user?.id}`);
             if (!luggageRes.ok) {
               return { ...trip, itemCount: 0 };
             }

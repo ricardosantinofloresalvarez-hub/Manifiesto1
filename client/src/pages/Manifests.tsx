@@ -37,7 +37,7 @@ export default function Manifests() {
       }
 
       const luggagePromises = trips.map(async (trip: any) => {
-        const res = await fetch(`/api/luggage?tripId=${trip.id}`);
+        const res = await fetch(`/api/luggage?tripId=${trip.id}&userId=${user?.id}`);
         if (!res.ok) return [];
         const luggage = await res.json();
         return luggage.map((lug: any) => ({
