@@ -211,7 +211,7 @@ export default function LuggageTab({ tripId, trip, user }: LuggageTabProps) {
     if (!deletingLuggage) return;
 
     try {
-      await deleteMutation.mutateAsync({ id: deletingLuggage.id, tripId });
+      await deleteMutation.mutateAsync({ id: deletingLuggage.id, tripId, userId: user?.id });
       toast({ title: t('luggageDeleted'), description: t('luggageDeletedSuccess') });
       setDeletingLuggage(null);
     } catch (err) {

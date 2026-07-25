@@ -81,8 +81,9 @@ export function useUpdateLuggage() {
 ========================= */
 export function useDeleteLuggage() {
   return useMutation({
-    mutationFn: async ({ id, tripId }: { id: string; tripId: string }) => {
-      const res = await fetch(`/api/luggage/${id}`, {
+    mutationFn: async ({ id, tripId, userId }: { id: string; tripId: string; userId?: string }) => {
+      const url = userId ? `/api/luggage/${id}?userId=${userId}` : `/api/luggage/${id}`;
+      const res = await fetch(url, {
         method: "DELETE",
       });
       if (!res.ok) throw new Error("Error eliminando maleta");

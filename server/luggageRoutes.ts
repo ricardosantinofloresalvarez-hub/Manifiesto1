@@ -473,6 +473,16 @@ router.post("/duplicate", async (req, res) => {
       router.delete("/:id", async (req, res) => {
       try {
       const { id } = req.params;
+      const { userId } = req.query;
+      if (userId) {
+        const [bag] = await db.select().from(luggage).where(eq(luggage.id, id));
+        if (bag) {
+          const [trip] = await db.select().from(trips).where(eq(trips.id, bag.tripId));
+          if (!trip || trip.userId !== String(userId)) {
+            return res.status(403).json({ error: "No autorizado" });
+          }
+        }
+      }
       await db.delete(manifestItems).where(eq(manifestItems.luggageId, id));
       const [deleted] = await db
       .delete(luggage)
