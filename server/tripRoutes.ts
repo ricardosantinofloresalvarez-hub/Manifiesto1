@@ -104,7 +104,7 @@ router.patch("/:id", async (req, res) => {
 });
 
 // DELETE /api/trips/:id
-router.delete("/:id", async (req, res) => {
+router.delete("/:id", requireAuth, async (req, res) => {
   try {
     const { id } = req.params;
     const [deleted] = await db.delete(trips).where(eq(trips.id, id)).returning();
