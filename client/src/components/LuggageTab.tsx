@@ -190,6 +190,7 @@ export default function LuggageTab({ tripId, trip, user }: LuggageTabProps) {
     try {
       await updateMutation.mutateAsync({
         id: editingLuggage.id,
+        userId: user?.id,
         data: {
           nickname: values.nickname || undefined,
           brand: values.brand || undefined,

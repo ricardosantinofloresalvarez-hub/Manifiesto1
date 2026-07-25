@@ -60,11 +60,11 @@ export function useCreateLuggage() {
 ========================= */
 export function useUpdateLuggage() {
   return useMutation({
-    mutationFn: async ({ id, data }: { id: string; data: Partial<InsertLuggage> }) => {
+    mutationFn: async ({ id, data, userId }: { id: string; data: Partial<InsertLuggage>; userId?: string }) => {
       const res = await fetch(`/api/luggage/${id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data),
+        body: JSON.stringify({ ...data, userId }),
       });
       if (!res.ok) throw new Error("Error actualizando maleta");
       return res.json();

@@ -505,10 +505,20 @@ router.post("/duplicate", async (req, res) => {
       try {
       const { id } = req.params;
       const data = req.body;
+      const { userId, ...updateData } = data;
+      if (userId) {
+        const [bag] = await db.select().from(luggage).where(eq(luggage.id, id));
+        if (bag) {
+          const [trip] = await db.select().from(trips).where(eq(trips.id, bag.tripId));
+          if (!trip || trip.userId !== String(userId)) {
+            return res.status(403).json({ error: "No autorizado" });
+          }
+        }
+      }
 
       const [updated] = await db
       .update(luggage)
-      .set(data)
+      .set(updateData)
       .where(eq(luggage.id, id))
       .returning();
 
