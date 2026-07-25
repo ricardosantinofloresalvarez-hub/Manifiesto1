@@ -7,7 +7,7 @@ import { eq } from "drizzle-orm";
 const router = Router();
 
 // GET /api/trips?userId=xxx
-router.get("/", async (req, res) => {
+router.get("/", requireAuth, async (req, res) => {
   try {
     const { userId } = req.query;
     if (!userId) return res.status(400).send("userId is required");
