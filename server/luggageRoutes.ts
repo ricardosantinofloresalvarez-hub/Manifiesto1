@@ -36,9 +36,17 @@ router.get("/", requireAuth, async (req, res) => {
 
 router.post("/", async (req, res) => {
   try {
+    const { tripId, userId } = req.body;
+    if (userId && tripId) {
+      const [trip] = await db.select().from(trips).where(eq(trips.id, tripId));
+      if (!trip || trip.userId !== String(userId)) {
+        return res.status(403).json({ error: "No autorizado" });
+      }
+    }
     const { randomBytes } = await import("crypto");
     const recoveryToken = randomBytes(16).toString("hex");
-    const [newItem] = await db.insert(luggage).values(req.body).returning();
+    const { userId: _omit, ...luggageData } = req.body;
+    const [newItem] = await db.insert(luggage).values(luggageData).returning();
     // Update recovery token via raw SQL
     await db.execute(sql`UPDATE luggage SET recovery_token = ${recoveryToken} WHERE id = ${newItem.id}`);
     newItem.recoveryToken = recoveryToken;

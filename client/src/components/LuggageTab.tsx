@@ -165,6 +165,7 @@ export default function LuggageTab({ tripId, trip, user }: LuggageTabProps) {
     try {
       const data: InsertLuggage = {
         tripId,
+        userId: user?.id,
         nickname: values.nickname || undefined,
         brand: values.brand || undefined,
         type: values.type || undefined,
