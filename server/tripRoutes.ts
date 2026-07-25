@@ -37,7 +37,7 @@ router.get("/:id", requireAuth, async (req, res) => {
 });
 
 // POST /api/trips
-router.post("/", async (req, res) => {
+router.post("/", requireAuth, async (req, res) => {
   try {
     let imageUrl = req.body.imageUrl;
     if (!imageUrl && req.body.destination) {
