@@ -421,6 +421,14 @@ router.post("/duplicate", async (req, res) => {
     if (!sourceTripId || !targetTripId) {
       return res.status(400).json({ error: "sourceTripId y targetTripId son requeridos" });
     }
+    const { userId } = req.body;
+    if (userId) {
+      const [sourceTrip] = await db.select().from(trips).where(eq(trips.id, sourceTripId));
+      const [targetTrip] = await db.select().from(trips).where(eq(trips.id, targetTripId));
+      if (!sourceTrip || sourceTrip.userId !== String(userId) || !targetTrip || targetTrip.userId !== String(userId)) {
+        return res.status(403).json({ error: "No autorizado" });
+      }
+    }
 
     // Obtener maletas del viaje origen
     const sourceLuggage = await db.select().from(luggage).where(eq(luggage.tripId, sourceTripId));

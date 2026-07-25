@@ -119,7 +119,7 @@ export default function LuggageTab({ tripId, trip, user }: LuggageTabProps) {
       const res = await fetch('/api/luggage/duplicate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ sourceTripId, targetTripId: tripId }),
+        body: JSON.stringify({ sourceTripId, targetTripId: tripId, userId: user?.id }),
       });
       if (!res.ok) throw new Error('Error al duplicar');
       toast({ title: 'Maletas duplicadas', description: 'Las maletas y artículos fueron copiados correctamente.' });
