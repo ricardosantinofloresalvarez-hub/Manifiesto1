@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { requireAuth } from "./authMiddleware";
 import { db } from "./db";
-import { luggage, manifestItems, trips, users } from "@shared/schema";
+import { luggage, manifestItems, trips, users, insertLuggageSchema } from "@shared/schema";
 import { eq, sql } from "drizzle-orm";
 import crypto from "crypto";
 import PDFDocument from "pdfkit";
@@ -43,9 +43,13 @@ router.post("/", async (req, res) => {
         return res.status(403).json({ error: "No autorizado" });
       }
     }
+    const { userId: _omit, ...luggageData } = req.body;
+    const parsed = insertLuggageSchema.safeParse(luggageData);
+    if (!parsed.success) {
+      return res.status(400).json({ error: "Datos inválidos", details: parsed.error.flatten() });
+    }
     const { randomBytes } = await import("crypto");
     const recoveryToken = randomBytes(16).toString("hex");
-    const { userId: _omit, ...luggageData } = req.body;
     const [newItem] = await db.insert(luggage).values(luggageData).returning();
     // Update recovery token via raw SQL
     await db.execute(sql`UPDATE luggage SET recovery_token = ${recoveryToken} WHERE id = ${newItem.id}`);
@@ -522,6 +526,10 @@ router.post("/duplicate", async (req, res) => {
             return res.status(403).json({ error: "No autorizado" });
           }
         }
+      }
+      const parsedUpdate = insertLuggageSchema.partial().safeParse(updateData);
+      if (!parsedUpdate.success) {
+        return res.status(400).json({ error: "Datos inválidos", details: parsedUpdate.error.flatten() });
       }
 
       const [updated] = await db
