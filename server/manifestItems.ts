@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { requireAuth } from "./authMiddleware";
 import { db } from "./db";
-import { manifestItems, luggage, trips } from "@shared/schema";
+import { manifestItems, luggage, trips, insertManifestItemSchema } from "@shared/schema";
 import { eq } from "drizzle-orm";
 
 const router = Router();
@@ -72,8 +72,9 @@ router.post("/", async (req, res) => {
   try {
     const data = req.body;
 
-    if (!data.luggageId || !data.name || !data.category) {
-      return res.status(400).send("luggageId, name, and category are required");
+    const parsed = insertManifestItemSchema.safeParse(data);
+    if (!parsed.success) {
+      return res.status(400).json({ error: "Datos inválidos", details: parsed.error.flatten() });
     }
 
     const [newItem] = await db
@@ -103,6 +104,11 @@ router.put("/:id", async (req, res) => {
   try {
     const { id } = req.params; // ID es string (VARCHAR), no número
     const data = req.body;
+
+    const parsedUpdate = insertManifestItemSchema.partial().safeParse(data);
+    if (!parsedUpdate.success) {
+      return res.status(400).json({ error: "Datos inválidos", details: parsedUpdate.error.flatten() });
+    }
 
     const [updatedItem] = await db
       .update(manifestItems)
