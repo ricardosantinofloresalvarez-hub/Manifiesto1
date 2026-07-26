@@ -87,6 +87,10 @@ const apiLimiter = rateLimit({
   message: { error: "Demasiadas peticiones, intenta de nuevo más tarde" },
 });
 app.use("/api", apiLimiter);
+app.use("/api", (req, res, next) => {
+  res.setHeader("Cache-Control", "no-store");
+  next();
+});
 
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
