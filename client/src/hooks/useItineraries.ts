@@ -74,11 +74,11 @@ export function useCreateItineraryItem(type: ItineraryType) {
 
 export function useUpdateItineraryItem(type: ItineraryType) {
   return useMutation({
-    mutationFn: async ({ id, data }: { id: string; data: Partial<InsertItineraryItem> }) => {
+    mutationFn: async ({ id, data, userId }: { id: string; data: Partial<InsertItineraryItem>; userId?: string }) => {
       const response = await fetch(`/api/${type}/${id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data),
+        body: JSON.stringify({ ...data, userId }),
       });
 
       if (!response.ok) {
@@ -95,8 +95,9 @@ export function useUpdateItineraryItem(type: ItineraryType) {
 
 export function useDeleteItineraryItem(type: ItineraryType) {
   return useMutation({
-    mutationFn: async ({ id, tripId }: { id: string; tripId: string }) => {
-      const response = await fetch(`/api/${type}/${id}`, {
+    mutationFn: async ({ id, tripId, userId }: { id: string; tripId: string; userId?: string }) => {
+      const url = userId ? `/api/${type}/${id}?userId=${userId}` : `/api/${type}/${id}`;
+      const response = await fetch(url, {
         method: "DELETE",
       });
 

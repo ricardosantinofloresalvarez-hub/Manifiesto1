@@ -168,7 +168,7 @@ export default function ItineraryTab({ tripId, destination, user }: ItineraryTab
                         variant="ghost"
                         size="icon"
                         onClick={() => deleteFlightMutation.mutate(
-                          { id: flight.id, tripId },
+                          { id: flight.id, tripId, userId: user?.id },
                           {
                             onSuccess: () => {
                               toast({ title: t('success'), description: t('flightDeleted') || 'Vuelo eliminado' });
@@ -355,7 +355,7 @@ export default function ItineraryTab({ tripId, destination, user }: ItineraryTab
                         variant="ghost"
                         size="icon"
                         onClick={() => deleteHotelMutation.mutate(
-                          { id: hotel.id, tripId },
+                          { id: hotel.id, tripId, userId: user?.id },
                           {
                             onSuccess: () => {
                               toast({ title: t('success'), description: t('hotelDeleted') || 'Hotel eliminado' });
@@ -490,7 +490,7 @@ export default function ItineraryTab({ tripId, destination, user }: ItineraryTab
                         variant="ghost"
                         size="icon"
                         onClick={() => deleteTransportMutation.mutate(
-                          { id: item.id, tripId },
+                          { id: item.id, tripId, userId: user?.id },
                           {
                             onSuccess: () => {
                               toast({ title: t('success'), description: t('transportDeleted') || 'Transporte eliminado' });
@@ -641,7 +641,7 @@ export default function ItineraryTab({ tripId, destination, user }: ItineraryTab
                         variant="ghost"
                         size="icon"
                         onClick={() => deleteRestaurantMutation.mutate(
-                          { id: restaurant.id, tripId },
+                          { id: restaurant.id, tripId, userId: user?.id },
                           {
                             onSuccess: () => {
                               toast({ title: t('success'), description: t('restaurantDeleted') || 'Restaurante eliminado' });
@@ -763,7 +763,7 @@ export default function ItineraryTab({ tripId, destination, user }: ItineraryTab
                               variant="ghost"
                               size="icon"
                               onClick={() => deleteActivityMutation.mutate(
-                                { id: activity.id, tripId },
+                                { id: activity.id, tripId, userId: user?.id },
                                 {
                                   onSuccess: () => {
                                     toast({ title: t('success'), description: t('activityDeleted') || 'Actividad eliminada' });

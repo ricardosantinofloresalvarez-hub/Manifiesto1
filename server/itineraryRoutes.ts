@@ -70,10 +70,20 @@ router.patch("/:type/:id", async (req, res) => {
   try {
     const { type, id } = req.params;
     const table = getTable(type);
+    const { userId, ...updateData } = req.body;
+    if (userId) {
+      const [existing] = await db.select().from(table).where(eq(table.id, id));
+      if (existing) {
+        const [trip] = await db.select().from(trips).where(eq(trips.id, (existing as any).tripId));
+        if (!trip || trip.userId !== String(userId)) {
+          return res.status(403).json({ error: "No autorizado" });
+        }
+      }
+    }
 
     const [updated] = await db
       .update(table)
-      .set(req.body)
+      .set(updateData)
       .where(eq(table.id, id))
       .returning();
 
@@ -93,6 +103,16 @@ router.delete("/:type/:id", async (req, res) => {
   try {
     const { type, id } = req.params;
     const table = getTable(type);
+    const { userId } = req.query;
+    if (userId) {
+      const [existing] = await db.select().from(table).where(eq(table.id, id));
+      if (existing) {
+        const [trip] = await db.select().from(trips).where(eq(trips.id, (existing as any).tripId));
+        if (!trip || trip.userId !== String(userId)) {
+          return res.status(403).json({ error: "No autorizado" });
+        }
+      }
+    }
 
     const [deleted] = await db
       .delete(table)
