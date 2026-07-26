@@ -97,6 +97,10 @@ router.post("/", requireAuth, async (req, res) => {
 router.patch("/:id", async (req, res) => {
   try {
     const { id } = req.params;
+    const parsed = insertTripSchema.partial().safeParse(req.body);
+    if (!parsed.success) {
+      return res.status(400).json({ error: "Datos inválidos", details: parsed.error.flatten() });
+    }
     const [updated] = await db.update(trips).set(req.body).where(eq(trips.id, id)).returning();
 
     if (!updated) return res.status(404).send("Trip not found");
