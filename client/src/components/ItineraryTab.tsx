@@ -51,11 +51,11 @@ export default function ItineraryTab({ tripId, destination, user }: ItineraryTab
   const [isRestaurantDialogOpen, setIsRestaurantDialogOpen] = useState(false);
   const [isActivityDialogOpen, setIsActivityDialogOpen] = useState(false);
 
-  const { data: flights = [] } = useFlights(tripId);
-  const { data: hotels = [] } = useHotels(tripId);
-  const { data: transport = [] } = useTransport(tripId);
-  const { data: restaurants = [] } = useRestaurants(tripId);
-  const { data: activities = [] } = useActivities(tripId);
+  const { data: flights = [] } = useFlights(tripId, user?.id);
+  const { data: hotels = [] } = useHotels(tripId, user?.id);
+  const { data: transport = [] } = useTransport(tripId, user?.id);
+  const { data: restaurants = [] } = useRestaurants(tripId, user?.id);
+  const { data: activities = [] } = useActivities(tripId, user?.id);
 
   const [flightForm, setFlightForm] = useState({
     airline: '',

@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { db } from "./db";
-import { flights, hotels, transport, restaurants, activities } from "@shared/schema";
+import { flights, hotels, transport, restaurants, activities, trips } from "@shared/schema";
 import { eq } from "drizzle-orm";
 
 const router = Router();
@@ -21,10 +21,17 @@ function getTable(type: string) {
 router.get("/:type", async (req, res) => {
   try {
     const { type } = req.params;
-    const { tripId } = req.query;
+    const { tripId, userId } = req.query;
 
     if (!tripId) {
       return res.status(400).send("tripId is required");
+    }
+
+    if (userId) {
+      const [trip] = await db.select().from(trips).where(eq(trips.id, String(tripId)));
+      if (!trip || trip.userId !== String(userId)) {
+        return res.status(403).json({ error: "No autorizado" });
+      }
     }
 
     const table = getTable(type);

@@ -11,14 +11,16 @@ type InsertItineraryItem = InsertFlight | InsertHotel | InsertTransport | Insert
 
 export function useItineraryItems<T extends ItineraryItem>(
   tripId: string | null, 
-  type: ItineraryType
+  type: ItineraryType,
+  userId?: string | null
 ) {
   return useQuery({
-    queryKey: ["/api/trips", tripId, type],
+    queryKey: ["/api/trips", tripId, type, userId],
     queryFn: async () => {
       if (!tripId) return [];
 
-      const response = await fetch(`/api/${type}?tripId=${tripId}`);
+      const url = userId ? `/api/${type}?tripId=${tripId}&userId=${userId}` : `/api/${type}?tripId=${tripId}`;
+      const response = await fetch(url);
       if (!response.ok) {
         throw new Error(`Failed to fetch ${type}`);
       }
@@ -29,24 +31,24 @@ export function useItineraryItems<T extends ItineraryItem>(
   });
 }
 
-export function useFlights(tripId: string | null) {
-  return useItineraryItems<Flight>(tripId, "flights");
+export function useFlights(tripId: string | null, userId?: string | null) {
+  return useItineraryItems<Flight>(tripId, "flights", userId);
 }
 
-export function useHotels(tripId: string | null) {
-  return useItineraryItems<Hotel>(tripId, "hotels");
+export function useHotels(tripId: string | null, userId?: string | null) {
+  return useItineraryItems<Hotel>(tripId, "hotels", userId);
 }
 
-export function useTransport(tripId: string | null) {
-  return useItineraryItems<Transport>(tripId, "transport");
+export function useTransport(tripId: string | null, userId?: string | null) {
+  return useItineraryItems<Transport>(tripId, "transport", userId);
 }
 
-export function useRestaurants(tripId: string | null) {
-  return useItineraryItems<Restaurant>(tripId, "restaurants");
+export function useRestaurants(tripId: string | null, userId?: string | null) {
+  return useItineraryItems<Restaurant>(tripId, "restaurants", userId);
 }
 
-export function useActivities(tripId: string | null) {
-  return useItineraryItems<Activity>(tripId, "activities");
+export function useActivities(tripId: string | null, userId?: string | null) {
+  return useItineraryItems<Activity>(tripId, "activities", userId);
 }
 
 export function useCreateItineraryItem(type: ItineraryType) {
