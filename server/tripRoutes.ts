@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { requireAuth } from "./authMiddleware";
 import { db } from "./db";
-import { trips } from "@shared/schema";
+import { trips, insertTripSchema } from "@shared/schema";
 import { eq } from "drizzle-orm";
 
 const router = Router();
@@ -39,6 +39,10 @@ router.get("/:id", requireAuth, async (req, res) => {
 // POST /api/trips
 router.post("/", requireAuth, async (req, res) => {
   try {
+    const parsed = insertTripSchema.safeParse(req.body);
+    if (!parsed.success) {
+      return res.status(400).json({ error: "Datos inválidos", details: parsed.error.flatten() });
+    }
     let imageUrl = req.body.imageUrl;
     if (!imageUrl && req.body.destination) {
       try {
