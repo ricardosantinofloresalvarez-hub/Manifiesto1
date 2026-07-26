@@ -1,6 +1,9 @@
 import { Router } from "express";
 import { db } from "./db";
-import { flights, hotels, transport, restaurants, activities, trips } from "@shared/schema";
+import {
+  flights, hotels, transport, restaurants, activities, trips,
+  insertFlightSchema, insertHotelSchema, insertTransportSchema, insertRestaurantSchema, insertActivitySchema
+} from "@shared/schema";
 import { eq } from "drizzle-orm";
 
 const router = Router();
@@ -13,6 +16,16 @@ function getTable(type: string) {
     case "transport": return transport;
     case "restaurants": return restaurants;
     case "activities": return activities;
+    default: throw new Error(`Invalid itinerary type: ${type}`);
+  }
+}
+function getSchema(type: string) {
+  switch (type) {
+    case "flights": return insertFlightSchema;
+    case "hotels": return insertHotelSchema;
+    case "transport": return insertTransportSchema;
+    case "restaurants": return insertRestaurantSchema;
+    case "activities": return insertActivitySchema;
     default: throw new Error(`Invalid itinerary type: ${type}`);
   }
 }
@@ -52,6 +65,11 @@ router.post("/:type", async (req, res) => {
   try {
     const { type } = req.params;
     const table = getTable(type);
+    const schema = getSchema(type);
+    const parsed = schema.safeParse(req.body);
+    if (!parsed.success) {
+      return res.status(400).json({ error: "Datos inválidos", details: parsed.error.flatten() });
+    }
 
     const [newItem] = await db
       .insert(table)
@@ -79,6 +97,11 @@ router.patch("/:type/:id", async (req, res) => {
           return res.status(403).json({ error: "No autorizado" });
         }
       }
+    }
+    const schema = getSchema(type);
+    const parsedUpdate = schema.partial().safeParse(updateData);
+    if (!parsedUpdate.success) {
+      return res.status(400).json({ error: "Datos inválidos", details: parsedUpdate.error.flatten() });
     }
 
     const [updated] = await db
