@@ -78,10 +78,28 @@ app.use(
   }),
 );
 
+/* RATE LIMITING */
+const apiLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutos
+  max: 300, // 300 peticiones por IP cada 15 min
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: "Demasiadas peticiones, intenta de nuevo más tarde" },
+});
+app.use("/api", apiLimiter);
+
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 20, // 20 intentos de login/registro cada 15 min
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: "Demasiados intentos, intenta de nuevo más tarde" },
+});
+
 /* RUTAS */
 app.use("/api/manifestItems", manifestItemsRoutes);
 app.use("/api/luggage", luggageRoutes);
-app.use("/api/auth", authRoutes);
+app.use("/api/auth", authLimiter, authRoutes);
 app.use("/api/trips", tripRoutes);
 app.use("/api/travelers", travelerRoutes);
 
