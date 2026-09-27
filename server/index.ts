@@ -39,9 +39,10 @@ app.use(helmet({
     directives: {
       defaultSrc: ["'self'"],
       imgSrc: ["'self'", "data:", "https://api.cloudinary.com", "https://res.cloudinary.com", "https://*.tile.openstreetmap.org", "https://unpkg.com", "https://images.unsplash.com"],
-      connectSrc: ["'self'", "https://api.cloudinary.com", "https://nominatim.openstreetmap.org", "https://overpass-api.de", "https://www.google-analytics.com", "https://*.paddle.com"],
-      scriptSrc: ["'self'", "https://www.googletagmanager.com", "https://cdn.paddle.com"],
-      styleSrc: ["'self'", "'unsafe-inline'"],
+      fontSrc: ["'self'", "https://fonts.gstatic.com"],
+      connectSrc: ["'self'", "https://api.cloudinary.com", "https://nominatim.openstreetmap.org", "https://overpass-api.de", "https://www.google-analytics.com", "https://*.paddle.com", "https://api.openweathermap.org"],
+      scriptSrc: ["'self'", "'unsafe-inline'", "https://www.googletagmanager.com", "https://cdn.paddle.com", "https://public.profitwell.com"],
+      styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com", "https://cdn.paddle.com"],
       frameSrc: ["'self'", "https://*.paddle.com", "https://accounts.google.com"],
     },
   },
