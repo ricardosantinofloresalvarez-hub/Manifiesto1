@@ -11,13 +11,12 @@ const router = Router();
 
 // LISTAR Y CREAR (Básico)
 router.get("/", requireAuth, async (req, res) => {
-  const { tripId, userId } = req.query;
+  const { tripId } = req.query;
   if (!tripId) return res.status(400).json({ error: "tripId requerido" });
-  // Verificar que el trip pertenece al usuario
-  if (userId) {
-    const [trip] = await db.select().from(trips).where(eq(trips.id, String(tripId)));
-    if (!trip || trip.userId !== String(userId)) return res.status(403).json({ error: "No autorizado" });
-  }
+  // Verificar que el trip pertenece al usuario autenticado (sesión real, no query param)
+  const sessionUserId = (req.user as any)?.id;
+  const [trip] = await db.select().from(trips).where(eq(trips.id, String(tripId)));
+  if (!trip || trip.userId !== sessionUserId) return res.status(403).json({ error: "No autorizado" });
   const results = await db.select().from(luggage).where(eq(luggage.tripId, String(tripId)));
   // Add recovery token via raw query
   const ids = results.map(r => r.id);
