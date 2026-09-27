@@ -34,7 +34,17 @@ const app = express();
 app.set('trust proxy', 1);
 
 app.use(helmet({
-  contentSecurityPolicy: false,
+  contentSecurityPolicy: {
+    reportOnly: true,
+    directives: {
+      defaultSrc: ["'self'"],
+      imgSrc: ["'self'", "data:", "https://api.cloudinary.com", "https://res.cloudinary.com", "https://*.tile.openstreetmap.org", "https://unpkg.com", "https://images.unsplash.com"],
+      connectSrc: ["'self'", "https://api.cloudinary.com", "https://nominatim.openstreetmap.org", "https://overpass-api.de", "https://www.google-analytics.com", "https://*.paddle.com"],
+      scriptSrc: ["'self'", "https://www.googletagmanager.com", "https://cdn.paddle.com"],
+      styleSrc: ["'self'", "'unsafe-inline'"],
+      frameSrc: ["'self'", "https://*.paddle.com", "https://accounts.google.com"],
+    },
+  },
   referrerPolicy: { policy: 'no-referrer-when-downgrade' },
 }));
 
