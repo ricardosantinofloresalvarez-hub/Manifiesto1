@@ -39,7 +39,7 @@ app.use(helmet({
     reportOnly: false,
     directives: {
       defaultSrc: ["'self'"],
-      imgSrc: ["'self'", "data:", "https://api.cloudinary.com", "https://res.cloudinary.com", "https://*.tile.openstreetmap.org", "https://unpkg.com", "https://images.unsplash.com"],
+      imgSrc: ["'self'", "data:", "https://api.cloudinary.com", "https://res.cloudinary.com", "https://*.tile.openstreetmap.org", "https://unpkg.com", "https://images.unsplash.com", "https://*.googleusercontent.com"],
       fontSrc: ["'self'", "https://fonts.gstatic.com"],
       connectSrc: ["'self'", "https://api.cloudinary.com", "https://nominatim.openstreetmap.org", "https://overpass-api.de", "https://www.google-analytics.com", "https://*.paddle.com", "https://api.openweathermap.org"],
       scriptSrc: ["'self'", "'unsafe-inline'", "https://www.googletagmanager.com", "https://cdn.paddle.com", "https://public.profitwell.com"],
