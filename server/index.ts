@@ -9,6 +9,15 @@ import { db } from "./db";
 import { users } from "@shared/schema";
 import { eq } from "drizzle-orm";
 import crypto from "crypto";
+
+function escapeHtml(str: string): string {
+  return str
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
 import manifestItemsRoutes from "./manifestItems";
 import luggageRoutes from "./luggageRoutes";
 import authRoutes from "./authRoutes"
@@ -21,6 +30,8 @@ import paypalRoutes from "./paypalRoutes";
 import paddleRoutes from "./paddleRoutes";
 
 const app = express();
+
+app.set('trust proxy', 1);
 
 app.use(express.static('dist/public'));
 app.get("/", (_req, res) => {
@@ -154,7 +165,7 @@ app.post("/api/found/:token/report", async (req, res) => {
         <h2>Buenas noticias</h2>
         <p>Alguien escaneó el código QR de tu maleta <strong>${bag.nickname || "sin nombre"}</strong>.</p>
         <p><strong>Hora:</strong> ${new Date().toLocaleString("es-ES")}</p>
-        ${message ? `<p><strong>Mensaje:</strong> ${message}</p>` : ""}
+        ${message ? `<p><strong>Mensaje:</strong> ${escapeHtml(message)}</p>` : ""}
         <p>Si puedes contactar a quien la encontró, responde a este correo o comunícate directamente. Tu maleta puede estar esperándote.</p>
       `
     });
