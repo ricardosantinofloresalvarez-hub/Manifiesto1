@@ -33,6 +33,11 @@ const app = express();
 
 app.set('trust proxy', 1);
 
+app.use(helmet({
+  contentSecurityPolicy: false,
+  referrerPolicy: { policy: 'no-referrer-when-downgrade' },
+}));
+
 app.use(express.static('dist/public'));
 app.get("/", (_req, res) => {
   res.sendFile('index.html', { root: 'dist/public' });
