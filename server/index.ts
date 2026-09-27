@@ -35,7 +35,7 @@ app.set('trust proxy', 1);
 
 app.use(helmet({
   contentSecurityPolicy: {
-    reportOnly: true,
+    reportOnly: false,
     directives: {
       defaultSrc: ["'self'"],
       imgSrc: ["'self'", "data:", "https://api.cloudinary.com", "https://res.cloudinary.com", "https://*.tile.openstreetmap.org", "https://unpkg.com", "https://images.unsplash.com"],
