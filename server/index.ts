@@ -24,7 +24,7 @@ import authRoutes from "./authRoutes"
 import tripRoutes from "./tripRoutes";
 import travelerRoutes from "./travelerRoutes";
 import itineraryRoutes from "./itineraryRoutes";
-import paymentsRoutes from "./paymentsRoutes";
+// import paymentsRoutes from "./paymentsRoutes"; // deshabilitado 27 sept: Lemon Squeezy ya no se usa, webhook sin auth obligatoria era vulnerable
 import adminRoutes from "./adminRoutes";
 import { requireAuth } from "./authMiddleware";
 import paypalRoutes from "./paypalRoutes";
@@ -215,7 +215,7 @@ app.post("/api/dictate", requireAuth, async (req, res) => {
   }
 });
 app.use("/api", itineraryRoutes);
-app.use("/api/payments", paymentsRoutes);
+// app.use("/api/payments", paymentsRoutes); // deshabilitado 27 sept: ver nota arriba
 app.use("/api/admin", adminRoutes);
 app.use("/api/paypal", paypalRoutes);
 app.use("/api/paddle", paddleRoutes);
