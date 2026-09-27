@@ -3,6 +3,9 @@ import cors from "cors";
 import helmet from "helmet";
 import rateLimit from "express-rate-limit";
 import session from "express-session";
+import connectPgSimple from "connect-pg-simple";
+
+const PgSession = connectPgSimple(session);
 import passport from "passport";
 import { Strategy as GoogleStrategy } from "passport-google-oauth20";
 import { db } from "./db";
@@ -58,6 +61,10 @@ app.get("/", (_req, res) => {
 
 /* SESSION */
 app.use(session({
+  store: new PgSession({
+    conString: process.env.DATABASE_URL,
+    createTableIfMissing: true,
+  }),
   secret: process.env.SESSION_SECRET || require('crypto').randomBytes(32).toString('hex'),
   resave: false,
   saveUninitialized: false,
