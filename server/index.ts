@@ -26,6 +26,7 @@ import travelerRoutes from "./travelerRoutes";
 import itineraryRoutes from "./itineraryRoutes";
 import paymentsRoutes from "./paymentsRoutes";
 import adminRoutes from "./adminRoutes";
+import { requireAuth } from "./authMiddleware";
 import paypalRoutes from "./paypalRoutes";
 import paddleRoutes from "./paddleRoutes";
 
@@ -192,7 +193,7 @@ app.post("/api/found/:token/report", async (req, res) => {
     res.status(500).json({ error: "Error del servidor" });
   }
 });
-app.post("/api/dictate", async (req, res) => {
+app.post("/api/dictate", requireAuth, async (req, res) => {
   try {
     const { text } = req.body;
     if (!text) return res.status(400).json({ error: "No text provided" });
