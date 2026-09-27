@@ -233,5 +233,5 @@ app.get("*", (_req, res) => {
 /* SERVER */
 const PORT = 5000;
 app.listen(PORT, () => {
-  console.log(`🚀 Server running on port ${PORT}`);
+  console.log(`🚀 Server running on port ${PORT}`); // prueba de persistencia de sesión
 });
