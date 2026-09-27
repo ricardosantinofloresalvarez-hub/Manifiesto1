@@ -3,7 +3,10 @@ import { db } from "./db";
 import { users, trips, purchases } from "@shared/schema";
 import { sql, eq } from "drizzle-orm";
 
+import { requireAuth } from "./authMiddleware";
+
 const router = Router();
+router.use(requireAuth);
 const ADMIN_EMAIL = "ricardosantino.floresalvarez@gmail.com";
 
 async function isAdmin(userId: string) {
@@ -14,7 +17,7 @@ async function isAdmin(userId: string) {
 
 router.get("/users", async (req, res) => {
   try {
-    const userId = req.query.userId as string;
+    const userId = (req.user as any)?.id;
     if (!await isAdmin(userId)) return res.status(403).json({ error: "No autorizado" });
     const allUsers = await db.select().from(users);
     res.json(allUsers);
@@ -25,7 +28,7 @@ router.get("/users", async (req, res) => {
 
 router.get("/stats", async (req, res) => {
   try {
-    const userId = req.query.userId as string;
+    const userId = (req.user as any)?.id;
     if (!await isAdmin(userId)) return res.status(403).json({ error: "No autorizado" });
     const [totalUsers] = await db.select({ count: sql<number>`count(*)` }).from(users);
     const [totalTrips] = await db.select({ count: sql<number>`count(*)` }).from(trips);
@@ -44,7 +47,7 @@ router.get("/stats", async (req, res) => {
 
 router.post("/users/:id/credits", async (req, res) => {
   try {
-    const userId = req.query.userId as string;
+    const userId = (req.user as any)?.id;
     if (!await isAdmin(userId)) return res.status(403).json({ error: "No autorizado" });
     const { credits } = req.body;
     if (typeof credits !== 'number') return res.status(400).json({ error: "Créditos inválidos" });
@@ -57,7 +60,7 @@ router.post("/users/:id/credits", async (req, res) => {
 
 router.delete("/users/:id", async (req, res) => {
   try {
-    const userId = req.query.userId as string;
+    const userId = (req.user as any)?.id;
     if (!await isAdmin(userId)) return res.status(403).json({ error: "No autorizado" });
     const { id } = req.params;
     // Eliminar en cascada
