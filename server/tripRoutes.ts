@@ -9,8 +9,8 @@ const router = Router();
 // GET /api/trips?userId=xxx
 router.get("/", requireAuth, async (req, res) => {
   try {
-    const { userId } = req.query;
-    if (!userId) return res.status(400).send("userId is required");
+    const userId = (req.user as any)?.id;
+    if (!userId) return res.status(401).send("No autenticado");
 
     const results = await db.select().from(trips).where(eq(trips.userId, String(userId)));
     res.json(results);
@@ -24,11 +24,11 @@ router.get("/", requireAuth, async (req, res) => {
 router.get("/:id", requireAuth, async (req, res) => {
   try {
     const { id } = req.params;
-    const userId = req.query.userId || (req.user as any)?.id;
+    const userId = (req.user as any)?.id;
     const [trip] = await db.select().from(trips).where(eq(trips.id, id));
 
     if (!trip) return res.status(404).send("Trip not found");
-    if (userId && trip.userId !== String(userId)) return res.status(403).json({ error: "No autorizado" });
+    if (trip.userId !== userId) return res.status(403).json({ error: "No autorizado" });
     res.json(trip);
   } catch (error) {
     console.error("Error fetching trip:", error);
@@ -85,7 +85,7 @@ router.post("/", requireAuth, async (req, res) => {
         console.error('❌ Error fetching Unsplash image:', err);
       }
     }
-    const [newTrip] = await db.insert(trips).values({ ...req.body, imageUrl }).returning();
+    const [newTrip] = await db.insert(trips).values({ ...req.body, userId: (req.user as any)?.id, imageUrl }).returning();
     res.json(newTrip);
   } catch (error) {
     console.error("Error creating trip:", error);
@@ -94,14 +94,19 @@ router.post("/", requireAuth, async (req, res) => {
 });
 
 // PATCH /api/trips/:id
-router.patch("/:id", async (req, res) => {
+router.patch("/:id", requireAuth, async (req, res) => {
   try {
     const { id } = req.params;
+    const userId = (req.user as any)?.id;
+    const [existing] = await db.select().from(trips).where(eq(trips.id, id));
+    if (!existing) return res.status(404).send("Trip not found");
+    if (existing.userId !== userId) return res.status(403).json({ error: "No autorizado" });
     const parsed = insertTripSchema.partial().safeParse(req.body);
     if (!parsed.success) {
       return res.status(400).json({ error: "Datos inválidos", details: parsed.error.flatten() });
     }
-    const [updated] = await db.update(trips).set(req.body).where(eq(trips.id, id)).returning();
+    const { userId: _ignore, ...safeBody } = req.body;
+    const [updated] = await db.update(trips).set(safeBody).where(eq(trips.id, id)).returning();
 
     if (!updated) return res.status(404).send("Trip not found");
     res.json(updated);
@@ -115,6 +120,10 @@ router.patch("/:id", async (req, res) => {
 router.delete("/:id", requireAuth, async (req, res) => {
   try {
     const { id } = req.params;
+    const userId = (req.user as any)?.id;
+    const [existing] = await db.select().from(trips).where(eq(trips.id, id));
+    if (!existing) return res.status(404).send("Trip not found");
+    if (existing.userId !== userId) return res.status(403).json({ error: "No autorizado" });
     const [deleted] = await db.delete(trips).where(eq(trips.id, id)).returning();
 
     if (!deleted) return res.status(404).send("Trip not found");
