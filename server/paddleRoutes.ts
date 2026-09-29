@@ -1,4 +1,5 @@
 import { Router } from "express";
+import crypto from "crypto";
 import { db } from "./db";
 import { users, purchases } from "@shared/schema";
 import { eq } from "drizzle-orm";
@@ -80,8 +81,26 @@ router.get("/checkout/:productId", async (req, res) => {
 });
 
 // POST /api/paddle/webhook
+function verifyPaddleSignature(req: any): boolean {
+  try {
+    const sigHeader = req.headers["paddle-signature"] as string;
+    const secret = process.env.PADDLE_WEBHOOK_SECRET;
+    if (!sigHeader || !secret || !req.rawBody) return false;
+    const parts = Object.fromEntries(sigHeader.split(";").map((p: string) => p.split("=")));
+    const { ts, h1 } = parts;
+    if (!ts || !h1) return false;
+    const signedPayload = `${ts}:${req.rawBody.toString()}`;
+    const expected = crypto.createHmac("sha256", secret).update(signedPayload).digest("hex");
+    return crypto.timingSafeEqual(Buffer.from(expected), Buffer.from(h1));
+  } catch {
+    return false;
+  }
+}
+
 router.post("/webhook", async (req, res) => {
   try {
+    const isValid = verifyPaddleSignature(req);
+    console.log(`[Paddle webhook] Firma ${isValid ? "VÁLIDA ✅" : "INVÁLIDA ❌"} (modo observación, no bloquea)`);
     const event = req.body;
     
     if (event.event_type === "transaction.completed") {
