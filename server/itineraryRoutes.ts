@@ -1,4 +1,5 @@
 import { Router } from "express";
+import { requireAuth } from "./authMiddleware";
 import { db } from "./db";
 import {
   flights, hotels, transport, restaurants, activities, trips,
@@ -7,8 +8,8 @@ import {
 import { eq } from "drizzle-orm";
 
 const router = Router();
+router.use(requireAuth);
 
-// Helper function to get the correct table
 function getTable(type: string) {
   switch (type) {
     case "flights": return flights;
@@ -30,29 +31,28 @@ function getSchema(type: string) {
   }
 }
 
-// GET /api/:type?tripId=xxx - List items
+async function tripBelongsToUser(tripId: string, userId: string): Promise<boolean> {
+  const [trip] = await db.select().from(trips).where(eq(trips.id, tripId));
+  return !!trip && trip.userId === userId;
+}
+
+async function itemBelongsToUser(table: any, id: string, userId: string): Promise<boolean> {
+  const [existing] = await db.select().from(table).where(eq(table.id, id));
+  if (!existing) return false;
+  return tripBelongsToUser((existing as any).tripId, userId);
+}
+
 router.get("/:type", async (req, res) => {
   try {
     const { type } = req.params;
-    const { tripId, userId } = req.query;
-
-    if (!tripId) {
-      return res.status(400).send("tripId is required");
+    const { tripId } = req.query;
+    const userId = (req.user as any)?.id;
+    if (!tripId) return res.status(400).send("tripId is required");
+    if (!(await tripBelongsToUser(String(tripId), userId))) {
+      return res.status(403).json({ error: "No autorizado" });
     }
-
-    if (userId) {
-      const [trip] = await db.select().from(trips).where(eq(trips.id, String(tripId)));
-      if (!trip || trip.userId !== String(userId)) {
-        return res.status(403).json({ error: "No autorizado" });
-      }
-    }
-
     const table = getTable(type);
-    const results = await db
-      .select()
-      .from(table)
-      .where(eq(table.tripId, String(tripId)));
-
+    const results = await db.select().from(table).where(eq(table.tripId, String(tripId)));
     res.json(results);
   } catch (error) {
     console.error(`Error fetching ${req.params.type}:`, error);
@@ -60,22 +60,20 @@ router.get("/:type", async (req, res) => {
   }
 });
 
-// POST /api/:type - Create item
 router.post("/:type", async (req, res) => {
   try {
     const { type } = req.params;
+    const userId = (req.user as any)?.id;
     const table = getTable(type);
     const schema = getSchema(type);
     const parsed = schema.safeParse(req.body);
     if (!parsed.success) {
       return res.status(400).json({ error: "Datos inválidos", details: parsed.error.flatten() });
     }
-
-    const [newItem] = await db
-      .insert(table)
-      .values(req.body)
-      .returning();
-
+    if (!(await tripBelongsToUser(req.body.tripId, userId))) {
+      return res.status(403).json({ error: "No autorizado" });
+    }
+    const [newItem] = await db.insert(table).values(req.body).returning();
     res.json(newItem);
   } catch (error) {
     console.error(`Error creating ${req.params.type}:`, error);
@@ -83,37 +81,22 @@ router.post("/:type", async (req, res) => {
   }
 });
 
-// PATCH /api/:type/:id - Update item
 router.patch("/:type/:id", async (req, res) => {
   try {
     const { type, id } = req.params;
+    const userId = (req.user as any)?.id;
     const table = getTable(type);
-    const { userId, ...updateData } = req.body;
-    if (userId) {
-      const [existing] = await db.select().from(table).where(eq(table.id, id));
-      if (existing) {
-        const [trip] = await db.select().from(trips).where(eq(trips.id, (existing as any).tripId));
-        if (!trip || trip.userId !== String(userId)) {
-          return res.status(403).json({ error: "No autorizado" });
-        }
-      }
+    if (!(await itemBelongsToUser(table, id, userId))) {
+      return res.status(403).json({ error: "No autorizado" });
     }
+    const { userId: _ignore, ...updateData } = req.body;
     const schema = getSchema(type);
     const parsedUpdate = schema.partial().safeParse(updateData);
     if (!parsedUpdate.success) {
       return res.status(400).json({ error: "Datos inválidos", details: parsedUpdate.error.flatten() });
     }
-
-    const [updated] = await db
-      .update(table)
-      .set(updateData)
-      .where(eq(table.id, id))
-      .returning();
-
-    if (!updated) {
-      return res.status(404).send("Item not found");
-    }
-
+    const [updated] = await db.update(table).set(updateData).where(eq(table.id, id)).returning();
+    if (!updated) return res.status(404).send("Item not found");
     res.json(updated);
   } catch (error) {
     console.error(`Error updating ${req.params.type}:`, error);
@@ -121,31 +104,16 @@ router.patch("/:type/:id", async (req, res) => {
   }
 });
 
-// DELETE /api/:type/:id - Delete item
 router.delete("/:type/:id", async (req, res) => {
   try {
     const { type, id } = req.params;
+    const userId = (req.user as any)?.id;
     const table = getTable(type);
-    const { userId } = req.query;
-    if (userId) {
-      const [existing] = await db.select().from(table).where(eq(table.id, id));
-      if (existing) {
-        const [trip] = await db.select().from(trips).where(eq(trips.id, (existing as any).tripId));
-        if (!trip || trip.userId !== String(userId)) {
-          return res.status(403).json({ error: "No autorizado" });
-        }
-      }
+    if (!(await itemBelongsToUser(table, id, userId))) {
+      return res.status(403).json({ error: "No autorizado" });
     }
-
-    const [deleted] = await db
-      .delete(table)
-      .where(eq(table.id, id))
-      .returning();
-
-    if (!deleted) {
-      return res.status(404).send("Item not found");
-    }
-
+    const [deleted] = await db.delete(table).where(eq(table.id, id)).returning();
+    if (!deleted) return res.status(404).send("Item not found");
     res.json({ success: true, id });
   } catch (error) {
     console.error(`Error deleting ${req.params.type}:`, error);
