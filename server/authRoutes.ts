@@ -75,13 +75,19 @@ router.get("/magic", async (req, res) => {
     if (!token) return res.redirect("/login?error=invalid");
     const user = await verifyMagicToken(token);
     if (!user) return res.redirect("/login?error=expired");
-    const userData = encodeURIComponent(JSON.stringify({
-      id: user.id,
-      email: user.email,
-      name: user.name,
-      photoUrl: user.photoUrl
-    }));
-    res.redirect(`${process.env.BASE_URL || 'https://159cf49c-0920-4684-b3d1-58a353686a03-00-32y8k86zgc8mg.worf.replit.dev'}/auth/callback?user=${userData}`);
+    req.login(user, (err) => {
+      if (err) {
+        console.error("Error creando sesión de magic link:", err);
+        return res.redirect("/login?error=session");
+      }
+      const userData = encodeURIComponent(JSON.stringify({
+        id: user.id,
+        email: user.email,
+        name: user.name,
+        photoUrl: user.photoUrl
+      }));
+      res.redirect(`${process.env.BASE_URL || 'https://159cf49c-0920-4684-b3d1-58a353686a03-00-32y8k86zgc8mg.worf.replit.dev'}/auth/callback?user=${userData}`);
+    });
   } catch (error) {
     console.error("Error verifying magic token:", error);
     res.redirect("/login?error=invalid");
