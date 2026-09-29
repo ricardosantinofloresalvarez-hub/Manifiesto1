@@ -68,7 +68,7 @@ app.use(session({
   secret: process.env.SESSION_SECRET || require('crypto').randomBytes(32).toString('hex'),
   resave: false,
   saveUninitialized: false,
-  cookie: { secure: false }
+  cookie: { secure: process.env.NODE_ENV === 'production' }
 }));
 
 /* PASSPORT */
