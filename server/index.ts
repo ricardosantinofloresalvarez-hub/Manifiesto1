@@ -223,11 +223,11 @@ app.post("/api/dictate", requireAuth, async (req, res) => {
     res.status(500).json({ error: "Error procesando dictado" });
   }
 });
-app.use("/api", itineraryRoutes);
 // app.use("/api/payments", paymentsRoutes); // deshabilitado 27 sept: ver nota arriba
 app.use("/api/admin", adminRoutes);
 app.use("/api/paypal", paypalRoutes);
 app.use("/api/paddle", paddleRoutes);
+app.use("/api", itineraryRoutes); // movido al final: su requireAuth interceptaba /api/paddle y /api/paypal antes de que llegaran esos webhooks
 app.get("*", (_req, res) => {
   res.sendFile("index.html", { root: "dist/public" });
 });

@@ -100,7 +100,10 @@ function verifyPaddleSignature(req: any): boolean {
 router.post("/webhook", async (req, res) => {
   try {
     const isValid = verifyPaddleSignature(req);
-    console.log(`[Paddle webhook] Firma ${isValid ? "VÁLIDA ✅" : "INVÁLIDA ❌"} (modo observación, no bloquea)`);
+    if (!isValid) {
+      console.warn("[Paddle webhook] Firma INVÁLIDA ❌ — petición rechazada");
+      return res.status(401).json({ error: "Firma inválida" });
+    }
     const event = req.body;
     
     if (event.event_type === "transaction.completed") {
