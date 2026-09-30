@@ -41,8 +41,7 @@ async function getAccessToken() {
 router.get("/checkout/:productId", async (req, res) => {
   try {
     const { productId } = req.params;
-    const user = req.user as any;
-    const userId = (req.query.userId as string) || user?.id;
+    const userId = (req.user as any)?.id;
     if (!userId) return res.status(401).json({ error: "No autenticado" });
 
     const price = PRODUCT_PRICES[productId];
