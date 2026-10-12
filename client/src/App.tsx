@@ -1,4 +1,5 @@
-import { Switch, Route } from "wouter";
+import { useEffect, useRef } from "react";
+import { Switch, Route, useLocation } from "wouter";
 import FoundLuggage from "@/pages/FoundLuggage";
 import RecoveryLabelPage from "@/pages/RecoveryLabelPage";
 import AuthCallback from "@/pages/AuthCallback";
@@ -20,6 +21,68 @@ import Verify from "@/pages/Verify";
 import Profile from "@/pages/Profile";
 import Admin from "@/pages/Admin";
 import Plans from "@/pages/Plans";
+import { getSeoMetadata } from "@shared/seo";
+
+declare global {
+  interface Window {
+    gtag?: (...args: any[]) => void;
+  }
+}
+
+function RouteSeo() {
+  const [location] = useLocation();
+  const lastPageView = useRef<string | null>(null);
+
+  useEffect(() => {
+    const pathname = location.split("?")[0] || "/";
+    const seo = getSeoMetadata(pathname);
+    const setContent = (id: string, content: string) => {
+      document.getElementById(id)?.setAttribute("content", content);
+    };
+
+    document.title = seo.title;
+    setContent("seo-description", seo.description);
+    setContent("seo-robots", seo.robots);
+    setContent("seo-og-title", seo.title);
+    setContent("seo-og-description", seo.description);
+    setContent("seo-og-url", seo.canonical || "https://manifiesto.app/");
+    setContent("seo-twitter-title", seo.title);
+    setContent("seo-twitter-description", seo.description);
+
+    let canonical = document.getElementById("seo-canonical") as HTMLLinkElement | null;
+    if (seo.canonical) {
+      if (!canonical) {
+        canonical = document.createElement("link");
+        canonical.id = "seo-canonical";
+        canonical.rel = "canonical";
+        document.head.appendChild(canonical);
+      }
+      canonical.href = seo.canonical;
+    } else {
+      canonical?.remove();
+    }
+
+    document.getElementById("seo-jsonld")?.remove();
+    if (seo.jsonLd) {
+      const jsonLd = document.createElement("script");
+      jsonLd.id = "seo-jsonld";
+      jsonLd.type = "application/ld+json";
+      jsonLd.textContent = JSON.stringify(seo.jsonLd);
+      document.head.appendChild(jsonLd);
+    }
+
+    if (lastPageView.current !== pathname) {
+      lastPageView.current = pathname;
+      window.gtag?.("event", "page_view", {
+        page_path: pathname,
+        page_title: seo.title,
+        page_location: `${window.location.origin}${pathname}`,
+      });
+    }
+  }, [location]);
+
+  return null;
+}
 
 function Router() {
   return (
@@ -49,6 +112,7 @@ function App() {
           <AuthProvider>
             <TooltipProvider>
               <Toaster />
+              <RouteSeo />
               <Router />
             </TooltipProvider>
           </AuthProvider>
