@@ -230,7 +230,10 @@ app.use("/api/paddle", paddleRoutes);
 app.use("/api", itineraryRoutes); // movido al final: su requireAuth interceptaba /api/paddle y /api/paypal antes de que llegaran esos webhooks
 app.get("*", async (req, res) => {
   try {
-    if (req.path === "/verify") {
+    if (
+      req.path === "/verify" ||
+      /^\/(found|label)\/[^/]+\/?$/.test(req.path)
+    ) {
       res.setHeader("X-Robots-Tag", "noindex");
     }
     const indexHtml = await readFile(

@@ -20,7 +20,10 @@ const seoHtmlPlugin = {
   }) {
     server.middlewares.use((req, res, next) => {
       const pathname = new URL(req.url || "/", "http://localhost").pathname;
-      if (pathname === "/verify") {
+      if (
+        pathname === "/verify" ||
+        /^\/(found|label)\/[^/]+\/?$/.test(pathname)
+      ) {
         res.setHeader("X-Robots-Tag", "noindex");
       }
       next();
