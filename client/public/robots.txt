@@ -1,0 +1,20 @@
+User-agent: *
+Allow: /
+Disallow: /login
+Disallow: /dashboard
+Disallow: /trip/
+Disallow: /manifests
+Disallow: /found/
+Disallow: /label/
+Disallow: /auth/
+Disallow: /profile
+Disallow: /admin
+Disallow: /api
+Disallow: /verify
+Disallow: /payments
+Disallow: /payment
+Disallow: /checkout
+Disallow: /pago
+Disallow: /pagos
+
+Sitemap: https://manifiesto.app/sitemap.xml

@@ -97,11 +97,11 @@ const privateExactPaths = new Set([
 ]);
 
 export function getSeoMetadata(pathname: string): SeoMetadata {
-  const normalizedPath = pathname.replace(/\/+$/, "") || "/";
+  const normalizedPath =
+    pathname === "/index.html" ? "/" : pathname.replace(/\/+$/, "") || "/";
   const publicMetadata = publicSeo[normalizedPath];
   if (publicMetadata) return publicMetadata;
 
-  if (normalizedPath === "/planes") return publicSeo["/planes"];
   if (
     privateExactPaths.has(normalizedPath) ||
     /^\/(trip|found|label)(\/|$)/.test(normalizedPath)

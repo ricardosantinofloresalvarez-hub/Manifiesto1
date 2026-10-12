@@ -12,6 +12,9 @@ import { db } from "./db";
 import { users } from "@shared/schema";
 import { eq } from "drizzle-orm";
 import crypto from "crypto";
+import { readFile } from "fs/promises";
+import path from "path";
+import { applySeoToHtml } from "../shared/seo";
 
 function escapeHtml(str: string): string {
   return str
@@ -53,10 +56,7 @@ app.use(helmet({
   referrerPolicy: { policy: 'no-referrer-when-downgrade' },
 }));
 
-app.use(express.static('dist/public'));
-app.get("/", (_req, res) => {
-  res.sendFile('index.html', { root: 'dist/public' });
-});
+app.use(express.static("dist/public", { index: false }));
 
 
 /* SESSION */
@@ -228,8 +228,20 @@ app.use("/api/admin", adminRoutes);
 app.use("/api/paypal", paypalRoutes);
 app.use("/api/paddle", paddleRoutes);
 app.use("/api", itineraryRoutes); // movido al final: su requireAuth interceptaba /api/paddle y /api/paypal antes de que llegaran esos webhooks
-app.get("*", (_req, res) => {
-  res.sendFile("index.html", { root: "dist/public" });
+app.get("*", async (req, res) => {
+  try {
+    if (req.path === "/verify") {
+      res.setHeader("X-Robots-Tag", "noindex");
+    }
+    const indexHtml = await readFile(
+      path.resolve("dist/public/index.html"),
+      "utf8",
+    );
+    res.type("html").send(applySeoToHtml(indexHtml, req.path));
+  } catch (error) {
+    console.error("Error serving SPA page:", error);
+    res.status(500).send("No se pudo cargar la aplicación");
+  }
 });
 
 /* SERVER */
