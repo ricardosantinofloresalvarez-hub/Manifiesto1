@@ -1,0 +1,28 @@
+TAREA: ayuda de sincronización iCal en el panel del anfitrión (solo texto/UI, sin tocar la lógica de sincronización ni la base de datos).
+
+1) Primero revisa dónde está hoy la función de iCal en el panel del anfitrión (importar el calendario de otra plataforma y exportar el de Hospes). Dime en una línea qué pantalla y qué componente es, y usa esa misma pantalla. No crees una página nueva.
+
+2) Agrega ahí un bloque plegable (acordeón) titulado "¿Cómo sincronizo mi calendario?", cerrado por defecto. Contenido en español, corto y con pasos numerados:
+
+   A. Para que Hospes bloquee las fechas que ya tienes reservadas en otra plataforma (importar):
+      1. En Airbnb, Booking u otro sistema, busca la opción "Exportar calendario" o "Enlace iCal" de tu alojamiento y copia el enlace.
+      2. En Hospes, pégalo en el campo de importar calendario y guarda.
+
+   B. Para que Airbnb, Booking u otro sistema bloqueen las fechas que reserven en Hospes (exportar):
+      1. Copia aquí el enlace de calendario de Hospes (usa el botón de copiar que ya exista).
+      2. En la otra plataforma, busca "Importar calendario" o "Sincronizar calendario" y pega el enlace.
+
+   C. Avisos importantes (en una caja destacada):
+      - La sincronización no es instantánea: Airbnb, Booking y otros pueden tardar varias horas en reflejar los cambios.
+      - Repite los dos pasos (A y B) para cada habitación o alojamiento.
+      - Si usas Cloudbeds u otro sistema de gestión, busca la opción de exportar/importar calendario iCal; si no la encuentras, escríbenos a contacto@hospes.lat y te ayudamos.
+
+   No inventes nombres exactos de menús de Airbnb o Booking, porque cambian: usa los textos genéricos de arriba ("Exportar calendario", "Importar calendario").
+
+3) Si el campo de importar ya muestra un estado (última sincronización, error, etc.), déjalo como está y no lo cambies.
+
+4) Traducciones: agrega las cadenas en español y en inglés en i18n.ts, siguiendo cómo ya se hace en el resto de la app.
+
+5) Diseño: mismo estilo de la pantalla (colores y tipografía existentes), que se vea bien en celular. Sin librerías nuevas.
+
+6) Un solo lote de cambios. Al final dame un resumen corto: archivos tocados y confirmación de que no cambió ninguna lógica ni esquema. No hace falta que hagas pruebas largas: solo verifica que compile y que el acordeón abra y cierre.
